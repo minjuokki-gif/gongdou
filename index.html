@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>水云间 · 深宫纪事</title>
+    <style>
+        :root {
+            /* 水色系主题 */
+            --main-color: #87cefa; --light-color: #e0f7fa; --dark-color: #4682b4; --bg-color: #f0f8ff; --text-color: #2f4f4f; 
+            /* 帝王系主题 */
+            --emp-main: #ffd700; --emp-light: #fff8dc; --emp-dark: #b8860b;
+        }
+
+        body { margin: 0; padding: 0; background: var(--bg-color); font-family: "Microsoft YaHei", "STKaiti", serif; color: var(--text-color); display: flex; justify-content: center; min-height: 100vh; overflow: hidden;}
+        .screen { display: none; width: 100%; max-width: 600px; height: 100vh; padding: 20px; box-sizing: border-box; position: relative;}
+        .screen.active { display: block; }
+        .header-bar { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--main-color); padding-bottom: 10px; margin-bottom: 20px; position: relative; z-index: 10; }
+        .back-btn { background: rgba(255,255,255,0.8); color: var(--dark-color); border: 1px solid var(--main-color); border-radius: 8px; padding: 5px 12px; cursor: pointer; font-weight: bold; font-size: 14px; z-index: 50;}
+        .header-title { font-size: 20px; font-weight: bold; color: var(--dark-color); text-align: center; flex-grow: 1; letter-spacing: 2px;}
+
+        /* --- 🌟 常驻菜单 🌟 --- */
+        .menu-btn { position: fixed; top: 20px; left: 20px; width: 45px; height: 45px; background-color: var(--main-color); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; z-index: 5000; box-shadow: 0 4px 10px rgba(135, 206, 250, 0.4); }
+        .menu-btn span { display: block; width: 20px; height: 2px; background-color: white; border-radius: 2px; }
+        .menu-dropdown { position: fixed; top: 75px; left: 20px; background: white; border: 2px solid var(--main-color); border-radius: 12px; padding: 8px 0; width: 130px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: none; z-index: 4999; }
+        .menu-dropdown.active { display: block; }
+        .menu-item { padding: 10px 15px; font-size: 14px; cursor: pointer; text-align: center; border-bottom: 1px dashed var(--light-color); }
+        .menu-item:hover { background-color: var(--light-color); color: var(--dark-color); font-weight: bold; }
+
+        /* ✨ 秀女开局界面 ✨ */
+        .draft-container { background: rgba(255, 255, 255, 0.9); border: 4px solid var(--light-color); border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(135, 206, 250, 0.2); position: relative; overflow: hidden; max-height: 90vh; overflow-y: auto;}
+        .crystal-deco { position: absolute; mix-blend-mode: screen; pointer-events: none; z-index: 1; opacity: 0.8; }
+        .deco-top-right { top: -20px; right: -20px; width: 150px; transform: rotate(15deg); }
+        .deco-bottom-left { bottom: 10px; left: -30px; width: 180px; }
+        .top-section { display: flex; gap: 20px; margin-bottom: 20px; position: relative; z-index: 2; }
+        .avatar-box { width: 120px; height: 160px; border: 2px solid var(--main-color); border-radius: 8px; background: var(--light-color); display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; flex-shrink: 0; }
+        .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+        .info-box { flex-grow: 1; }
+        .name-row { margin-bottom: 15px; font-size: 16px; font-weight: bold; }
+        .name-row input { border: none; border-bottom: 1px solid var(--main-color); width: 60px; background: transparent; outline: none; text-align: center; color: var(--dark-color); font-size: 16px; font-family: inherit; font-weight: bold; }
+        .random-box { background: rgba(224, 247, 250, 0.8); padding: 10px 15px; border-radius: 8px; border: 1px dashed var(--main-color); }
+        .random-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; }
+        .btn-sm { background: var(--main-color); color: white; border: none; border-radius: 4px; padding: 3px 10px; cursor: pointer; font-family: inherit; }
+        .system-feedback { text-align: center; color: var(--dark-color); font-size: 13px; font-weight: bold; min-height: 20px; margin-bottom: 15px;}
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px;}
+        .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid var(--light-color); border-radius: 8px; font-size: 14px; background: rgba(255,255,255,0.85); }
+        .btn-pt { background: var(--main-color); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; }
+        .pts-row { text-align: right; margin-top: 15px; color: var(--dark-color); font-size: 15px; font-weight: bold;}
+        .submit-btn { width: 100%; background: var(--dark-color); color: white; font-size: 16px; border: none; padding: 12px; border-radius: 8px; margin-top: 15px; cursor: pointer; font-family: inherit; }
+
+        /* ✨ 皇帝设置档案界面 ✨ */
+        .emp-setting-container { background: rgba(255, 255, 255, 0.95); border: 4px solid var(--emp-main); border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(218, 165, 32, 0.3); margin-top: 10px; }
+        .emp-avatar-box { width: 120px; height: 160px; border: 2px solid var(--emp-main); border-radius: 8px; background: var(--emp-light); display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; flex-shrink: 0; }
+        .emp-avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+        .emp-random-box { background: var(--emp-light); padding: 10px 15px; border-radius: 8px; border: 1px dashed var(--emp-main); margin-bottom: 10px;}
+        .emp-btn-sm { background: var(--emp-dark); color: white; border: none; border-radius: 4px; padding: 3px 10px; cursor: pointer; font-family: inherit; }
+
+        /* ✨ 正式游玩界面 (面圣/宫斗) ✨ */
+        #gameplay-screen { padding: 0; background-image: url('https://i.postimg.cc/nzRWw6wT/huang-di-hui-ke-ting.jpg'); background-size: cover; background-position: center; position: relative; transition: background-image 1s ease-in-out; }
+        
+        .game-time-display { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); color: white; padding: 6px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 2px solid #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.5); z-index: 50;}
+
+        /* 立绘与对话框防遮挡排版 */
+        .game-avatar { position: absolute; bottom: 32%; width: 120px; height: 180px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 15px rgba(255,255,255,0.6); transition: opacity 0.5s, transform 0.5s; z-index: 15; border: 3px solid rgba(255,255,255,0.9);}
+        #player-avatar-ingame { left: 8%; }
+        #npc-avatar-ingame { right: 8%; opacity: 0; transform: translateX(20px); } 
+        .npc-active #npc-avatar-ingame { opacity: 1; transform: translateX(0); }
+
+        .game-dialogue-box { position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; aspect-ratio: 16/9; background-image: url('https://i.postimg.cc/W1B4FyNP/IMG-3644.png'); background-size: 100% 100%; display: flex; flex-direction: column; padding: 12% 10% 5% 12%; box-sizing: border-box; z-index: 10; }
+        .speaker-name { font-size: 16px; font-weight: bold; color: #b8860b; margin-bottom: 5px; text-shadow: 1px 1px 2px white;}
+        .dialogue-content { color: #4682b4; font-size: 16px; font-weight: bold; line-height: 1.6; letter-spacing: 1px; flex-grow: 1; overflow-y: auto;}
+        
+        .game-input-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); padding: 10px 20px; box-sizing: border-box; display: flex; gap: 10px; z-index: 20; border-top: 1px solid var(--main-color);}
+        .game-input-bar input { flex-grow: 1; padding: 5px 15px; border: 1px solid var(--main-color); border-radius: 20px; outline: none; font-family: inherit; font-size: 15px; background: rgba(255,255,255,0.9); color: var(--text-color);}
+        .game-input-bar button { background: var(--dark-color); color: white; border: none; border-radius: 20px; padding: 0 20px; font-weight: bold; cursor: pointer; }
+
+        /* ✨ 宫门地图面板 ✨ */
+        .map-overlay { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(255,255,255,0.9); border: 3px solid var(--main-color); border-radius: 15px; padding: 20px; display: none; flex-direction: column; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
+        .map-overlay.active { display: flex; }
+        .map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;}
+        .map-btn { background: var(--light-color); color: var(--dark-color); border: 1px solid var(--main-color); padding: 10px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit;}
+        .map-btn:hover { background: var(--main-color); color: white; }
+        .next-month-btn { background: #e91e63; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: inherit; width: 100%; font-size: 16px;}
+
+        /* ✨ 弹窗通用样式 ✨ */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 6000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 85%; max-width: 400px; max-height: 80vh; overflow-y: auto; border: 3px solid var(--main-color); position: relative;}
+        
+        .favor-box { background: #fff0f5; border: 1px dashed #ff69b4; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; color: #d02090; font-size: 18px;}
+        .wb-textarea { width: 100%; height: 200px; padding: 10px; border: 2px solid var(--main-color); border-radius: 10px; resize: none; outline: none; font-family: inherit; margin-bottom: 10px; box-sizing: border-box; }
+        
+        .harem-card { background: var(--light-color); border: 1px solid var(--main-color); border-radius: 8px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .harem-title { font-weight: bold; color: var(--dark-color); font-size: 16px; border-bottom: 1px dashed var(--main-color); padding-bottom: 5px;}
+        .harem-info { font-size: 13px; color: var(--text-color); display: flex; justify-content: space-between;}
+        
+        .close-btn { background: var(--main-color); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; font-family: inherit;}
+
+        /* --- API 设置 --- */
+        .form-group { margin-bottom: 15px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        #toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; display: none; z-index: 7000; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="menu-btn" id="menu-toggle">
+        <span></span><span></span><span></span>
+    </div>
+    <div class="menu-dropdown" id="menu-dropdown">
+        <div class="menu-item" onclick="switchScreen('start-screen')">重新开局</div>
+        <div class="menu-item" id="menu-stats-btn" style="display:none;" onclick="showPlayerStats()">查看属性</div>
+        <div class="menu-item" id="menu-harem-btn" style="display:none; color: #d02090;" onclick="showHaremList()">后宫花名册</div>
+        <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="showModal('wb-modal')">世界书设定</div>
+        <div class="menu-item" id="menu-regen-btn" style="display:none; color: #e91e63;" onclick="regenerateLastResponse()">回溯(重塑)</div>
+        <div class="menu-item" onclick="switchScreen('api-screen')">API设置</div>
+    </div>
+
+    <div id="start-screen" class="screen active" style="overflow-y:auto;">
+        <div class="draft-container">
+            <img class="crystal-deco deco-top-right" src="https://i.postimg.cc/placeholder-flower.jpg" alt="装饰" onerror="this.style.display='none'">
+            <img class="crystal-deco deco-bottom-left" src="https://i.postimg.cc/placeholder-umbrella.jpg" alt="装饰" onerror="this.style.display='none'">
+            
+            <div class="header-bar"><div class="header-placeholder"></div><div class="header-title">💠 水云间 · 选秀名册 💠</div><div class="header-placeholder"></div></div>
+            
+            <div class="top-section">
+                <div class="avatar-box" onclick="document.getElementById('upload-avatar').click()">
+                    <img id="avatar-preview" src="" alt="点击上传" style="display:none;">
+                    <span id="avatar-hint" style="font-size: 12px; color: var(--dark-color);">呈上小像</span>
+                </div>
+                <input type="file" id="upload-avatar" hidden accept="image/*" onchange="handleImage(this, 'player')">
+                
+                <div class="info-box">
+                    <div class="name-row">姓：<input type="text" id="surname" value="钮祜禄"> 名：<input type="text" id="firstname" value="甄嬛"></div>
+                    <div class="random-box">
+                        <div class="random-row"><span>龄：<span id="age-val">16</span></span><button class="btn-sm" onclick="rollAge()">摇</button></div>
+                        <div class="random-row" style="margin-bottom:0;"><span>籍：<span id="bg-val" style="font-size:12px;">武林世家传人</span><br><span class="bg-cost" id="bg-cost-val">(0点)</span></span><button class="btn-sm" onclick="rollBg()">摇</button></div>
+                    </div>
+                </div>
+            </div>
+            <div class="system-feedback" id="sys-feedback">等待嬷嬷验看(需配置识图API)...</div>
+            <div class="stats-grid" id="stats-grid"></div>
+            <div class="pts-row">潜能：<span id="pts-left">10</span></div>
+            <button class="submit-btn" id="submit-btn" onclick="goToEmperorSettings()">✨ 呈递名册，设置帝王 ✨</button>
+        </div>
+    </div>
+
+    <div id="emperor-setting-screen" class="screen" style="overflow-y:auto;">
+        <div class="emp-setting-container">
+            <div class="header-bar" style="border-bottom-color: var(--emp-main);"><div class="header-title" style="color: var(--emp-dark);">👑 建立帝王档案 👑</div></div>
+            
+            <div class="top-section">
+                <div class="emp-avatar-box" onclick="document.getElementById('upload-emp-avatar').click()">
+                    <img id="emp-avatar-preview" src="" alt="点击上传" style="display:none;">
+                    <span id="emp-avatar-hint" style="font-size: 12px; color: var(--emp-dark); text-align:center;">呈上<br>圣上画像</span>
+                </div>
+                <input type="file" id="upload-emp-avatar" hidden accept="image/*" onchange="handleImage(this, 'emp')">
+                
+                <div class="info-box">
+                    <div class="name-row">姓：<input type="text" id="emp-surname" value="爱新觉罗" style="border-bottom-color: var(--emp-main); color: var(--emp-dark); width:70px;">名：<input type="text" id="emp-firstname" value="弘历" style="border-bottom-color: var(--emp-main); color: var(--emp-dark); width:50px;"></div>
+                    <div class="emp-random-box">
+                        <div class="random-row"><span>圣寿：<strong id="emp-age-val" style="color:var(--emp-dark);">20</strong></span><button class="emp-btn-sm" onclick="rollEmpAge()">摇</button></div>
+                        <div class="random-row" style="margin-bottom:0;"><span>性格：<strong id="emp-personality-val" style="color:var(--emp-dark);">风流</strong></span><button class="emp-btn-sm" onclick="rollEmpPersonality()">摇</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid" style="margin-bottom: 10px;">
+                <div class="stat-item" style="border-color: var(--emp-main);"><span>圣颜</span><span id="emp-charm-val" style="font-weight:bold; color:var(--emp-dark);">8</span></div>
+                <div class="stat-item" style="border-color: var(--emp-main);"><span>威望</span><span id="emp-influence-val" style="font-weight:bold; color:var(--emp-dark);">7</span></div>
+                <div class="stat-item" style="border-color: var(--emp-main);"><span>国力</span><span id="emp-power-val" style="font-weight:bold; color:var(--emp-dark);">9</span></div>
+            </div>
+            <div style="text-align: right; margin-bottom: 15px;"><button class="emp-btn-sm" onclick="rollEmpStats()">重调国祚</button></div>
+            <div class="emp-random-box" style="margin-bottom: 0;">
+                <div class="random-row" style="margin-bottom: 0;"><span>太后性格：<strong id="dowager-personality-val" style="color:var(--emp-dark);">精敏</strong></span><button class="emp-btn-sm" onclick="rollDowagerPersonality()">摇</button></div>
+            </div>
+            <button class="submit-btn" style="background: var(--emp-dark); margin-top: 15px;" onclick="startGameplay()">✨ 档案建立，面见圣上 ✨</button>
+        </div>
+    </div>
+
+    <div id="gameplay-screen" class="screen">
+        <button class="back-btn" id="leave-scene-btn" style="position:absolute; top:75px; left:20px; z-index:50;" onclick="showMap()">‹ 离开当前场景</button>
+        <div class="game-time-display" id="game-time">入宫1年1月 第1天</div>
+        
+        <img id="player-avatar-ingame" class="game-avatar" src="" style="display:none;">
+        <img id="npc-avatar-ingame" class="game-avatar" src="" style="display:none;">
+
+        <div class="map-overlay" id="map-overlay">
+            <h3 style="text-align:center; color: var(--dark-color); margin-top:0;">🗺️ 宫门导航 🗺️</h3>
+            <div class="map-grid">
+                <button class="map-btn" onclick="enterLocation('皇帝寝宫')">皇帝寝宫</button>
+                <button class="map-btn" onclick="enterLocation('御书房')">御书房</button>
+                <button class="map-btn" onclick="enterLocation('御花园白天1')">御花园</button>
+                <button class="map-btn" onclick="enterLocation('太医院')">太医院</button>
+                <button class="map-btn" onclick="enterLocation('嫔妃豪华内殿1')">拜访妃嫔</button>
+                <button class="map-btn" onclick="enterLocation('女主卧室')">回自己寝宫</button>
+            </div>
+            <button class="next-month-btn" onclick="endDay()">🌙 结束今日 (敬事房通报)</button>
+        </div>
+
+        <div class="game-dialogue-box" id="dialogue-container">
+            <div class="speaker-name" id="speaker-name">系统</div>
+            <div class="dialogue-content" id="dialogue-text">殿选正式开始。</div>
+        </div>
+
+        <div class="game-input-bar" id="input-container">
+            <input type="text" id="game-input" placeholder="格式：（动作）说的话" onkeypress="if(event.key==='Enter') sendGameMessage()">
+            <button onclick="sendGameMessage()" id="send-btn">发 送</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="stats-modal" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content">
+            <h3 style="text-align:center; color: var(--dark-color); margin-top:0;">🌸 玩家属性 🌸</h3>
+            <div class="favor-box">👑 当前天宠：<span id="favor-val">0</span> 👑</div>
+            <div class="stats-grid" id="modal-stats-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+                </div>
+            <button class="close-btn" style="margin-top:15px;" onclick="document.getElementById('stats-modal').classList.remove('active')">关闭面板</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="wb-modal" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content">
+            <h3 style="text-align:center; color: var(--dark-color); margin-top:0;">📖 世界书设定 📖</h3>
+            <p style="font-size:12px; color:#666; margin-top:-10px; text-align:center;">写下自定义剧情或隐藏设定，AI会记住它。</p>
+            <textarea id="wb-input" class="wb-textarea" placeholder="例如：皇后其实是穿越来的，或者皇上极度害怕猫..."></textarea>
+            <button class="close-btn" onclick="saveWorldbook()">保存并关闭</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="harem-modal" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content">
+            <h3 style="text-align:center; color: #d02090; margin-top:0;">🪷 后宫花名册 🪷</h3>
+            <div id="harem-list-container">
+                </div>
+            <button class="close-btn" style="margin-top:15px; background: #d02090;" onclick="document.getElementById('harem-modal').classList.remove('active')">合上名册</button>
+        </div>
+    </div>
+
+    <div id="api-screen" class="screen">
+        <div class="draft-container">
+            <div class="header-bar"><button class="back-btn" onclick="switchScreen('start-screen')">‹ 返回</button><div class="header-title">⚙️ API 设置</div><div class="header-placeholder"></div></div>
+            <form id="api-form">
+                <div class="form-group"><label>服务商</label><select id="api-provider"><option value="newapi">OpenAI格式</option><option value="gemini">Gemini</option></select></div>
+                <div class="form-group"><label>API 地址</label><input type="url" id="api-url" required></div>
+                <div class="form-group"><label>密钥 (Key)</label><input type="password" id="api-key" required></div>
+                
+                <button type="button" class="close-btn" id="fetch-models-btn" style="background:var(--dark-color); margin-bottom: 10px;">获取/拉取模型列表</button>
+                <div class="form-group"><label>选择模型</label><select id="api-model" required><option value="gemini-1.5-pro-latest">gemini-1.5-pro-latest</option></select></div>
+                
+                <button type="submit" class="close-btn">保存设置</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        /* =========================================================
+           🌟 妃嫔立绘库拓展区 🌟 
+        ========================================================= */
+        const npcAvatarLibrary = [
+            "https://i.postimg.cc/MTgkdnT0/cgi-bin-mmwebwx-bin-webwxgetmsgimg-Msg-ID-7245049807259911026-skey-crypt-2911baa7-25595c68d7065c8.jpg",
+            // "https://i.postimg.cc/xxxxxx.jpg", 
+        ];
+
+        /* ================= 场景系统映射库 ================= */
+        const bgMap = {
+            "皇帝正殿": "https://i.postimg.cc/nzRWw6wT/huang-di-hui-ke-ting.jpg", "女主卧室": "https://i.postimg.cc/Dzy0rGVr/gu-feng-chang-jing-wo-shi.jpg",
+            "皇帝寝宫": "https://i.postimg.cc/yNb10rXt/huang-di-qin-gong-bai-tian-ban-ben.jpg", "后宫闲聊处": "https://i.postimg.cc/6p4Y98bZ/后宫闲聊处.jpg",
+            "太医院": "https://i.postimg.cc/dtx5P26L/太医院.jpg", "嫔妃豪华内殿1": "https://i.postimg.cc/qM51Vswk/嫔妃豪华内殿1.jpg",
+            "御花园夜晚": "https://i.postimg.cc/3Jct5X13/室内庭园.jpg", "宫女房间": "https://i.postimg.cc/0yKc8zXC/宫女房间.jpg",
+            "宫门": "https://i.postimg.cc/g2LNYxts/宫门.jpg", "御花园白天1": "https://i.postimg.cc/YCLbpvDN/小院子.jpg",
+            "御花园白天2": "https://i.postimg.cc/JzHP1sYc/庭院.jpg", "御书房": "https://i.postimg.cc/XYBQVr1X/御书房.jpg",
+            "御膳房": "https://i.postimg.cc/Z5vVTWs9/御膳房.jpg", "浴池": "https://i.postimg.cc/zGH0Jy2y/浴池.jpg", "皇后内殿3": "https://i.postimg.cc/NfMdzJ1Z/皇后内殿3.jpg",
+            "宫宴": "https://i.postimg.cc/MG12dyNq/gong-yan.jpg"
+        };
+
+        /* ================= 全局状态与基础 ================= */
+        let gameState = {
+            playerAvatar: '', empAvatar: '', playerName: '', empName: '',
+            favor: 0, year: 1, month: 1, day: 1, rank: '待定', pregnancy: 0, worldbook: '',
+            harem: [], history: [], isGenerating: false
+        };
+        
+        const menuToggle = document.getElementById('menu-toggle');
+        const menuDropdown = document.getElementById('menu-dropdown');
+        menuToggle.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('active'); });
+        document.body.addEventListener('click', () => { menuDropdown.classList.remove('active'); });
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            if(screenId === 'gameplay-screen') {
+                document.getElementById('menu-stats-btn').style.display = 'block';
+                document.getElementById('menu-regen-btn').style.display = 'block';
+                document.getElementById('menu-wb-btn').style.display = 'block';
+                document.getElementById('menu-harem-btn').style.display = 'block';
+            } else {
+                document.getElementById('menu-stats-btn').style.display = 'none';
+                document.getElementById('menu-regen-btn').style.display = 'none';
+                document.getElementById('menu-wb-btn').style.display = 'none';
+                document.getElementById('menu-harem-btn').style.display = 'none';
+            }
+        }
+        function showToast(msg) { const toast = document.getElementById('toast'); toast.textContent = msg; toast.style.display = 'block'; setTimeout(() => toast.style.display = 'none', 3000); }
+        function showModal(modalId) { document.getElementById(modalId).classList.add('active'); menuDropdown.classList.remove('active'); }
+
+        /* ================= 秀女系统 (完整的12个家世) ================= */
+        let basePts = 10; let currentBgCost = 0; 
+        const statsConfig = {
+            'charm': { name: '容貌', v: 5 }, 'intel': { name: '才智', v: 5 }, 'cunning': { name: '心机', v: 5 }, 'dance': { name: '歌舞', v: 5 },
+            'needle': { name: '女红', v: 5 }, 'health': { name: '体质', v: 5 }, 'luck': { name: '福源', v: 5 }, 'charisma': { name: '魅力', v: 5 }
+        };
+        const backgrounds = [
+            { name: '正一品太傅嫡女', cost: 5 }, { name: '从二品总督庶女', cost: 4 }, { name: '正三品巡抚嫡女', cost: 3 }, { name: '皇商世家嫡女', cost: 2 },
+            { name: '江南富商之女', cost: 1 }, { name: '武林世家传人', cost: 0 }, { name: '正四品知府庶女', cost: -1 }, { name: '异国献祭贡女', cost: -2 },
+            { name: '从六品州判嫡女', cost: -2 }, { name: '正八品县丞之女', cost: -3 }, { name: '没落侯府庶女', cost: -4 }, { name: '平民百姓之女', cost: -5 }
+        ];
+
+        function calculateRemainingPts() { let cost = 0; for(let k in statsConfig) cost += (statsConfig[k].v - 5); return basePts - currentBgCost - cost; }
+        function renderStats() {
+            const grid = document.getElementById('stats-grid'); grid.innerHTML = ''; let rem = calculateRemainingPts();
+            for(let key in statsConfig) {
+                grid.innerHTML += `<div class="stat-item"><span>${statsConfig[key].name}</span><div class="stat-controls"><button class="btn-pt" onclick="modStat('${key}',-1)">-</button><span style="width:16px;text-align:center;">${statsConfig[key].v}</span><button class="btn-pt" onclick="modStat('${key}',1)">+</button></div></div>`;
+            }
+            document.getElementById('pts-left').innerText = rem;
+            document.getElementById('submit-btn').disabled = rem < 0;
+            document.getElementById('submit-btn').innerText = rem < 0 ? "⛔ 潜能透支" : "✨ 呈递名册，设置帝王 ✨";
+        }
+        function modStat(k, d) { let rem = calculateRemainingPts(); if(d>0 && rem>0 && statsConfig[k].v<10) statsConfig[k].v++; else if(d<0 && statsConfig[k].v>0) statsConfig[k].v--; renderStats(); }
+        function rollAge() { document.getElementById('age-val').innerText = Math.floor(Math.random()*5)+15; }
+        function rollBg() { const bg = backgrounds[Math.floor(Math.random()*backgrounds.length)]; currentBgCost = bg.cost; document.getElementById('bg-val').innerText = bg.name; document.getElementById('bg-cost-val').innerText = `(${bg.cost>0?'-':'+'}${Math.abs(bg.cost)}点)`; renderStats(); }
+        
+        /* 📸 嬷嬷看脸：视觉大模型接口 */
+        async function handleImage(input, type) {
+            if(input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const base64Img = e.target.result;
+                    if(type === 'player') {
+                        document.getElementById('avatar-preview').src = base64Img; document.getElementById('avatar-preview').style.display = 'block'; document.getElementById('avatar-hint').style.display = 'none';
+                        gameState.playerAvatar = base64Img;
+                        
+                        const feedbackEl = document.getElementById('sys-feedback');
+                        feedbackEl.style.color = "var(--dark-color)";
+                        feedbackEl.innerHTML = "嬷嬷正在连线西洋画师(AI)验看小像...";
+                        
+                        const savedApi = JSON.parse(localStorage.getItem('palace_api_settings') || '{}');
+                        if(savedApi.url && savedApi.key) {
+                            try {
+                                const sysPrompt = "你是一位刻薄的清宫教引嬷嬷。请根据玩家上传的照片（小像）颜值进行评价。必须且只能返回固定格式：评语|数字。数字在-5到+5之间。示例：『面容清秀，算是个可人儿。』|+3";
+                                let fetchUrl, headers, requestBody;
+                                if(savedApi.provider === 'gemini') {
+                                    const mimeType = base64Img.match(/data:(.*?);/)[1]; const rawBase64 = base64Img.split(',')[1];
+                                    fetchUrl = `${savedApi.url}/v1beta/models/${savedApi.model}:generateContent?key=${savedApi.key}`;
+                                    headers = { 'Content-Type': 'application/json' };
+                                    requestBody = { contents: [{ parts: [ { text: sysPrompt }, { inline_data: { mime_type: mimeType, data: rawBase64 } } ] }] };
+                                } else {
+                                    fetchUrl = `${savedApi.url}/v1/chat/completions`;
+                                    headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedApi.key}` };
+                                    requestBody = { model: savedApi.model, messages: [{ role: "user", content: [ { type: "text", text: sysPrompt }, { type: "image_url", image_url: { url: base64Img } } ] }] };
+                                }
+                                const res = await fetch(fetchUrl, { method: 'POST', headers, body: JSON.stringify(requestBody) });
+                                if(!res.ok) throw new Error("API无视觉支持或错误");
+                                const json = await res.json();
+                                let aiText = savedApi.provider === 'gemini' ? json.candidates[0].content.parts[0].text : json.choices[0].message.content;
+                                const parts = aiText.split('|');
+                                let scoreChange = parts[1] ? parseInt(parts[1].replace('+', '')) : 0; if(isNaN(scoreChange)) scoreChange = 0;
+                                let newCharm = Math.max(0, Math.min(10, statsConfig['charm'].v + scoreChange));
+                                let actualChange = newCharm - statsConfig['charm'].v;
+                                statsConfig['charm'].v = newCharm;
+                                feedbackEl.innerHTML = `嬷嬷：${parts[0]||'不予置评。'} (容貌${actualChange>0?'+':''}${actualChange})`;
+                                renderStats();
+                            } catch(err) {
+                                feedbackEl.innerHTML = "【识图失败】需在API设置里配置带Vision模型，随机给个(容貌+1)";
+                                if(statsConfig['charm'].v <= 9) statsConfig['charm'].v += 1; renderStats();
+                            }
+                        } else {
+                            feedbackEl.innerHTML = "【未配置API】请先配置API。随机(容貌+1)";
+                            if(statsConfig['charm'].v <= 9) statsConfig['charm'].v += 1; renderStats();
+                        }
+
+                    } else {
+                        document.getElementById('emp-avatar-preview').src = base64Img; document.getElementById('emp-avatar-preview').style.display = 'block'; document.getElementById('emp-avatar-hint').style.display = 'none';
+                        gameState.empAvatar = base64Img;
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+        function goToEmperorSettings() { if(calculateRemainingPts() < 0) return; switchScreen('emperor-setting-screen'); rollEmpAge(); rollEmpPersonality(); rollEmpStats(); rollDowagerPersonality(); }
+
+        /* ================= 皇帝系统 ================= */
+        const empPersonalities = ['风流', '刚正', '温柔', '冷漠', '天真']; const dowagerPersonalities = ['精敏', '避世', '擅权', '亲和'];
+        function rollEmpAge() { document.getElementById('emp-age-val').innerText = Math.floor(Math.random()*9)+18; } 
+        function rollEmpPersonality() { document.getElementById('emp-personality-val').innerText = empPersonalities[Math.floor(Math.random()*empPersonalities.length)]; }
+        function rollDowagerPersonality() { document.getElementById('dowager-personality-val').innerText = dowagerPersonalities[Math.floor(Math.random()*dowagerPersonalities.length)]; }
+        function rollEmpStats() { document.getElementById('emp-charm-val').innerText=Math.floor(Math.random()*6)+5; document.getElementById('emp-influence-val').innerText=Math.floor(Math.random()*6)+5; document.getElementById('emp-power-val').innerText=Math.floor(Math.random()*6)+5; }
+
+        /* ================= 🌟 游戏核心 (大地图/后宫/翻牌子) 🌟 ================= */
+        function updateTimeDisplay() { document.getElementById('game-time').innerText = `入宫${gameState.year}年${gameState.month}月 第${gameState.day}天`; }
+
+        // 🌟 生成后宫 
+        function generateHarem() {
+            let harem = [];
+            harem.push({ title: '慜', rank: '贵妃', name: '朴敏珠', age: 21, favor: 35, personality: '清冷(Lesbian)', affection: 30 });
+            
+            const titles = ["婉", "华", "宁", "丽", "静", "惠", "顺", "娇", "熙", "敬", "端", "舒", "嘉", "纯", ""];
+            const ranks = ["妃", "嫔", "贵人", "常在", "答应"];
+            const personalities = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
+            const surnames = ["乌拉那拉", "富察", "佟佳", "沈", "安", "夏", "瓜尔佳", "钮祜禄", "叶赫那拉", "辉发那拉", "索绰罗", "博尔济吉特", "年", "巴林", "陈", "白", "张"];
+            const givenNames = ["如懿", "容音", "眉庄", "陵容", "冬春", "明玉", "海兰", "琅嬅", "晞月", "玉妍", "意欢", "蕊姬", "绿筠", "嬿婉", "香见", "璟瑟", "若曦", "甄嬛", "玉娆", "世兰", "清秋", "紫嫣", "雨晴", "芷若", "婉清", "书瑶", "初夏", "映雪"];
+            
+            let count = Math.floor(Math.random() * 3) + 3; 
+            let favoredCount = 0; let exclusiveCount = 0; 
+
+            for(let i=0; i<count; i++) {
+                let favorScore = Math.floor(Math.random() * 80);
+                if (favorScore >= 70) {
+                    if (exclusiveCount < 1 && favoredCount < 3) { exclusiveCount++; favoredCount++; } 
+                    else if (favoredCount < 3) { favorScore = Math.floor(Math.random() * 29) + 40; favoredCount++; } 
+                    else { favorScore = Math.floor(Math.random() * 40); }
+                } else if (favorScore >= 40) {
+                    if (favoredCount < 3) { favoredCount++; } 
+                    else { favorScore = Math.floor(Math.random() * 40); }
+                }
+
+                harem.push({
+                    title: titles[Math.floor(Math.random()*titles.length)],
+                    rank: ranks[Math.floor(Math.random()*ranks.length)],
+                    name: surnames[Math.floor(Math.random()*surnames.length)] + givenNames[Math.floor(Math.random()*givenNames.length)],
+                    age: Math.floor(Math.random()*8)+16, favor: favorScore,
+                    personality: personalities[Math.floor(Math.random()*personalities.length)],
+                    affection: Math.floor(Math.random()*101) - 50 
+                });
+            }
+            gameState.harem = harem.sort((a,b) => b.favor - a.favor);
+        }
+
+        function startGameplay() {
+            gameState.playerName = document.getElementById('surname').value + document.getElementById('firstname').value;
+            gameState.empName = document.getElementById('emp-surname').value + document.getElementById('emp-firstname').value;
+            gameState.favor = 0; gameState.year = 1; gameState.month = 1; gameState.day = 1; gameState.rank = '待定'; gameState.pregnancy = 0; gameState.worldbook = '';
+            gameState.history = [];
+            generateHarem(); 
+
+            if(gameState.playerAvatar) { document.getElementById('player-avatar-ingame').src = gameState.playerAvatar; document.getElementById('player-avatar-ingame').style.display = 'block'; }
+            // ✨ 修复BUG：修正右侧皇上立绘赋值的ID
+            if(gameState.empAvatar) { document.getElementById('npc-avatar-ingame').src = gameState.empAvatar; document.getElementById('npc-avatar-ingame').style.display = 'block'; }
+            
+            updateTimeDisplay();
+            document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["皇帝正殿"]}')`;
+            document.getElementById('gameplay-screen').classList.add('npc-active'); 
+            switchScreen('gameplay-screen');
+            
+            gameState.history.push({role: "user", content: `系统提示：殿选开始。请太后或皇帝向秀女“${gameState.playerName}”发问。必须赐予初始位份（答应或常在）。`});
+            requestAI();
+        }
+
+        function showMap() {
+            document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["宫门"]}')`;
+            document.getElementById('dialogue-container').style.display = 'none';
+            document.getElementById('input-container').style.display = 'none';
+            document.getElementById('leave-scene-btn').style.display = 'none';
+            document.getElementById('map-overlay').classList.add('active');
+            document.getElementById('gameplay-screen').classList.remove('npc-active');
+        }
+
+        async function enterLocation(locName) {
+            document.getElementById('map-overlay').classList.remove('active');
+            document.getElementById('dialogue-container').style.display = 'flex';
+            document.getElementById('input-container').style.display = 'flex';
+            document.getElementById('leave-scene-btn').style.display = 'block';
+            document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[locName]}')`;
+
+            gameState.history.push({role: "user", content: `系统提示：玩家来到了 ${locName}。请从后宫名单中安排一位NPC或太监宫女发生事件（或遇到敏珠）。`});
+            await requestAI();
+        }
+
+        async function endDay() {
+            gameState.day++;
+            if(gameState.day > 3) { 
+                gameState.day = 1; gameState.month++; 
+                if(gameState.month > 12) { gameState.year++; gameState.month = 1; }
+                if(gameState.pregnancy > 0) {
+                    gameState.pregnancy++;
+                    if(gameState.pregnancy > 10) { gameState.pregnancy = 0; showToast("🌸 历经十月怀胎，你顺利诞下皇嗣！"); }
+                }
+            }
+            updateTimeDisplay();
+            document.getElementById('map-overlay').classList.remove('active');
+            document.getElementById('dialogue-container').style.display = 'flex';
+            document.getElementById('input-container').style.display = 'flex';
+            document.getElementById('leave-scene-btn').style.display = 'block';
+
+            let nightEventText = "";
+
+            if((gameState.month === 6 || gameState.month === 12) && gameState.day === 1) {
+                document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["宫宴"]}')`;
+                nightEventText = `系统提示：今日是${gameState.month}月宫宴，后宫众妃与皇上、太后齐聚一堂。玩家【心机:${statsConfig['cunning'].v}】【歌舞:${statsConfig['dance'].v}】。请生成宫宴上要求玩家表演才艺、或者其他妃嫔暗算的开场剧情！[背景: 宫宴]`;
+            } else {
+                let userChance = 10 + (gameState.favor * 2); 
+                if(userChance > 80) userChance = 80; 
+                let roll = Math.random() * 100;
+                
+                if (roll < userChance) {
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["浴池"]}')`;
+                    nightEventText = `系统提示：敬事房通报：“今夜翻的是${gameState.rank}小主（玩家）的牌子！”玩家已在浴池沐浴。请扮演皇帝互动。`;
+                } else if (roll < userChance + 30) {
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["女主卧室"]}')`;
+                    nightEventText = `系统提示：皇上今日政务繁忙，独寝。新的一天，请生成早晨日常过渡。`;
+                } else {
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["女主卧室"]}')`;
+                    let luckyNpc = gameState.harem[Math.floor(Math.random() * gameState.harem.length)];
+                    let npcFullName = luckyNpc.title + luckyNpc.rank + luckyNpc.name;
+                    nightEventText = `系统提示：敬事房通报，皇上今夜翻了【${npcFullName}】的牌子。玩家独寝。新的一天，请生成早晨过渡剧情。`;
+                }
+            }
+
+            gameState.history.push({role: "user", content: nightEventText});
+            await requestAI();
+        }
+
+        /* ================= 🌟 AI 对话与解析 🌟 ================= */
+        function buildSystemPrompt() {
+            let statsText = ""; for(let k in statsConfig) statsText += `${statsConfig[k].name}:${statsConfig[k].v} `;
+            const empP = document.getElementById('emp-personality-val').innerText;
+            const dowP = document.getElementById('dowager-personality-val').innerText;
+            const pregText = gameState.pregnancy === 0 ? "无" : `已怀孕${gameState.pregnancy}个月`;
+            const bgNames = Object.keys(bgMap).join(", ");
+            const wbText = gameState.worldbook ? `【世界书设定】\n${gameState.worldbook}\n` : "";
+            
+            let haremText = "【当前后宫名单】\n";
+            gameState.harem.forEach(h => {
+                haremText += `- ${h.title}${h.rank}${h.name} (好感:${h.affection}, 性格:${h.personality}, 宠:${h.favor})\n`;
+            });
+
+            let extraRules = "";
+            if(statsConfig['cunning'].v <= 5) { extraRules += "【隐藏机制】玩家【心机】极低，请让其他坏心眼妃嫔更容易暗算或嘲讽她。\n"; }
+
+            return `你是一个文字冒险游戏引擎。当前场景：后宫生存。
+玩家：${gameState.playerName}，家世：${document.getElementById('bg-val').innerText}，位份：${gameState.rank}，孕期：${pregText}。
+属性：${statsText}。皇帝性格：${empP}。太后性格：${dowP}。
+${haremText}
+${wbText}
+${extraRules}
+【核心规则】
+1. 绝对不要替玩家说话或做动作！用第二人称“你”称呼玩家。
+2. 每次回复控制在20-40字以内！禁止长篇大论。
+3. 对话格式强制为：NPC姓名：（动作）说的话。
+4. 判断喜爱度，末尾强制带上：[天宠+X] 或 [天宠-X] 或 [天宠+0]。X是1-5。
+5. 你兼任游戏导演。可用场景库：【${bgNames}】。末尾强制附带：[背景: 场景名]。
+6. 赐予位份或封号时附带：[位份: 封号+位份]。
+7. 示例：“${gameState.empName}：【（端起茶盏）既然太后说好，便留牌子吧。】[天宠+1][背景: 皇帝正殿][位份: 答应]”`;
+        }
+
+        async function sendGameMessage() {
+            if(gameState.isGenerating) return;
+            const input = document.getElementById('game-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            input.value = "";
+            displayDialogue(gameState.playerName, text);
+            document.getElementById('gameplay-screen').classList.remove('npc-active'); 
+
+            gameState.history.push({role: "user", content: `玩家说/做：${text}`});
+            await requestAI();
+        }
+
+        async function regenerateLastResponse() {
+            if(gameState.isGenerating) return;
+            if(gameState.history.length === 0) return showToast("暂无对话可回溯！");
+            const lastMsg = gameState.history[gameState.history.length - 1];
+            if(lastMsg.role === "assistant" || lastMsg.role === "model") {
+                gameState.history.pop(); 
+                document.getElementById('speaker-name').innerText = "系统";
+                document.getElementById('dialogue-text').innerHTML = "<span style='color:#ccc'>正在施展时光倒流术，重新推演局势...</span>";
+                await requestAI();
+            } else {
+                showToast("最后一句是你说的，不能回溯哦！");
+            }
+        }
+
+        async function requestAI() {
+            const apiData = JSON.parse(localStorage.getItem('palace_api_settings') || '{}');
+            if(!apiData.url || !apiData.key) return displayDialogue("系统", "请先在左上角菜单配置API！", true);
+            
+            gameState.isGenerating = true;
+            document.getElementById('send-btn').innerText = "等...";
+            document.getElementById('send-btn').disabled = true;
+
+            try {
+                let fetchUrl, headers, requestBody;
+
+                if(apiData.provider === 'gemini') {
+                    fetchUrl = `${apiData.url}/v1beta/models/${apiData.model || 'gemini-1.5-flash'}:generateContent?key=${apiData.key}`;
+                    headers = { 'Content-Type': 'application/json' };
+                    let geminiHistory = [];
+                    geminiHistory.push({ role: 'user', parts: [{ text: buildSystemPrompt() }] });
+                    geminiHistory.push({ role: 'model', parts: [{ text: '收到，将严格遵守一切机制设定。' }] });
+                    for(let m of gameState.history) {
+                        geminiHistory.push({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] });
+                    }
+                    requestBody = { contents: geminiHistory };
+                } else {
+                    let messages = [{role: "system", content: buildSystemPrompt()}, ...gameState.history];
+                    fetchUrl = `${apiData.url}/v1/chat/completions`;
+                    headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiData.key}` };
+                    requestBody = { model: apiData.model, messages: messages };
+                }
+
+                const res = await fetch(fetchUrl, { method: 'POST', headers, body: JSON.stringify(requestBody) });
+                if(!res.ok) throw new Error("API错误");
+                const json = await res.json();
+                
+                let reply = apiData.provider === 'gemini' ? json.candidates[0].content.parts[0].text : json.choices[0].message.content;
+                gameState.history.push({role: "assistant", content: reply});
+                
+                parseAndDisplayAI(reply);
+
+            } catch(e) {
+                console.error(e);
+                displayDialogue("系统", "网络连接异常或API报错。");
+            } finally {
+                gameState.isGenerating = false;
+                document.getElementById('send-btn').innerText = "发 送";
+                document.getElementById('send-btn').disabled = false;
+                document.getElementById('game-input').focus();
+            }
+        }
+
+        function parseAndDisplayAI(text) {
+            let cleanText = text;
+
+            const favorMatch = cleanText.match(/\[天宠([+-]\d+)\]/);
+            if(favorMatch) {
+                gameState.favor += parseInt(favorMatch[1]);
+                document.getElementById('favor-val').innerText = gameState.favor;
+            }
+            const rankMatch = cleanText.match(/\[位份[：:](.*?)\]/);
+            if(rankMatch) {
+                gameState.rank = rankMatch[1].trim();
+                showToast(`🌸 恭喜小主，获封：${gameState.rank}`);
+            }
+            const bgMatch = cleanText.match(/\[背景[：:](.*?)\]/);
+            if(bgMatch && bgMap[bgMatch[1].trim()]) {
+                document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[bgMatch[1].trim()]}')`;
+            }
+
+            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').trim();
+
+            let speaker = "系统"; let content = cleanText;
+            const splitMatch = cleanText.match(/^([^：:]+)[：:]([\s\S]+)/);
+            if(splitMatch) { speaker = splitMatch[1].trim(); content = splitMatch[2].trim(); }
+
+            // NPC 立绘逻辑
+            const npcAvatarEl = document.getElementById('npc-avatar-ingame');
+            if(speaker.includes(gameState.empName) || speaker.includes("皇帝") || speaker.includes("皇上")) {
+                if(gameState.empAvatar) { npcAvatarEl.src = gameState.empAvatar; npcAvatarEl.style.display = 'block'; }
+                document.getElementById('gameplay-screen').classList.add('npc-active');
+            } else if (speaker.includes("敏珠") || speaker.includes("慜") || speaker.includes("贵妃")) {
+                npcAvatarEl.src = npcAvatarLibrary[0]; 
+                npcAvatarEl.style.display = 'block';
+                document.getElementById('gameplay-screen').classList.add('npc-active');
+            } else if (speaker !== "系统" && speaker !== gameState.playerName) {
+                if(npcAvatarLibrary.length > 1) {
+                    let hash = 0; for(let i=0; i<speaker.length; i++) hash += speaker.charCodeAt(i);
+                    let idx = (hash % (npcAvatarLibrary.length - 1)) + 1;
+                    npcAvatarEl.src = npcAvatarLibrary[idx];
+                    npcAvatarEl.style.display = 'block';
+                } else {
+                    npcAvatarEl.style.display = 'none';
+                }
+                document.getElementById('gameplay-screen').classList.add('npc-active');
+            } else {
+                document.getElementById('gameplay-screen').classList.remove('npc-active');
+            }
+
+            displayDialogue(speaker, content, true);
+        }
+
+        function displayDialogue(speaker, text, typewriter = false) {
+            document.getElementById('speaker-name').innerText = speaker;
+            const box = document.getElementById('dialogue-text');
+            box.innerHTML = "";
+            if(typewriter) {
+                let i = 0;
+                let timer = setInterval(() => { box.innerHTML += text.charAt(i); i++; if(i >= text.length) clearInterval(timer); }, 50); 
+            } else {
+                box.innerText = text;
+            }
+        }
+
+        /* ================= 🌟 属性面板与API表单设置 (修复拉取模型) 🌟 ================= */
+        function showPlayerStats() {
+            const grid = document.getElementById('modal-stats-grid');
+            grid.innerHTML = `<div class="stat-item" style="border:none; border-bottom:1px dashed #ccc;"><span>姓名</span><strong>${gameState.playerName}</strong></div>`;
+            grid.innerHTML += `<div class="stat-item" style="border:none; border-bottom:1px dashed #ccc;"><span>家世</span><strong>${document.getElementById('bg-val').innerText}</strong></div>`;
+            grid.innerHTML += `<div class="stat-item" style="border:none; border-bottom:1px dashed #ccc;"><span>位份</span><strong style="color:var(--emp-dark);">${gameState.rank}</strong></div>`;
+            grid.innerHTML += `<div class="stat-item" style="border:none; border-bottom:1px dashed #ccc;"><span>孕期</span><strong style="color:#e91e63">${gameState.pregnancy === 0 ? '无' : gameState.pregnancy+'个月'}</strong></div>`;
+            
+            for(let key in statsConfig) {
+                grid.innerHTML += `<div class="stat-item" style="border:none; border-bottom:1px dashed #eee;"><span>${statsConfig[key].name}</span><strong>${statsConfig[key].v}</strong></div>`;
+            }
+            document.getElementById('favor-val').innerText = gameState.favor;
+            showModal('stats-modal');
+        }
+
+        function saveWorldbook() {
+            gameState.worldbook = document.getElementById('wb-input').value.trim();
+            document.getElementById('wb-modal').classList.remove('active');
+            showToast("世界书设定已录入！");
+        }
+
+        function showHaremList() {
+            const container = document.getElementById('harem-list-container');
+            container.innerHTML = '';
+            gameState.harem.forEach(h => {
+                let fn = h.title + h.rank + " " + h.name;
+                container.innerHTML += `
+                    <div class="harem-card">
+                        <div class="harem-title">${fn} (年方${h.age})</div>
+                        <div class="harem-info">
+                            <span>性格：${h.personality}</span>
+                            <span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span>
+                        </div>
+                        <div class="harem-info" style="margin-top:5px; justify-content: flex-end;">
+                            <span>对你好感度：<strong style="color:${h.affection<0?'red':'#4CAF50'};">${h.affection>0?'+':''}${h.affection}</strong></span>
+                        </div>
+                    </div>`;
+            });
+            showModal('harem-modal');
+        }
+
+        renderStats();
+
+        /* API 配置与拉取系统 */
+        const providerUrls = { newapi: '', gemini: 'https://generativelanguage.googleapis.com' };
+        const providerSelect = document.getElementById('api-provider');
+        const urlInput = document.getElementById('api-url');
+        const keyInput = document.getElementById('api-key');
+        const modelSelect = document.getElementById('api-model');
+        const fetchBtn = document.getElementById('fetch-models-btn');
+        const apiForm = document.getElementById('api-form');
+
+        providerSelect.addEventListener('change', () => {
+            if(!urlInput.value || Object.values(providerUrls).includes(urlInput.value)) {
+                urlInput.value = providerUrls[providerSelect.value] || '';
+            }
+        });
+
+        fetchBtn.addEventListener('click', async () => {
+            let url = urlInput.value.trim(); 
+            const key = keyInput.value.trim(); 
+            const provider = providerSelect.value;
+            
+            if (!url || !key) return showToast('请先填写 API 地址和密钥！');
+            if (url.endsWith('/')) url = url.slice(0, -1);
+            
+            const randomKey = key.includes(',') ? key.split(',').map(i => i.trim())[Math.floor(Math.random() * key.split(',').length)] : key;
+            const fetchUrl = provider === 'gemini' ? `${url}/v1beta/models?key=${randomKey}` : `${url}/v1/models`;
+            const headers = provider === 'gemini' ? {} : { Authorization: `Bearer ${key}` };
+
+            fetchBtn.textContent = '正在拉取...'; fetchBtn.disabled = true;
+            try {
+                const res = await fetch(fetchUrl, { method: 'GET', headers: headers });
+                if (!res.ok) throw new Error(`响应错误: ${res.status}`);
+                const json = await res.json();
+                
+                let models = (provider !== 'gemini' && json.data) ? json.data.map(e => e.id) : ((provider === 'gemini' && json.models) ? json.models.map(e => e.name.replace('models/', '')) : []);
+                modelSelect.innerHTML = '';
+                if (models.length > 0) {
+                    models.forEach(m => modelSelect.innerHTML += `<option value="${m}">${m}</option>`);
+                    showToast('✅ 模型拉取成功！请在下拉框中选择。');
+                } else throw new Error("未找到模型数据");
+            } catch (err) {
+                modelSelect.innerHTML = '<option value="">拉取失败，请检查网络或密钥</option>'; 
+                showToast(`❌ 拉取失败: ${err.message}`);
+            } finally {
+                fetchBtn.textContent = '获取/拉取模型列表'; fetchBtn.disabled = false;
+            }
+        });
+
+        apiForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const set = { provider: providerSelect.value, url: urlInput.value.trim(), key: keyInput.value.trim(), model: modelSelect.value };
+            localStorage.setItem('palace_api_settings', JSON.stringify(set));
+            showToast('✅ API 设置已永久保存！');
+        });
+
+        function loadApiSettings() {
+            const saved = JSON.parse(localStorage.getItem('palace_api_settings') || '{}');
+            if(saved.url) { 
+                providerSelect.value = saved.provider || 'newapi'; 
+                urlInput.value = saved.url; 
+                keyInput.value = saved.key; 
+                if(saved.model) {
+                    modelSelect.innerHTML = `<option value="${saved.model}">${saved.model}</option>`;
+                    modelSelect.value = saved.model;
+                }
+            }
+        }
+        loadApiSettings();
+    </script>
+</body>
+</html>
