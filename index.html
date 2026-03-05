@@ -207,9 +207,12 @@
             <div class="header-bar" style="border-bottom-color: var(--emp-main);"><div class="header-title" style="color: var(--emp-dark);">👑 建立帝王档案 👑</div></div>
             
             <div class="top-section">
-                <div class="emp-avatar-box" onclick="document.getElementById('upload-emp-avatar').click()">
-                    <img id="emp-avatar-preview" src="" alt="点击上传" style="display:none;">
-                    <span id="emp-avatar-hint" style="font-size: 12px; color: var(--emp-dark); text-align:center;">呈上<br>圣上画像</span>
+                <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                    <div class="emp-avatar-box"><img id="emp-avatar-preview" src="" alt="点击上传" style="display:none;"><span id="emp-avatar-hint" style="font-size: 12px; color: var(--emp-dark); text-align:center;">呈上<br>圣上画像</span></div>
+                    <div style="display:flex; gap:5px; width: 120px;">
+                        <button class="emp-btn-sm" style="flex:1; background:#b8860b; font-size:12px; padding:4px 0;" onclick="openEmpPresetModal()">👑 选立绘</button>
+                        <button class="emp-btn-sm" style="flex:1; background:var(--emp-dark); font-size:12px; padding:4px 0;" onclick="document.getElementById('upload-emp-avatar').click()">📸 传照片</button>
+                    </div>
                 </div>
                 <input type="file" id="upload-emp-avatar" hidden accept="image/*" onchange="handleImage(this, 'emp')">
                 
@@ -361,7 +364,7 @@
             favor: 0, year: 1, month: 1, period: 0, rank: '待定', 
             pregnancy: 0, children: [], 
             worldbook: '', harem: [], history: [], isGenerating: false, currentLoc: '皇帝正殿',
-            isPlayerTransparent: false 
+            isPlayerTransparent: false, isEmpTransparent: false 
         };
         let gameState = JSON.parse(JSON.stringify(defaultState));
         let dialogueQueue = []; let isTyping = false; let typeTimer = null;
@@ -401,7 +404,7 @@
                 'cunning': ['天真烂漫', '涉世未深', '八面玲珑', '城府极深', '算无遗策'],
                 'dance': ['肢体僵硬', '略懂音律', '身姿蹁跹', '惊鸿一舞', '一舞倾城'],
                 'needle': ['笨手笨脚', '勉强缝补', '穿针引线', '绣工精湛', '巧夺天工'],
-                'health': ['弱不禁风', '娇喘微微', '平安康健', '气血充盈', '龙精虎猛'], 
+                'health': ['弱不禁风', '娇喘微微', '平安康健', '气血充盈', '神龙马壮'], 
                 'luck': ['厄运缠身', '命途多舛', '吉人天相', '洪福齐天', '天命之女'],
                 'charisma': ['黯淡无光', '泯然众人', '惹人怜爱', '风情万种', '颠倒众生']
             };
@@ -457,8 +460,21 @@
         
         /* ✨ 绝美立绘素材库 ✨ */
         const playerPresets = [
-            { name: "清雅绝尘", url: "https://i.postimg.cc/Tw5H4vtY/550jia-zeng-san.png" },
-            { name: "青花瓷韵", url: "https://i.postimg.cc/90Ggct3n/sheng-qi-5-qing-hua-ci-da-bao-ban-shen-zeng-pin.png" }
+            { name: "绝代风华", url: "https://i.postimg.cc/qRZb2951/1250jia-zeng-jiu.png" },
+            { name: "清雅绝尘", url: "https://i.postimg.cc/g01LRsKL/550jia-zeng-san.png" },
+            { name: "幽兰吐蕊", url: "https://i.postimg.cc/4d8MBKmb/650jia-zeng-si.png" },
+            { name: "娇云怯雨", url: "https://i.postimg.cc/9QT6CFnD/950jia-zeng-qi.png" },
+            { name: "青花瓷韵", url: "https://i.postimg.cc/KzsqtdHw/sheng-qi-5-qing-hua-ci-da-bao-ban-shen-zeng-pin.png" },
+            { name: "仙姿玉貌", url: "https://i.postimg.cc/W3fW0QHf/e-zeng-song-fu-li-ban-shen.png" }
+        ];
+
+        const empPresets = [
+            { name: "白发妖孽", url: "https://i.postimg.cc/ZKrkh5gZ/bai-fa-hu-nan.png" },
+            { name: "白衣谪仙", url: "https://i.postimg.cc/pTnGY0Mn/bai-yi-bai-fa.png" },
+            { name: "绿衣银发", url: "https://i.postimg.cc/Znwd9Ssn/lu-yi-yin-fa.png" },
+            { name: "幽蓝深邃", url: "https://i.postimg.cc/sxThBrHY/lan-hei-yi-hei-fa.png" },
+            { name: "黑发血眸", url: "https://i.postimg.cc/prb00DPy/hei-fa-xue-mou.png" },
+            { name: "黑衣玄魅", url: "https://i.postimg.cc/GtXyBCgz/hei-yi-hei-fa.png" }
         ];
 
         const portraitPools = {
@@ -496,6 +512,26 @@
             document.getElementById('preset-modal').classList.remove('active');
             document.getElementById('sys-feedback').innerHTML = "【系统】已换上绝美透明大立绘！(容貌+2)";
             statsConfig['charm'].v = Math.min(10, statsConfig['charm'].v + 2); renderStats();
+        }
+
+        function openEmpPresetModal() {
+            const list = document.getElementById('preset-avatar-list'); list.innerHTML = '';
+            empPresets.forEach(p => {
+                list.innerHTML += `
+                <div class="stat-item" style="flex-direction:column; cursor:pointer; padding:5px; border-color:var(--emp-main);" onclick="selectEmpPreset('${p.url}')">
+                    <img src="${p.url}" style="width:100%; height:130px; object-fit:contain; border-radius:4px; background:#fff8dc;">
+                    <span style="margin-top:5px; font-weight:bold; color:var(--emp-dark);">${p.name}</span>
+                </div>`;
+            }); 
+            document.getElementById('preset-modal').querySelector('h3').innerText = "👑 挑选圣上立绘";
+            showModal('preset-modal');
+        }
+
+        function selectEmpPreset(url) {
+            gameState.empAvatar = url; gameState.isEmpTransparent = true;
+            document.getElementById('emp-avatar-preview').src = url; document.getElementById('emp-avatar-preview').style.display = 'block'; document.getElementById('emp-avatar-hint').style.display = 'none';
+            document.getElementById('preset-modal').classList.remove('active');
+            showToast("👑 已换上绝美圣上立绘！");
         }
 
         async function handleImage(input, type) {
@@ -758,17 +794,19 @@
 
             let extraRules = statsConfig['cunning'].v <= 5 ? "【隐藏】玩家【心机】低，极易被暗算。\n" : "";
 
-            return `你是一个文字冒险游戏引擎。
+            return `你是《水云间》文字游戏引擎，必须严格遵守以下强制模板，严禁遗漏！
 玩家：${gameState.playerName}，家世：${document.getElementById('bg-val').innerText}，位份：${gameState.rank}，孕期：${pregText}。
 属性：${statsText}。皇帝性格：${empP}。
 ${haremText}${wbText}${extraRules}
 【规则】
 1. 不替玩家说话！用“你”称呼玩家。
 2. 对话分块：一句话尽量在一个框内说完！每次最多5块。
-3. 格式：[发言] NPC姓名：【（动作）内容】
+3. 格式：[发言] NPC姓名：（动作）内容
 4. 皇帝宠爱每次[天宠+X]最多+1或+2。注意圣宠是零和的。
 5. 结算标签（只能放在最后一块）：[天宠+X] [更新: 姓名|好感变动|圣宠变动|新位份] [背景: 场景名]。
-6. 若玩家拜访妃嫔，请自编宫殿名，并附带 [背景: 嫔妃豪华内殿1]。`;
+6. 若玩家拜访妃嫔，请自编宫殿名，并附带 [背景: 嫔妃豪华内殿1]。
+7. 只要剧情提到了换场景(如:去御花园、回宫)，你必须在最后一行输出: [背景: 场景名]！
+8. 只要提到了升位份，必须在最后一行输出: [位份: 新位份]！`;
         }
 
         async function sendGameMessage() {
@@ -857,14 +895,19 @@ ${haremText}${wbText}${extraRules}
 
         function parseAndDisplayAI(text) {
             let cleanText = text;
-            const favorMatch = cleanText.match(/\[天宠([+-]\d+)\]/);
+            const favorMatch = cleanText.match(/\[天宠\s*([+-]\d+)\]/);
             if(favorMatch) { gameState.favor += parseInt(favorMatch[1]); document.getElementById('favor-val').innerText = gameState.favor; }
-            const rankMatch = cleanText.match(/\[位份[：:](.*?)\]/);
+            
+            const rankMatch = cleanText.match(/\[位份\s*[：:]\s*(.*?)\]/);
             if(rankMatch) { gameState.rank = rankMatch[1].trim(); showToast(`🌸 获封：${gameState.rank}`); }
-            const bgMatch = cleanText.match(/\[背景[：:](.*?)\]/);
-            if(bgMatch && bgMap[bgMatch[1].trim()]) { 
-                document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[bgMatch[1].trim()]}')`; 
-                document.getElementById('loc-display').innerText = `当前位置：${bgMatch[1].trim()}`;
+            
+            const bgMatch = cleanText.match(/\[背景\s*[：:]\s*(.*?)\]/);
+            if(bgMatch) { 
+                let targetBg = bgMatch[1].trim();
+                if(bgMap[targetBg]) {
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[targetBg]}')`; 
+                    document.getElementById('loc-display').innerText = `当前位置：${targetBg}`;
+                }
             }
 
             const upRegex = /\[更新[：:](.*?)\|(.*?)\|(.*?)\|(.*?)\]/g; let upMatch;
@@ -900,7 +943,10 @@ ${haremText}${wbText}${extraRules}
             
             if(msg.speaker.includes(gameState.empName) || msg.speaker.includes("皇帝") || msg.speaker.includes("皇上")) { 
                 if(gameState.empAvatar) {
-                    const p = document.getElementById('npc-framed-ingame'); p.src = gameState.empAvatar; p.style.display = 'block';
+                    const elId = gameState.isEmpTransparent ? 'npc-trans-ingame' : 'npc-framed-ingame';
+                    const p = document.getElementById(elId); 
+                    p.src = gameState.empAvatar; 
+                    p.style.display = 'block';
                 }
             } else if(msg.speaker === gameState.playerName || msg.speaker === "我") {
                 // 女主说话，右侧保持空
