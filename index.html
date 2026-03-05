@@ -55,24 +55,56 @@
         .emp-random-box { background: var(--emp-light); padding: 10px 15px; border-radius: 8px; border: 1px dashed var(--emp-main); margin-bottom: 10px;}
         .emp-btn-sm { background: var(--emp-dark); color: white; border: none; border-radius: 4px; padding: 3px 10px; cursor: pointer; font-family: inherit; }
 
-        /* ✨ 正式游玩界面 (面圣/宫斗) ✨ */
-        #gameplay-screen { padding: 0; background-image: url('https://i.postimg.cc/nzRWw6wT/huang-di-hui-ke-ting.jpg'); background-size: cover; background-position: center; position: relative; transition: background-image 1s ease-in-out; }
+        /* ✨ 正式游玩界面 ✨ */
+        #gameplay-screen { padding: 0; background-size: cover; background-position: center; position: relative; transition: background-image 1s ease-in-out; overflow: hidden; } 
         
         .game-time-display { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); color: white; padding: 6px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 2px solid #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.5); z-index: 50;}
+        .loc-display { position: absolute; top: 115px; left: 20px; color: white; text-shadow: 1px 1px 3px black; font-weight: bold; font-size: 15px; z-index: 50; background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 15px; }
 
-        /* 立绘与对话框防遮挡排版 */
-        .game-avatar { position: absolute; bottom: 32%; width: 120px; height: 180px; border-radius: 8px; object-fit: cover; box-shadow: 0 0 15px rgba(255,255,255,0.6); transition: opacity 0.5s, transform 0.5s; z-index: 15; border: 3px solid rgba(255,255,255,0.9);}
-        #player-avatar-ingame { left: 8%; }
-        #npc-avatar-ingame { right: 8%; opacity: 0; transform: translateX(20px); } 
-        .npc-active #npc-avatar-ingame { opacity: 1; transform: translateX(0); }
+        /* 📸 ✨ 双人同屏：最大化立绘防遮挡排版 ✨ 📸 */
+        
+        /* 透明大立绘：允许边缘裁切，放得极大 */
+        .portrait-trans { 
+            position: absolute; 
+            bottom: 50px; /* 被对话框遮住一点底部 */
+            height: 85%; 
+            max-height: 800px; 
+            max-width: 65%; /* 关键：各自最多占65%，不会完全重叠 */
+            object-fit: contain; 
+            z-index: 5; /* 在对话框之后 */
+            pointer-events: none; 
+            display: none; 
+            filter: drop-shadow(0 0 15px rgba(0,0,0,0.3)); 
+        }
+        .player-pos-trans { left: -10%; transform: scaleX(-1); } /* 左侧，裁掉一点左边缘 */
+        .npc-pos-trans { right: -10%; } /* 右侧，裁掉一点右边缘 */
 
-        .game-dialogue-box { position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; aspect-ratio: 16/9; background-image: url('https://i.postimg.cc/W1B4FyNP/IMG-3644.png'); background-size: 100% 100%; display: flex; flex-direction: column; padding: 12% 10% 5% 12%; box-sizing: border-box; z-index: 10; }
+        /* 拍立得相框：给皇帝或没抠图的照片用 */
+        .portrait-framed { 
+            position: absolute; 
+            bottom: 35%; 
+            width: 130px; 
+            height: 180px; 
+            object-fit: cover; 
+            border: 4px solid rgba(255,255,255,0.9); 
+            border-radius: 8px; 
+            box-shadow: 0 0 15px rgba(255,255,255,0.6); 
+            z-index: 15; 
+            background: #fff; 
+            display: none; 
+        }
+        .player-pos-framed { left: 8%; transform: rotate(-3deg); }
+        .npc-pos-framed { right: 8%; transform: rotate(3deg); }
+
+        /* 对话框 (z-index: 10) */
+        .game-dialogue-box { position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; aspect-ratio: 16/9; background-image: url('https://i.postimg.cc/W1B4FyNP/IMG-3644.png'); background-size: 100% 100%; display: flex; flex-direction: column; padding: 12% 10% 5% 12%; box-sizing: border-box; z-index: 10; cursor: pointer;}
         .speaker-name { font-size: 16px; font-weight: bold; color: #b8860b; margin-bottom: 5px; text-shadow: 1px 1px 2px white;}
         .dialogue-content { color: #4682b4; font-size: 16px; font-weight: bold; line-height: 1.6; letter-spacing: 1px; flex-grow: 1; overflow-y: auto;}
         
+        /* 输入框 - 永远不消失！ */
         .game-input-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); padding: 10px 20px; box-sizing: border-box; display: flex; gap: 10px; z-index: 20; border-top: 1px solid var(--main-color);}
         .game-input-bar input { flex-grow: 1; padding: 5px 15px; border: 1px solid var(--main-color); border-radius: 20px; outline: none; font-family: inherit; font-size: 15px; background: rgba(255,255,255,0.9); color: var(--text-color);}
-        .game-input-bar button { background: var(--dark-color); color: white; border: none; border-radius: 20px; padding: 0 20px; font-weight: bold; cursor: pointer; }
+        .game-input-bar button { background: var(--dark-color); color: white; border: none; border-radius: 20px; padding: 0 20px; font-weight: bold; cursor: pointer; transition: 0.2s;}
 
         /* ✨ 宫门地图面板 ✨ */
         .map-overlay { position: absolute; top: 15%; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(255,255,255,0.9); border: 3px solid var(--main-color); border-radius: 15px; padding: 20px; display: none; flex-direction: column; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.5);}
@@ -85,15 +117,24 @@
         /* ✨ 弹窗通用样式 ✨ */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 6000; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 85%; max-width: 400px; max-height: 80vh; overflow-y: auto; border: 3px solid var(--main-color); position: relative;}
+        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 85%; max-width: 500px; max-height: 85vh; overflow-y: auto; border: 3px solid var(--main-color); position: relative;}
         
         .favor-box { background: #fff0f5; border: 1px dashed #ff69b4; text-align: center; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; color: #d02090; font-size: 18px;}
         .wb-textarea { width: 100%; height: 200px; padding: 10px; border: 2px solid var(--main-color); border-radius: 10px; resize: none; outline: none; font-family: inherit; margin-bottom: 10px; box-sizing: border-box; }
         
-        .harem-card { background: var(--light-color); border: 1px solid var(--main-color); border-radius: 8px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
+        .harem-card { background: var(--light-color); border: 1px solid var(--main-color); border-radius: 8px; padding: 10px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; cursor: pointer; transition: 0.2s;}
+        .harem-card:hover { background: #fff0f5; border-color: #ff69b4; }
         .harem-title { font-weight: bold; color: var(--dark-color); font-size: 16px; border-bottom: 1px dashed var(--main-color); padding-bottom: 5px;}
         .harem-info { font-size: 13px; color: var(--text-color); display: flex; justify-content: space-between;}
         
+        /* 🌸 图文并茂的档案排版 🌸 */
+        .archive-layout { display: flex; gap: 15px; margin-top: 10px; }
+        .al-left { flex: 1.2; font-size: 14px; line-height: 1.6; color: var(--text-color); }
+        .al-right { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+        .al-img-framed { width: 110px; height: 150px; object-fit: cover; border: 4px solid white; border-radius: 5px; box-shadow: 0 5px 10px rgba(0,0,0,0.3); transform: rotate(2deg); }
+        .al-img-trans { width: 100%; max-height: 250px; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2)); }
+        .al-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 10px; padding: 10px; border-radius: 8px; border: 1px dashed var(--main-color); }
+
         .close-btn { background: var(--main-color); color: white; border: none; padding: 10px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; font-family: inherit;}
 
         /* --- API 设置 --- */
@@ -108,12 +149,16 @@
         <span></span><span></span><span></span>
     </div>
     <div class="menu-dropdown" id="menu-dropdown">
-        <div class="menu-item" onclick="switchScreen('start-screen')">重新开局</div>
-        <div class="menu-item" id="menu-stats-btn" style="display:none;" onclick="showPlayerStats()">查看属性</div>
+        <div class="menu-item" onclick="location.reload()">重启入宫</div>
+        <div class="menu-item" id="menu-stats-btn" style="display:none;" onclick="showPlayerStats()">查看我的档案</div>
         <div class="menu-item" id="menu-harem-btn" style="display:none; color: #d02090;" onclick="showHaremList()">后宫花名册</div>
         <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="showModal('wb-modal')">世界书设定</div>
         <div class="menu-item" id="menu-regen-btn" style="display:none; color: #e91e63;" onclick="regenerateLastResponse()">回溯(重塑)</div>
+        <div class="menu-item" onclick="exportSave()">💾 导出存档</div>
+        <div class="menu-item" onclick="document.getElementById('import-file').click()">📂 导入存档</div>
         <div class="menu-item" onclick="switchScreen('api-screen')">API设置</div>
+        <input type="file" id="import-file" hidden accept=".json" onchange="importSave(event)">
+        <a id="downloadAnchorElem" style="display:none"></a>
     </div>
 
     <div id="start-screen" class="screen active" style="overflow-y:auto;">
@@ -124,9 +169,12 @@
             <div class="header-bar"><div class="header-placeholder"></div><div class="header-title">💠 水云间 · 选秀名册 💠</div><div class="header-placeholder"></div></div>
             
             <div class="top-section">
-                <div class="avatar-box" onclick="document.getElementById('upload-avatar').click()">
-                    <img id="avatar-preview" src="" alt="点击上传" style="display:none;">
-                    <span id="avatar-hint" style="font-size: 12px; color: var(--dark-color);">呈上小像</span>
+                <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                    <div class="avatar-box"><img id="avatar-preview" src="" alt="点击上传" style="display:none;"><span id="avatar-hint" style="font-size: 12px; color: var(--dark-color);">呈上小像</span></div>
+                    <div style="display:flex; gap:5px; width: 120px;">
+                        <button class="btn-sm" style="flex:1; background:#e91e63; font-size:12px; padding:4px 0;" onclick="openPresetModal()">👗 选立绘</button>
+                        <button class="btn-sm" style="flex:1; background:var(--dark-color); font-size:12px; padding:4px 0;" onclick="document.getElementById('upload-avatar').click()">📸 传照片</button>
+                    </div>
                 </div>
                 <input type="file" id="upload-avatar" hidden accept="image/*" onchange="handleImage(this, 'player')">
                 
@@ -142,6 +190,15 @@
             <div class="stats-grid" id="stats-grid"></div>
             <div class="pts-row">潜能：<span id="pts-left">10</span></div>
             <button class="submit-btn" id="submit-btn" onclick="goToEmperorSettings()">✨ 呈递名册，设置帝王 ✨</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="preset-modal" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content">
+            <h3 style="text-align:center; color:var(--dark-color); margin-top:0;">👗 挑选初始立绘</h3>
+            <p style="font-size:12px; color:#666; text-align:center;">选中后，将常驻在游戏左侧陪伴您</p>
+            <div class="stats-grid" id="preset-avatar-list" style="grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+            <button class="close-btn" onclick="document.getElementById('preset-modal').classList.remove('active')">关闭</button>
         </div>
     </div>
 
@@ -180,42 +237,88 @@
 
     <div id="gameplay-screen" class="screen">
         <button class="back-btn" id="leave-scene-btn" style="position:absolute; top:75px; left:20px; z-index:50;" onclick="showMap()">‹ 离开当前场景</button>
-        <div class="game-time-display" id="game-time">入宫1年1月 第1天</div>
+        <div class="loc-display" id="loc-display">当前位置：皇帝正殿</div>
+        <div class="game-time-display" id="game-time">入宫1年1月 上旬</div>
         
-        <img id="player-avatar-ingame" class="game-avatar" src="" style="display:none;">
-        <img id="npc-avatar-ingame" class="game-avatar" src="" style="display:none;">
+        <img id="player-trans-ingame" class="portrait-trans player-pos-trans" src="">
+        <img id="player-framed-ingame" class="portrait-framed player-pos-framed" src="">
+
+        <img id="npc-trans-ingame" class="portrait-trans npc-pos-trans" src="">
+        <img id="npc-framed-ingame" class="portrait-framed npc-pos-framed" src="">
 
         <div class="map-overlay" id="map-overlay">
             <h3 style="text-align:center; color: var(--dark-color); margin-top:0;">🗺️ 宫门导航 🗺️</h3>
             <div class="map-grid">
-                <button class="map-btn" onclick="enterLocation('皇帝寝宫')">皇帝寝宫</button>
+                <button class="map-btn" onclick="enterLocation('御膳房')">御膳房</button>
                 <button class="map-btn" onclick="enterLocation('御书房')">御书房</button>
                 <button class="map-btn" onclick="enterLocation('御花园白天1')">御花园</button>
                 <button class="map-btn" onclick="enterLocation('太医院')">太医院</button>
-                <button class="map-btn" onclick="enterLocation('嫔妃豪华内殿1')">拜访妃嫔</button>
+                <button class="map-btn" onclick="startVisit()">拜访妃嫔</button>
                 <button class="map-btn" onclick="enterLocation('女主卧室')">回自己寝宫</button>
             </div>
-            <button class="next-month-btn" onclick="endDay()">🌙 结束今日 (敬事房通报)</button>
+            <button class="next-month-btn" onclick="endDay()">🌙 结束本旬 (推进时间与结算)</button>
         </div>
 
-        <div class="game-dialogue-box" id="dialogue-container">
+        <div class="game-dialogue-box" id="dialogue-container" onclick="showNextDialogue()">
             <div class="speaker-name" id="speaker-name">系统</div>
             <div class="dialogue-content" id="dialogue-text">殿选正式开始。</div>
+            <div class="click-hint" id="click-hint" style="display:none;">▼ 点击继续 ▼</div>
         </div>
 
         <div class="game-input-bar" id="input-container">
-            <input type="text" id="game-input" placeholder="格式：（动作）说的话" onkeypress="if(event.key==='Enter') sendGameMessage()">
+            <input type="text" id="game-input" placeholder="格式：（动作）说的话，留空则顺其自然..." onkeypress="if(event.key==='Enter') sendGameMessage()">
             <button onclick="sendGameMessage()" id="send-btn">发 送</button>
         </div>
     </div>
 
     <div class="modal-overlay" id="stats-modal" onclick="if(event.target==this) this.classList.remove('active')">
-        <div class="modal-content">
-            <h3 style="text-align:center; color: var(--dark-color); margin-top:0;">🌸 玩家属性 🌸</h3>
+        <div class="modal-content" style="background: #fff0f5; border-color: #ff69b4;">
+            <h3 style="text-align:center; color: var(--dark-color); margin-top:0;">🌸 我的档案 🌸</h3>
             <div class="favor-box">👑 当前天宠：<span id="favor-val">0</span> 👑</div>
-            <div class="stats-grid" id="modal-stats-grid" style="grid-template-columns: 1fr 1fr; gap:10px;">
+            <div class="archive-layout">
+                <div class="al-left">
+                    <p style="margin:5px 0;"><b>姓名：</b><span id="player-name-val"></span></p>
+                    <p style="margin:5px 0;"><b>位份：</b><span id="player-rank-val" style="color:#b8860b; font-weight:bold;"></span></p>
+                    <p style="margin:5px 0;"><b>家世：</b><span id="player-bg-display"></span></p>
+                    <p style="margin:5px 0;"><b>孕期：</b><span id="player-preg-val" style="color:#e91e63;"></span></p>
+                    <p style="margin:5px 0;"><b>子嗣：</b><span id="player-child-val" style="color:#4682b4;"></span></p>
+                    <div class="al-grid" id="modal-stats-grid" style="background: rgba(255,255,255,0.7);"></div>
                 </div>
-            <button class="close-btn" style="margin-top:15px;" onclick="document.getElementById('stats-modal').classList.remove('active')">关闭面板</button>
+                <div class="al-right">
+                    <img id="player-detail-img" src="" alt="立绘">
+                </div>
+            </div>
+            <button class="close-btn" style="margin-top:15px; background:#ff69b4;" onclick="document.getElementById('stats-modal').classList.remove('active')">合上档案</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="harem-modal" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content">
+            <h3 style="text-align:center; color: #d02090; margin-top:0;">🪷 后宫花名册 🪷</h3>
+            <p style="font-size:12px; color:#666; text-align:center;">点击名牌查看详细档案</p>
+            <div id="harem-list-container"></div>
+            <button class="close-btn" style="margin-top:15px; background: #d02090;" onclick="document.getElementById('harem-modal').classList.remove('active')">合上名册</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="concubine-detail-modal" style="z-index: 6100;" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content" style="background: #e0f7fa; border-color: #87cefa;">
+            <h3 style="text-align:center; color:#d02090; margin-top:0;" id="cd-title-name">妃嫔档案</h3>
+            <div class="archive-layout">
+                <div class="al-left">
+                    <p style="margin:5px 0;"><b>家世：</b><span id="cd-bg"></span></p>
+                    <p style="margin:5px 0;"><b>圣宠：</b><span id="cd-favor" style="color:#b8860b; font-weight:bold;"></span></p>
+                    <p style="margin:5px 0;"><b>性格：</b><span id="cd-personality"></span></p>
+                    <p style="margin:5px 0;"><b>孕期：</b><span id="cd-preg" style="color:#e91e63;"></span></p>
+                    <p style="margin:5px 0;"><b>子嗣：</b><span id="cd-child" style="color:#4682b4;"></span></p>
+                    <p style="margin:5px 0;"><b>对你好感：</b><span id="cd-affection"></span></p>
+                    <div class="al-grid" id="cd-stats-grid" style="background: rgba(255,255,255,0.7);"></div>
+                </div>
+                <div class="al-right">
+                    <img id="cd-img" src="" alt="立绘">
+                </div>
+            </div>
+            <button class="close-btn" style="background:#d02090;" onclick="document.getElementById('concubine-detail-modal').classList.remove('active')">返回花名册</button>
         </div>
     </div>
 
@@ -228,18 +331,9 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="harem-modal" onclick="if(event.target==this) this.classList.remove('active')">
-        <div class="modal-content">
-            <h3 style="text-align:center; color: #d02090; margin-top:0;">🪷 后宫花名册 🪷</h3>
-            <div id="harem-list-container">
-                </div>
-            <button class="close-btn" style="margin-top:15px; background: #d02090;" onclick="document.getElementById('harem-modal').classList.remove('active')">合上名册</button>
-        </div>
-    </div>
-
     <div id="api-screen" class="screen">
         <div class="draft-container">
-            <div class="header-bar"><button class="back-btn" onclick="switchScreen('start-screen')">‹ 返回</button><div class="header-title">⚙️ API 设置</div><div class="header-placeholder"></div></div>
+            <div class="header-bar"><button class="back-btn" onclick="backFromApi()">‹ 返回</button><div class="header-title">⚙️ API 设置</div><div class="header-placeholder"></div></div>
             <form id="api-form">
                 <div class="form-group"><label>服务商</label><select id="api-provider"><option value="newapi">OpenAI格式</option><option value="gemini">Gemini</option></select></div>
                 <div class="form-group"><label>API 地址</label><input type="url" id="api-url" required></div>
@@ -257,14 +351,123 @@
 
     <script>
         /* =========================================================
-           🌟 妃嫔立绘库拓展区 🌟 
+           ✨ 全局状态与基础功能 ✨
         ========================================================= */
-        const npcAvatarLibrary = [
-            "https://i.postimg.cc/MTgkdnT0/cgi-bin-mmwebwx-bin-webwxgetmsgimg-Msg-ID-7245049807259911026-skey-crypt-2911baa7-25595c68d7065c8.jpg",
-            // "https://i.postimg.cc/xxxxxx.jpg", 
+        const periods = ['上旬', '中旬', '下旬'];
+        let prevScreen = 'start-screen';
+        
+        const defaultState = {
+            playerAvatar: '', empAvatar: '', playerName: '', empName: '',
+            favor: 0, year: 1, month: 1, period: 0, rank: '待定', 
+            pregnancy: 0, children: [], 
+            worldbook: '', harem: [], history: [], isGenerating: false, currentLoc: '皇帝正殿',
+            isPlayerTransparent: false 
+        };
+        let gameState = JSON.parse(JSON.stringify(defaultState));
+        let dialogueQueue = []; let isTyping = false; let typeTimer = null;
+
+        function updateTimeDisplay() { 
+            document.getElementById('game-time').innerText = `入宫${gameState.year}年${gameState.month}月 ${periods[gameState.period]}`; 
+        }
+
+        const menuToggle = document.getElementById('menu-toggle');
+        const menuDropdown = document.getElementById('menu-dropdown');
+        menuToggle.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('active'); });
+        document.body.addEventListener('click', () => { menuDropdown.classList.remove('active'); });
+
+        function switchScreen(screenId) {
+            let current = document.querySelector('.screen.active');
+            if(current && current.id !== 'api-screen') prevScreen = current.id;
+            
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if(screenId === 'gameplay-screen') {
+                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn'].forEach(id=>document.getElementById(id).style.display='block');
+            } else {
+                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn'].forEach(id=>document.getElementById(id).style.display='none');
+            }
+        }
+        function backFromApi() { switchScreen(prevScreen); }
+        function showToast(msg) { const toast = document.getElementById('toast'); toast.textContent = msg; toast.style.display = 'block'; setTimeout(() => toast.style.display = 'none', 3000); }
+        function showModal(modalId) { document.getElementById(modalId).classList.add('active'); menuDropdown.classList.remove('active'); }
+
+        // ✨ 纯古风形容词翻译器
+        function getAncientAttr(type, value) {
+            let level = 0;
+            if(value <= 2) level = 0; else if(value <= 4) level = 1; else if(value <= 6) level = 2; else if(value <= 8) level = 3; else level = 4;
+            const words = {
+                'charm': ['貌若无盐', '小家碧玉', '楚楚动人', '沉鱼落雁', '绝代倾城'],
+                'intel': ['愚笨粗鄙', '略通文墨', '冰雪聪明', '蕙质兰心', '咏絮之才'],
+                'cunning': ['天真烂漫', '涉世未深', '八面玲珑', '城府极深', '算无遗策'],
+                'dance': ['肢体僵硬', '略懂音律', '身姿蹁跹', '惊鸿一舞', '一舞倾城'],
+                'needle': ['笨手笨脚', '勉强缝补', '穿针引线', '绣工精湛', '巧夺天工'],
+                'health': ['弱不禁风', '娇喘微微', '平安康健', '气血充盈', '龙精虎猛'], 
+                'luck': ['厄运缠身', '命途多舛', '吉人天相', '洪福齐天', '天命之女'],
+                'charisma': ['黯淡无光', '泯然众人', '惹人怜爱', '风情万种', '颠倒众生']
+            };
+            const names = {'charm':'容貌', 'intel':'才智', 'cunning':'心机', 'dance':'歌舞', 'needle':'女红', 'health':'体质', 'luck':'福源', 'charisma':'魅力'};
+            return `<b>${names[type]}：</b>${words[type][level]}`;
+        }
+
+        /* ================= 永久兼容的存读档 ================= */
+        function exportSave() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gameState));
+            const dl = document.getElementById('downloadAnchorElem'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "水云间存档.json"); dl.click();
+            document.getElementById('menu-dropdown').classList.remove('active'); showToast("存档已导出！");
+        }
+        function importSave(e) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try { 
+                    let loadedState = JSON.parse(e.target.result); 
+                    // 新旧存档融合，防止缺少字段报错
+                    gameState = Object.assign({}, defaultState, loadedState);
+                    
+                    updateTimeDisplay(); 
+                    document.getElementById('loc-display').innerText = `当前位置：${gameState.currentLoc}`; 
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[gameState.currentLoc] || bgMap['女主卧室']}')`; 
+                    
+                    // 恢复左侧女主立绘常驻
+                    if(gameState.playerAvatar) {
+                        const pid = gameState.isPlayerTransparent ? 'player-trans-ingame' : 'player-framed-ingame';
+                        document.getElementById(pid).src = gameState.playerAvatar;
+                        document.getElementById(pid).style.display = 'block';
+                    }
+                    switchScreen('gameplay-screen'); showToast("存档导入成功！"); 
+                } 
+                catch(err) { showToast("存档损坏或格式错误！"); }
+            }; reader.readAsText(file);
+        }
+
+        /* ================= 秀女系统 ================= */
+        let basePts = 10; let currentBgCost = 0; 
+        const statsConfig = { 'charm': { name: '容貌', v: 5 }, 'intel': { name: '才智', v: 5 }, 'cunning': { name: '心机', v: 5 }, 'dance': { name: '歌舞', v: 5 }, 'needle': { name: '女红', v: 5 }, 'health': { name: '体质', v: 5 }, 'luck': { name: '福源', v: 5 }, 'charisma': { name: '魅力', v: 5 } };
+        const backgrounds = [ { name: '正一品太傅嫡女', cost: 5 }, { name: '从二品总督庶女', cost: 4 }, { name: '正三品巡抚嫡女', cost: 3 }, { name: '皇商世家嫡女', cost: 2 }, { name: '江南富商之女', cost: 1 }, { name: '武林世家传人', cost: 0 }, { name: '正四品知府庶女', cost: -1 }, { name: '异国献祭贡女', cost: -2 }, { name: '从六品州判嫡女', cost: -2 }, { name: '正八品县丞之女', cost: -3 }, { name: '没落侯府庶女', cost: -4 }, { name: '平民百姓之女', cost: -5 } ];
+
+        function calculateRemainingPts() { let cost = 0; for(let k in statsConfig) cost += (statsConfig[k].v - 5); return basePts - currentBgCost - cost; }
+        function renderStats() {
+            const grid = document.getElementById('stats-grid'); grid.innerHTML = ''; let rem = calculateRemainingPts();
+            for(let key in statsConfig) { grid.innerHTML += `<div class="stat-item"><span>${statsConfig[key].name}</span><div class="stat-controls"><button class="btn-pt" onclick="modStat('${key}',-1)">-</button><span style="width:16px;text-align:center;">${statsConfig[key].v}</span><button class="btn-pt" onclick="modStat('${key}',1)">+</button></div></div>`; }
+            document.getElementById('pts-left').innerText = rem; document.getElementById('submit-btn').disabled = rem < 0; document.getElementById('submit-btn').innerText = rem < 0 ? "⛔ 潜能透支" : "✨ 呈递名册，设置帝王 ✨";
+        }
+        function modStat(k, d) { let rem = calculateRemainingPts(); if(d>0 && rem>0 && statsConfig[k].v<10) statsConfig[k].v++; else if(d<0 && statsConfig[k].v>0) statsConfig[k].v--; renderStats(); }
+        function rollAge() { document.getElementById('age-val').innerText = Math.floor(Math.random()*5)+15; }
+        function rollBg() { const bg = backgrounds[Math.floor(Math.random()*backgrounds.length)]; currentBgCost = bg.cost; document.getElementById('bg-val').innerText = bg.name; document.getElementById('bg-cost-val').innerText = `(${bg.cost>0?'-':'+'}${Math.abs(bg.cost)}点)`; renderStats(); }
+        
+        /* ✨ 绝美立绘素材库 ✨ */
+        const playerPresets = [
+            { name: "清雅绝尘", url: "https://i.postimg.cc/Tw5H4vtY/550jia-zeng-san.png" },
+            { name: "青花瓷韵", url: "https://i.postimg.cc/90Ggct3n/sheng-qi-5-qing-hua-ci-da-bao-ban-shen-zeng-pin.png" }
         ];
 
-        /* ================= 场景系统映射库 ================= */
+        const portraitPools = {
+            level0_2: [ "https://i.postimg.cc/vDR50pcw/shen-gong-qu-xy-insvaas9-109.png", "https://i.postimg.cc/yWq0Lwkx/shen-gong-qu-xy-insvaas9-1148.png", "https://i.postimg.cc/YjcQdJhv/shen-gong-qu-xy-insvaas9-1569.png", "https://i.postimg.cc/Lhdjxrn6/shen-gong-qu-xy-insvaas9-174.png", "https://i.postimg.cc/QVLcfRHX/shen-gong-qu-xy-insvaas9-239.png", "https://i.postimg.cc/qgf219zp/shen-gong-qu-xy-insvaas9-240.png", "https://i.postimg.cc/z3mTx9VD/shen-gong-qu-xy-insvaas9-938.png" ],
+            level3_4: [ "https://i.postimg.cc/brZRCxg6/shen-gong-qu-xy-insvaas9-1030.png", "https://i.postimg.cc/MHnYP75D/shen-gong-qu-xy-insvaas9-1439.png", "https://i.postimg.cc/hvX0yLss/shen-gong-qu-xy-insvaas9-1449.png", "https://i.postimg.cc/BbjCYTpm/shen-gong-qu-xy-insvaas9-1612.png", "https://i.postimg.cc/tJszS3k8/shen-gong-qu-xy-insvaas9-2200.png", "https://i.postimg.cc/prmBGfkN/shen-gong-qu-xy-insvaas9-2268.png", "https://i.postimg.cc/BbRBdj7V/shen-gong-qu-xy-insvaas9-2921.png", "https://i.postimg.cc/85KHmKRb/shen-gong-qu-xy-insvaas9-700.png" ],
+            level5_6: [ "https://i.postimg.cc/MKh9LFhD/shen-gong-qu-xy-insvaas9-1445.png", "https://i.postimg.cc/CLWc2QWc/shen-gong-qu-xy-insvaas9-2729.png", "https://i.postimg.cc/PrBS7RBZ/shen-gong-qu-xy-insvaas9-342.png", "https://i.postimg.cc/dtz5fxzr/shen-gong-qu-xy-insvaas9-343.png", "https://i.postimg.cc/8PqZY0qj/shen-gong-qu-xy-insvaas9-50.png", "https://i.postimg.cc/Hsf6Nhf4/shen-gong-qu-xy-insvaas9-893.png" ],
+            level7_8: [ "https://i.postimg.cc/VN9ZnWZ5/shen-gong-qu-xy-insvaas9-1133.png", "https://i.postimg.cc/LskQL3Q5/shen-gong-qu-xy-insvaas9-2447.png", "https://i.postimg.cc/6QVbnfb3/shen-gong-qu-xy-insvaas9-2480.png", "https://i.postimg.cc/nLKSBGSG/shen-gong-qu-xy-insvaas9-2548.png", "https://i.postimg.cc/d0RNrjNW/shen-gong-qu-xy-insvaas9-2745.png", "https://i.postimg.cc/3wQbkc1Y/shen-gong-qu-xy-insvaas9-404.png", "https://i.postimg.cc/W4mYgwY4/shen-gong-qu-xy-insvaas9-414.png" ],
+            level9_10: [ "https://i.postimg.cc/RF59Vd6n/晏生_兰时.png", "https://i.postimg.cc/TwMGY0LD/限时加赠二_兰时.png", "https://i.postimg.cc/rF8VrfhW/青雀师妹_兰时.png" ]
+        };
         const bgMap = {
             "皇帝正殿": "https://i.postimg.cc/nzRWw6wT/huang-di-hui-ke-ting.jpg", "女主卧室": "https://i.postimg.cc/Dzy0rGVr/gu-feng-chang-jing-wo-shi.jpg",
             "皇帝寝宫": "https://i.postimg.cc/yNb10rXt/huang-di-qin-gong-bai-tian-ban-ben.jpg", "后宫闲聊处": "https://i.postimg.cc/6p4Y98bZ/后宫闲聊处.jpg",
@@ -276,116 +479,56 @@
             "宫宴": "https://i.postimg.cc/MG12dyNq/gong-yan.jpg"
         };
 
-        /* ================= 全局状态与基础 ================= */
-        let gameState = {
-            playerAvatar: '', empAvatar: '', playerName: '', empName: '',
-            favor: 0, year: 1, month: 1, day: 1, rank: '待定', pregnancy: 0, worldbook: '',
-            harem: [], history: [], isGenerating: false
-        };
-        
-        const menuToggle = document.getElementById('menu-toggle');
-        const menuDropdown = document.getElementById('menu-dropdown');
-        menuToggle.addEventListener('click', (e) => { e.stopPropagation(); menuDropdown.classList.toggle('active'); });
-        document.body.addEventListener('click', () => { menuDropdown.classList.remove('active'); });
-
-        function switchScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            
-            if(screenId === 'gameplay-screen') {
-                document.getElementById('menu-stats-btn').style.display = 'block';
-                document.getElementById('menu-regen-btn').style.display = 'block';
-                document.getElementById('menu-wb-btn').style.display = 'block';
-                document.getElementById('menu-harem-btn').style.display = 'block';
-            } else {
-                document.getElementById('menu-stats-btn').style.display = 'none';
-                document.getElementById('menu-regen-btn').style.display = 'none';
-                document.getElementById('menu-wb-btn').style.display = 'none';
-                document.getElementById('menu-harem-btn').style.display = 'none';
-            }
+        function openPresetModal() {
+            const list = document.getElementById('preset-avatar-list'); list.innerHTML = '';
+            playerPresets.forEach(p => {
+                list.innerHTML += `
+                <div class="stat-item" style="flex-direction:column; cursor:pointer; padding:5px; border-color:var(--main-color);" onclick="selectPreset('${p.url}')">
+                    <img src="${p.url}" style="width:100%; height:130px; object-fit:contain; border-radius:4px; background:#f0f8ff;">
+                    <span style="margin-top:5px; font-weight:bold; color:var(--dark-color);">${p.name}</span>
+                </div>`;
+            }); showModal('preset-modal');
         }
-        function showToast(msg) { const toast = document.getElementById('toast'); toast.textContent = msg; toast.style.display = 'block'; setTimeout(() => toast.style.display = 'none', 3000); }
-        function showModal(modalId) { document.getElementById(modalId).classList.add('active'); menuDropdown.classList.remove('active'); }
 
-        /* ================= 秀女系统 (完整的12个家世) ================= */
-        let basePts = 10; let currentBgCost = 0; 
-        const statsConfig = {
-            'charm': { name: '容貌', v: 5 }, 'intel': { name: '才智', v: 5 }, 'cunning': { name: '心机', v: 5 }, 'dance': { name: '歌舞', v: 5 },
-            'needle': { name: '女红', v: 5 }, 'health': { name: '体质', v: 5 }, 'luck': { name: '福源', v: 5 }, 'charisma': { name: '魅力', v: 5 }
-        };
-        const backgrounds = [
-            { name: '正一品太傅嫡女', cost: 5 }, { name: '从二品总督庶女', cost: 4 }, { name: '正三品巡抚嫡女', cost: 3 }, { name: '皇商世家嫡女', cost: 2 },
-            { name: '江南富商之女', cost: 1 }, { name: '武林世家传人', cost: 0 }, { name: '正四品知府庶女', cost: -1 }, { name: '异国献祭贡女', cost: -2 },
-            { name: '从六品州判嫡女', cost: -2 }, { name: '正八品县丞之女', cost: -3 }, { name: '没落侯府庶女', cost: -4 }, { name: '平民百姓之女', cost: -5 }
-        ];
-
-        function calculateRemainingPts() { let cost = 0; for(let k in statsConfig) cost += (statsConfig[k].v - 5); return basePts - currentBgCost - cost; }
-        function renderStats() {
-            const grid = document.getElementById('stats-grid'); grid.innerHTML = ''; let rem = calculateRemainingPts();
-            for(let key in statsConfig) {
-                grid.innerHTML += `<div class="stat-item"><span>${statsConfig[key].name}</span><div class="stat-controls"><button class="btn-pt" onclick="modStat('${key}',-1)">-</button><span style="width:16px;text-align:center;">${statsConfig[key].v}</span><button class="btn-pt" onclick="modStat('${key}',1)">+</button></div></div>`;
-            }
-            document.getElementById('pts-left').innerText = rem;
-            document.getElementById('submit-btn').disabled = rem < 0;
-            document.getElementById('submit-btn').innerText = rem < 0 ? "⛔ 潜能透支" : "✨ 呈递名册，设置帝王 ✨";
+        function selectPreset(url) {
+            gameState.playerAvatar = url; gameState.isPlayerTransparent = true;
+            document.getElementById('avatar-preview').src = url; document.getElementById('avatar-preview').style.display = 'block'; document.getElementById('avatar-hint').style.display = 'none';
+            document.getElementById('preset-modal').classList.remove('active');
+            document.getElementById('sys-feedback').innerHTML = "【系统】已换上绝美透明大立绘！(容貌+2)";
+            statsConfig['charm'].v = Math.min(10, statsConfig['charm'].v + 2); renderStats();
         }
-        function modStat(k, d) { let rem = calculateRemainingPts(); if(d>0 && rem>0 && statsConfig[k].v<10) statsConfig[k].v++; else if(d<0 && statsConfig[k].v>0) statsConfig[k].v--; renderStats(); }
-        function rollAge() { document.getElementById('age-val').innerText = Math.floor(Math.random()*5)+15; }
-        function rollBg() { const bg = backgrounds[Math.floor(Math.random()*backgrounds.length)]; currentBgCost = bg.cost; document.getElementById('bg-val').innerText = bg.name; document.getElementById('bg-cost-val').innerText = `(${bg.cost>0?'-':'+'}${Math.abs(bg.cost)}点)`; renderStats(); }
-        
-        /* 📸 嬷嬷看脸：视觉大模型接口 */
+
         async function handleImage(input, type) {
             if(input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = async function(e) {
                     const base64Img = e.target.result;
                     if(type === 'player') {
-                        document.getElementById('avatar-preview').src = base64Img; document.getElementById('avatar-preview').style.display = 'block'; document.getElementById('avatar-hint').style.display = 'none';
-                        gameState.playerAvatar = base64Img;
-                        
-                        const feedbackEl = document.getElementById('sys-feedback');
-                        feedbackEl.style.color = "var(--dark-color)";
-                        feedbackEl.innerHTML = "嬷嬷正在连线西洋画师(AI)验看小像...";
-                        
+                        gameState.isPlayerTransparent = false; 
+                        document.getElementById('avatar-preview').src = base64Img; document.getElementById('avatar-preview').style.display = 'block'; document.getElementById('avatar-hint').style.display = 'none'; gameState.playerAvatar = base64Img;
+                        const feedbackEl = document.getElementById('sys-feedback'); feedbackEl.innerHTML = "嬷嬷正在连线AI验看小像...";
                         const savedApi = JSON.parse(localStorage.getItem('palace_api_settings') || '{}');
                         if(savedApi.url && savedApi.key) {
                             try {
-                                const sysPrompt = "你是一位刻薄的清宫教引嬷嬷。请根据玩家上传的照片（小像）颜值进行评价。必须且只能返回固定格式：评语|数字。数字在-5到+5之间。示例：『面容清秀，算是个可人儿。』|+3";
+                                const sysPrompt = "你是一位刻薄的清宫嬷嬷。评价照片颜值。必须且只能返回：评语|数字（-5到+5）。";
                                 let fetchUrl, headers, requestBody;
                                 if(savedApi.provider === 'gemini') {
                                     const mimeType = base64Img.match(/data:(.*?);/)[1]; const rawBase64 = base64Img.split(',')[1];
                                     fetchUrl = `${savedApi.url}/v1beta/models/${savedApi.model}:generateContent?key=${savedApi.key}`;
-                                    headers = { 'Content-Type': 'application/json' };
-                                    requestBody = { contents: [{ parts: [ { text: sysPrompt }, { inline_data: { mime_type: mimeType, data: rawBase64 } } ] }] };
+                                    headers = { 'Content-Type': 'application/json' }; requestBody = { contents: [{ parts: [ { text: sysPrompt }, { inline_data: { mime_type: mimeType, data: rawBase64 } } ] }] };
                                 } else {
-                                    fetchUrl = `${savedApi.url}/v1/chat/completions`;
-                                    headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedApi.key}` };
+                                    fetchUrl = `${savedApi.url}/v1/chat/completions`; headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedApi.key}` };
                                     requestBody = { model: savedApi.model, messages: [{ role: "user", content: [ { type: "text", text: sysPrompt }, { type: "image_url", image_url: { url: base64Img } } ] }] };
                                 }
                                 const res = await fetch(fetchUrl, { method: 'POST', headers, body: JSON.stringify(requestBody) });
-                                if(!res.ok) throw new Error("API无视觉支持或错误");
                                 const json = await res.json();
                                 let aiText = savedApi.provider === 'gemini' ? json.candidates[0].content.parts[0].text : json.choices[0].message.content;
-                                const parts = aiText.split('|');
-                                let scoreChange = parts[1] ? parseInt(parts[1].replace('+', '')) : 0; if(isNaN(scoreChange)) scoreChange = 0;
-                                let newCharm = Math.max(0, Math.min(10, statsConfig['charm'].v + scoreChange));
-                                let actualChange = newCharm - statsConfig['charm'].v;
-                                statsConfig['charm'].v = newCharm;
-                                feedbackEl.innerHTML = `嬷嬷：${parts[0]||'不予置评。'} (容貌${actualChange>0?'+':''}${actualChange})`;
-                                renderStats();
-                            } catch(err) {
-                                feedbackEl.innerHTML = "【识图失败】需在API设置里配置带Vision模型，随机给个(容貌+1)";
-                                if(statsConfig['charm'].v <= 9) statsConfig['charm'].v += 1; renderStats();
-                            }
-                        } else {
-                            feedbackEl.innerHTML = "【未配置API】请先配置API。随机(容貌+1)";
-                            if(statsConfig['charm'].v <= 9) statsConfig['charm'].v += 1; renderStats();
-                        }
-
-                    } else {
-                        document.getElementById('emp-avatar-preview').src = base64Img; document.getElementById('emp-avatar-preview').style.display = 'block'; document.getElementById('emp-avatar-hint').style.display = 'none';
-                        gameState.empAvatar = base64Img;
-                    }
+                                const parts = aiText.split('|'); let scoreChange = parseInt(parts[1]) || 0;
+                                statsConfig['charm'].v = Math.max(0, Math.min(10, statsConfig['charm'].v + scoreChange));
+                                feedbackEl.innerHTML = `嬷嬷：${parts[0]||'不予置评。'} (容貌${scoreChange>0?'+':''}${scoreChange})`; renderStats();
+                            } catch(err) { feedbackEl.innerHTML = "【识图失败】随机(容貌+1)"; if(statsConfig['charm'].v <= 9) statsConfig['charm'].v += 1; renderStats(); }
+                        } else { feedbackEl.innerHTML = "【未配置API】随机(容貌+1)"; if(statsConfig['charm'].v <= 9) statsConfig['charm'].v += 1; renderStats(); }
+                    } else { document.getElementById('emp-avatar-preview').src = base64Img; document.getElementById('emp-avatar-preview').style.display = 'block'; document.getElementById('emp-avatar-hint').style.display = 'none'; gameState.empAvatar = base64Img; }
                 }
                 reader.readAsDataURL(input.files[0]);
             }
@@ -393,129 +536,209 @@
         function goToEmperorSettings() { if(calculateRemainingPts() < 0) return; switchScreen('emperor-setting-screen'); rollEmpAge(); rollEmpPersonality(); rollEmpStats(); rollDowagerPersonality(); }
 
         /* ================= 皇帝系统 ================= */
-        const empPersonalities = ['风流', '刚正', '温柔', '冷漠', '天真']; const dowagerPersonalities = ['精敏', '避世', '擅权', '亲和'];
         function rollEmpAge() { document.getElementById('emp-age-val').innerText = Math.floor(Math.random()*9)+18; } 
-        function rollEmpPersonality() { document.getElementById('emp-personality-val').innerText = empPersonalities[Math.floor(Math.random()*empPersonalities.length)]; }
-        function rollDowagerPersonality() { document.getElementById('dowager-personality-val').innerText = dowagerPersonalities[Math.floor(Math.random()*dowagerPersonalities.length)]; }
+        function rollEmpPersonality() { document.getElementById('emp-personality-val').innerText = ['风流', '刚正', '温柔', '冷漠', '天真'][Math.floor(Math.random()*5)]; }
+        function rollDowagerPersonality() { document.getElementById('dowager-personality-val').innerText = ['精敏', '避世', '擅权', '亲和'][Math.floor(Math.random()*4)]; }
         function rollEmpStats() { document.getElementById('emp-charm-val').innerText=Math.floor(Math.random()*6)+5; document.getElementById('emp-influence-val').innerText=Math.floor(Math.random()*6)+5; document.getElementById('emp-power-val').innerText=Math.floor(Math.random()*6)+5; }
 
-        /* ================= 🌟 游戏核心 (大地图/后宫/翻牌子) 🌟 ================= */
-        function updateTimeDisplay() { document.getElementById('game-time').innerText = `入宫${gameState.year}年${gameState.month}月 第${gameState.day}天`; }
-
-        // 🌟 生成后宫 
+        /* ================= 🌟 绝对不重复：生成带有绝美立绘与家世的后宫 🌟 ================= */
+        function getInitRank(age) { if(age > 20) return ["妃", "嫔", "贵人"][Math.floor(Math.random()*3)]; if(age > 18) return ["嫔", "贵人", "常在"][Math.floor(Math.random()*3)]; return ["贵人", "常在", "答应"][Math.floor(Math.random()*3)]; }
+        
         function generateHarem() {
-            let harem = [];
-            harem.push({ title: '慜', rank: '贵妃', name: '朴敏珠', age: 21, favor: 35, personality: '清冷(Lesbian)', affection: 30 });
+            let h = [];
+            // 深拷贝立绘池，用于防重复抽卡
+            let tempPools = JSON.parse(JSON.stringify(portraitPools));
             
-            const titles = ["婉", "华", "宁", "丽", "静", "惠", "顺", "娇", "熙", "敬", "端", "舒", "嘉", "纯", ""];
-            const ranks = ["妃", "嫔", "贵人", "常在", "答应"];
+            const titles = ["婉", "华", "宁", "丽", "静", "惠", "顺", "娇", "熙", "敬", "端", "舒", "嘉", "纯"];
             const personalities = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
-            const surnames = ["乌拉那拉", "富察", "佟佳", "沈", "安", "夏", "瓜尔佳", "钮祜禄", "叶赫那拉", "辉发那拉", "索绰罗", "博尔济吉特", "年", "巴林", "陈", "白", "张"];
-            const givenNames = ["如懿", "容音", "眉庄", "陵容", "冬春", "明玉", "海兰", "琅嬅", "晞月", "玉妍", "意欢", "蕊姬", "绿筠", "嬿婉", "香见", "璟瑟", "若曦", "甄嬛", "玉娆", "世兰", "清秋", "紫嫣", "雨晴", "芷若", "婉清", "书瑶", "初夏", "映雪"];
+            
+            // ✨ 丰富姓氏（区分满/汉/韩）
+            let manchuSurnames = ["乌拉那拉", "富察", "佟佳", "瓜尔佳", "钮祜禄", "叶赫那拉", "辉发那拉", "索绰罗", "博尔济吉特", "年", "巴林"];
+            let hanKorSurnames = ["林", "苏", "顾", "沈", "楚", "叶", "白", "裴", "宋", "姜", "崔", "朴", "金", "李", "尹", "郑", "韩", "柳", "张", "陈"];
+            
+            // ✨ 丰富名字（区分古言/韩系）
+            let korNames = ["海仁", "知恩", "昭熙", "旻恩", "恩彩", "泰妍", "智媛", "秀智", "允儿"];
+            let cnNames = ["清秋", "知微", "宛筠", "南乔", "星河", "语冰", "揽月", "长乐", "允真", "如懿", "容音", "眉庄", "陵容", "若曦", "甄嬛", "玉娆", "世兰", "紫嫣", "雨晴", "芷若", "婉清", "书瑶", "初夏", "映雪"];
+            
+            let usedFullNames = new Set(); // 防止全名重复
             
             let count = Math.floor(Math.random() * 3) + 3; 
             let favoredCount = 0; let exclusiveCount = 0; 
 
-            for(let i=0; i<count; i++) {
-                let favorScore = Math.floor(Math.random() * 80);
-                if (favorScore >= 70) {
-                    if (exclusiveCount < 1 && favoredCount < 3) { exclusiveCount++; favoredCount++; } 
-                    else if (favoredCount < 3) { favorScore = Math.floor(Math.random() * 29) + 40; favoredCount++; } 
-                    else { favorScore = Math.floor(Math.random() * 40); }
-                } else if (favorScore >= 40) {
-                    if (favoredCount < 3) { favoredCount++; } 
-                    else { favorScore = Math.floor(Math.random() * 40); }
+            for(let i=0; i<count+2; i++) { // +2 是同届萌新
+                let isNew = i >= count;
+                let age = isNew ? Math.floor(Math.random()*2)+15 : Math.floor(Math.random()*8)+16;
+                let f = isNew ? 0 : Math.floor(Math.random() * 80);
+                if (f >= 70) { if (exclusiveCount < 1 && favoredCount < 3) { exclusiveCount++; favoredCount++; } else if (favoredCount < 3) { f = Math.floor(Math.random() * 29) + 40; favoredCount++; } else f = Math.floor(Math.random() * 40); } 
+                else if (f >= 40) { if (favoredCount < 3) favoredCount++; else f = Math.floor(Math.random() * 40); }
+
+                let cStats = {}; ['charm','intel','cunning','dance','needle','health','luck','charisma'].forEach(k => cStats[k] = Math.floor(Math.random()*10)+1);
+                
+                // ✨ 立绘不重复抽取
+                let poolKey;
+                if(cStats.charm <= 2) poolKey = 'level0_2';
+                else if(cStats.charm <= 4) poolKey = 'level3_4';
+                else if(cStats.charm <= 6) poolKey = 'level5_6';
+                else if(cStats.charm <= 8) poolKey = 'level7_8';
+                else poolKey = 'level9_10';
+                
+                // 如果当前级别池子空了，借用相邻的
+                if(tempPools[poolKey].length === 0) {
+                    for(let k in tempPools) { if(tempPools[k].length > 0) { poolKey = k; break; } }
+                }
+                
+                let assignedImg = "https://i.postimg.cc/placeholder-flower.jpg";
+                if(tempPools[poolKey] && tempPools[poolKey].length > 0) {
+                    let randIdx = Math.floor(Math.random() * tempPools[poolKey].length);
+                    assignedImg = tempPools[poolKey].splice(randIdx, 1)[0]; // 抽走并删除
                 }
 
-                harem.push({
-                    title: titles[Math.floor(Math.random()*titles.length)],
-                    rank: ranks[Math.floor(Math.random()*ranks.length)],
-                    name: surnames[Math.floor(Math.random()*surnames.length)] + givenNames[Math.floor(Math.random()*givenNames.length)],
-                    age: Math.floor(Math.random()*8)+16, favor: favorScore,
-                    personality: personalities[Math.floor(Math.random()*personalities.length)],
-                    affection: Math.floor(Math.random()*101) - 50 
+                let hasTitle = Math.random() < 0.5; // 50%概率有封号
+                
+                // ✨ 名字逻辑（韩国名绝不配满族姓）
+                let surname, givenName, fullName;
+                do {
+                    let isKoreanName = Math.random() < 0.3; // 30%概率出韩国名
+                    if(isKoreanName) {
+                        surname = hanKorSurnames[Math.floor(Math.random()*hanKorSurnames.length)];
+                        givenName = korNames[Math.floor(Math.random()*korNames.length)];
+                    } else {
+                        let allSurnames = manchuSurnames.concat(hanKorSurnames);
+                        surname = allSurnames[Math.floor(Math.random()*allSurnames.length)];
+                        givenName = cnNames[Math.floor(Math.random()*cnNames.length)];
+                    }
+                    fullName = surname + givenName;
+                } while(usedFullNames.has(fullName));
+                usedFullNames.add(fullName);
+
+                const bgs = ["太傅嫡女", "总督庶女", "巡抚嫡女", "皇商世家", "江南富商", "武林世家", "知府庶女", "异国贡女", "没落侯府", "平民百姓"];
+
+                h.push({
+                    title: hasTitle ? titles[Math.floor(Math.random()*titles.length)] : "",
+                    rank: isNew ? (i===count?'常在':'答应') : getInitRank(age),
+                    name: fullName,
+                    bg: bgs[Math.floor(Math.random()*bgs.length)],
+                    age: age, favor: f, personality: personalities[Math.floor(Math.random()*personalities.length)], affection: isNew?0:(Math.floor(Math.random()*101)-50),
+                    stats: cStats, image: assignedImg, isTransparent: true, pregnancy: 0, children: []
                 });
             }
-            gameState.harem = harem.sort((a,b) => b.favor - a.favor);
+            gameState.harem = h.sort((a,b) => b.favor - a.favor);
         }
 
+        // --- 防崩溃开局引擎 ---
         function startGameplay() {
-            gameState.playerName = document.getElementById('surname').value + document.getElementById('firstname').value;
-            gameState.empName = document.getElementById('emp-surname').value + document.getElementById('emp-firstname').value;
-            gameState.favor = 0; gameState.year = 1; gameState.month = 1; gameState.day = 1; gameState.rank = '待定'; gameState.pregnancy = 0; gameState.worldbook = '';
-            gameState.history = [];
-            generateHarem(); 
+            try {
+                gameState.playerName = document.getElementById('surname').value + document.getElementById('firstname').value;
+                gameState.empName = document.getElementById('emp-surname').value + document.getElementById('emp-firstname').value;
+                gameState.favor = 0; gameState.year = 1; gameState.month = 1; gameState.period = 0; gameState.rank = '待定'; gameState.pregnancy = 0; gameState.worldbook = '';
+                gameState.history = []; gameState.children = [];
+                generateHarem(); 
 
-            if(gameState.playerAvatar) { document.getElementById('player-avatar-ingame').src = gameState.playerAvatar; document.getElementById('player-avatar-ingame').style.display = 'block'; }
-            // ✨ 修复BUG：修正右侧皇上立绘赋值的ID
-            if(gameState.empAvatar) { document.getElementById('npc-avatar-ingame').src = gameState.empAvatar; document.getElementById('npc-avatar-ingame').style.display = 'block'; }
-            
-            updateTimeDisplay();
-            document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["皇帝正殿"]}')`;
-            document.getElementById('gameplay-screen').classList.add('npc-active'); 
-            switchScreen('gameplay-screen');
-            
-            gameState.history.push({role: "user", content: `系统提示：殿选开始。请太后或皇帝向秀女“${gameState.playerName}”发问。必须赐予初始位份（答应或常在）。`});
-            requestAI();
+                // ✨ 常驻左侧的女主立绘 ✨
+                if(gameState.playerAvatar) {
+                    const pid = gameState.isPlayerTransparent ? 'player-trans-ingame' : 'player-framed-ingame';
+                    const pImg = document.getElementById(pid);
+                    if(pImg) {
+                        pImg.src = gameState.playerAvatar;
+                        pImg.style.display = 'block';
+                    }
+                }
+                
+                updateTimeDisplay();
+                document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["皇帝正殿"]}')`;
+                switchScreen('gameplay-screen');
+                
+                gameState.history.push({role: "user", content: `系统提示：殿选开始。皇帝向秀女“${gameState.playerName}”发问并赐予初始位份。`});
+                requestAI();
+            } catch(e) {
+                alert("启动时报错，请检查控制台: " + e.message);
+                console.error(e);
+            }
+        }
+
+        function clearNpcAvatar() {
+            document.getElementById('npc-trans-ingame').style.display = 'none';
+            document.getElementById('npc-framed-ingame').style.display = 'none';
         }
 
         function showMap() {
             document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["宫门"]}')`;
-            document.getElementById('dialogue-container').style.display = 'none';
-            document.getElementById('input-container').style.display = 'none';
-            document.getElementById('leave-scene-btn').style.display = 'none';
+            document.getElementById('loc-display').innerText = "当前位置：宫门";
             document.getElementById('map-overlay').classList.add('active');
-            document.getElementById('gameplay-screen').classList.remove('npc-active');
+            clearNpcAvatar(); // 回到地图清除右侧立绘
         }
 
         async function enterLocation(locName) {
             document.getElementById('map-overlay').classList.remove('active');
-            document.getElementById('dialogue-container').style.display = 'flex';
-            document.getElementById('input-container').style.display = 'flex';
-            document.getElementById('leave-scene-btn').style.display = 'block';
+            document.getElementById('loc-display').innerText = `当前位置：${locName}`;
             document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[locName]}')`;
+            clearNpcAvatar(); // 切换场景先清空右侧
 
-            gameState.history.push({role: "user", content: `系统提示：玩家来到了 ${locName}。请从后宫名单中安排一位NPC或太监宫女发生事件（或遇到敏珠）。`});
+            gameState.history.push({role: "user", content: `系统提示：玩家来到了 ${locName}。安排偶遇事件。`});
             await requestAI();
         }
 
+        // ✨ 直接进入后宫闲聊处，系统提问 ✨
+        async function startVisit() {
+            document.getElementById('map-overlay').classList.remove('active');
+            document.getElementById('loc-display').innerText = `当前位置：后宫闲聊处`;
+            document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["后宫闲聊处"]}')`;
+            clearNpcAvatar();
+
+            gameState.history.push({role: "user", content: `系统提示：玩家打算去拜访妃嫔。请系统简短发问：“你想去见哪位小主？”`});
+            await requestAI();
+        }
+
+        // ✨ 三年大选、子嗣与孕期结算 ✨
         async function endDay() {
-            gameState.day++;
-            if(gameState.day > 3) { 
-                gameState.day = 1; gameState.month++; 
+            gameState.period++; 
+            if(gameState.period > 2) { 
+                gameState.period = 0; gameState.month++; 
                 if(gameState.month > 12) { gameState.year++; gameState.month = 1; }
+                
+                // 玩家生娃
                 if(gameState.pregnancy > 0) {
                     gameState.pregnancy++;
-                    if(gameState.pregnancy > 10) { gameState.pregnancy = 0; showToast("🌸 历经十月怀胎，你顺利诞下皇嗣！"); }
+                    if(gameState.pregnancy > 10) { 
+                        gameState.pregnancy = 0; 
+                        let child = (Math.random()>0.5?"阿哥":"公主") + "·" + ["弘", "璟", "永", "和"][Math.floor(Math.random()*4)] + "某";
+                        gameState.children.push(child);
+                        showToast(`🌸 历经十月怀胎，你顺利诞下【${child}】！`); 
+                    }
                 }
+                // 后宫生娃
+                gameState.harem.forEach(h => {
+                    if(h.pregnancy>0){ h.pregnancy++; if(h.pregnancy>10){ h.pregnancy=0; h.children.push((Math.random()>0.5?"阿哥":"公主")+"·"+["弘","璟","永","和"][Math.floor(Math.random()*4)]+"某"); } }
+                });
             }
             updateTimeDisplay();
             document.getElementById('map-overlay').classList.remove('active');
-            document.getElementById('dialogue-container').style.display = 'flex';
-            document.getElementById('input-container').style.display = 'flex';
-            document.getElementById('leave-scene-btn').style.display = 'block';
+            clearNpcAvatar();
 
             let nightEventText = "";
-
-            if((gameState.month === 6 || gameState.month === 12) && gameState.day === 1) {
+            let isDraftTime = (gameState.year > 1 && (gameState.year - 1) % 3 === 0 && gameState.month === 1 && gameState.period === 0);
+            
+            if (isDraftTime) {
+                document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["皇帝正殿"]}')`;
+                document.getElementById('loc-display').innerText = "当前位置：选秀大殿";
+                nightEventText = `系统提示：三年一度的大选开始！五名秀女正在候场。玩家目前天宠为${gameState.favor}，作为旁观。玩家可进言，皇上会根据你的圣宠听取意见。请安排第一位秀女觐见！[背景: 皇帝正殿]`;
+            } else if((gameState.month === 6 || gameState.month === 12) && gameState.period === 0) {
                 document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["宫宴"]}')`;
-                nightEventText = `系统提示：今日是${gameState.month}月宫宴，后宫众妃与皇上、太后齐聚一堂。玩家【心机:${statsConfig['cunning'].v}】【歌舞:${statsConfig['dance'].v}】。请生成宫宴上要求玩家表演才艺、或者其他妃嫔暗算的开场剧情！[背景: 宫宴]`;
+                document.getElementById('loc-display').innerText = "当前位置：宫宴";
+                nightEventText = `系统提示：今日是${gameState.month}月宫宴。玩家【心机:${statsConfig['cunning'].v}】。生成宫宴事件！[背景: 宫宴]`;
             } else {
                 let userChance = 10 + (gameState.favor * 2); 
-                if(userChance > 80) userChance = 80; 
                 let roll = Math.random() * 100;
-                
                 if (roll < userChance) {
-                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["浴池"]}')`;
-                    nightEventText = `系统提示：敬事房通报：“今夜翻的是${gameState.rank}小主（玩家）的牌子！”玩家已在浴池沐浴。请扮演皇帝互动。`;
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["浴池"]}')`; document.getElementById('loc-display').innerText = "当前位置：浴池";
+                    nightEventText = `系统提示：敬事房通报翻了玩家的牌子！浴池准备中。`;
                 } else if (roll < userChance + 30) {
-                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["女主卧室"]}')`;
-                    nightEventText = `系统提示：皇上今日政务繁忙，独寝。新的一天，请生成早晨日常过渡。`;
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["女主卧室"]}')`; document.getElementById('loc-display').innerText = "当前位置：寝宫";
+                    nightEventText = `系统提示：皇上今日政务繁忙，独寝。新的一旬过渡。`;
                 } else {
-                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["女主卧室"]}')`;
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["女主卧室"]}')`; document.getElementById('loc-display').innerText = "当前位置：寝宫";
                     let luckyNpc = gameState.harem[Math.floor(Math.random() * gameState.harem.length)];
-                    let npcFullName = luckyNpc.title + luckyNpc.rank + luckyNpc.name;
-                    nightEventText = `系统提示：敬事房通报，皇上今夜翻了【${npcFullName}】的牌子。玩家独寝。新的一天，请生成早晨过渡剧情。`;
+                    nightEventText = `系统提示：皇上今夜翻了【${luckyNpc.title}${luckyNpc.rank}${luckyNpc.name}】的牌子。玩家独寝过渡。`;
                 }
             }
 
@@ -523,37 +746,29 @@
             await requestAI();
         }
 
-        /* ================= 🌟 AI 对话与解析 🌟 ================= */
+        /* ================= 🌟 AI 对话与双轨制显示 🌟 ================= */
         function buildSystemPrompt() {
             let statsText = ""; for(let k in statsConfig) statsText += `${statsConfig[k].name}:${statsConfig[k].v} `;
             const empP = document.getElementById('emp-personality-val').innerText;
-            const dowP = document.getElementById('dowager-personality-val').innerText;
-            const pregText = gameState.pregnancy === 0 ? "无" : `已怀孕${gameState.pregnancy}个月`;
-            const bgNames = Object.keys(bgMap).join(", ");
-            const wbText = gameState.worldbook ? `【世界书设定】\n${gameState.worldbook}\n` : "";
+            const pregText = gameState.pregnancy === 0 ? "无" : `怀孕${gameState.pregnancy}个月`;
+            const wbText = gameState.worldbook ? `【世界书】\n${gameState.worldbook}\n` : "";
             
-            let haremText = "【当前后宫名单】\n";
-            gameState.harem.forEach(h => {
-                haremText += `- ${h.title}${h.rank}${h.name} (好感:${h.affection}, 性格:${h.personality}, 宠:${h.favor})\n`;
-            });
+            let haremText = "【后宫名单】\n";
+            gameState.harem.forEach(h => { haremText += `- ${h.title}${h.rank}${h.name} (好感:${h.affection}, 性格:${h.personality}, 宠:${h.favor})\n`; });
 
-            let extraRules = "";
-            if(statsConfig['cunning'].v <= 5) { extraRules += "【隐藏机制】玩家【心机】极低，请让其他坏心眼妃嫔更容易暗算或嘲讽她。\n"; }
+            let extraRules = statsConfig['cunning'].v <= 5 ? "【隐藏】玩家【心机】低，极易被暗算。\n" : "";
 
-            return `你是一个文字冒险游戏引擎。当前场景：后宫生存。
+            return `你是一个文字冒险游戏引擎。
 玩家：${gameState.playerName}，家世：${document.getElementById('bg-val').innerText}，位份：${gameState.rank}，孕期：${pregText}。
-属性：${statsText}。皇帝性格：${empP}。太后性格：${dowP}。
-${haremText}
-${wbText}
-${extraRules}
-【核心规则】
-1. 绝对不要替玩家说话或做动作！用第二人称“你”称呼玩家。
-2. 每次回复控制在20-40字以内！禁止长篇大论。
-3. 对话格式强制为：NPC姓名：（动作）说的话。
-4. 判断喜爱度，末尾强制带上：[天宠+X] 或 [天宠-X] 或 [天宠+0]。X是1-5。
-5. 你兼任游戏导演。可用场景库：【${bgNames}】。末尾强制附带：[背景: 场景名]。
-6. 赐予位份或封号时附带：[位份: 封号+位份]。
-7. 示例：“${gameState.empName}：【（端起茶盏）既然太后说好，便留牌子吧。】[天宠+1][背景: 皇帝正殿][位份: 答应]”`;
+属性：${statsText}。皇帝性格：${empP}。
+${haremText}${wbText}${extraRules}
+【规则】
+1. 不替玩家说话！用“你”称呼玩家。
+2. 对话分块：一句话尽量在一个框内说完！每次最多5块。
+3. 格式：[发言] NPC姓名：【（动作）内容】
+4. 皇帝宠爱每次[天宠+X]最多+1或+2。注意圣宠是零和的。
+5. 结算标签（只能放在最后一块）：[天宠+X] [更新: 姓名|好感变动|圣宠变动|新位份] [背景: 场景名]。
+6. 若玩家拜访妃嫔，请自编宫殿名，并附带 [背景: 嫔妃豪华内殿1]。`;
         }
 
         async function sendGameMessage() {
@@ -563,10 +778,18 @@ ${extraRules}
             if(!text) return;
 
             input.value = "";
-            displayDialogue(gameState.playerName, text);
-            document.getElementById('gameplay-screen').classList.remove('npc-active'); 
+            
+            let contentText = text;
+            if(/翌日|次日|第二天/.test(text)) {
+                gameState.period++; 
+                if(gameState.period>2){ gameState.period=0; gameState.month++; if(gameState.month>12){ gameState.year++; gameState.month=1; } } 
+                updateTimeDisplay();
+                contentText = `[系统：时间流转，现为${periods[gameState.period]}] 玩家：` + text;
+            }
 
-            gameState.history.push({role: "user", content: `玩家说/做：${text}`});
+            displayDialogue(gameState.playerName, text);
+            
+            gameState.history.push({role: "user", content: contentText});
             await requestAI();
         }
 
@@ -577,11 +800,9 @@ ${extraRules}
             if(lastMsg.role === "assistant" || lastMsg.role === "model") {
                 gameState.history.pop(); 
                 document.getElementById('speaker-name').innerText = "系统";
-                document.getElementById('dialogue-text').innerHTML = "<span style='color:#ccc'>正在施展时光倒流术，重新推演局势...</span>";
+                document.getElementById('dialogue-text').innerHTML = "<span style='color:#ccc'>正在时光倒流...</span>";
                 await requestAI();
-            } else {
-                showToast("最后一句是你说的，不能回溯哦！");
-            }
+            } else { showToast("最后一句是你说的，不能回溯哦！"); }
         }
 
         async function requestAI() {
@@ -589,21 +810,18 @@ ${extraRules}
             if(!apiData.url || !apiData.key) return displayDialogue("系统", "请先在左上角菜单配置API！", true);
             
             gameState.isGenerating = true;
-            document.getElementById('send-btn').innerText = "等...";
-            document.getElementById('send-btn').disabled = true;
+            const sendBtn = document.getElementById('send-btn');
+            sendBtn.innerText = "等..."; sendBtn.disabled = true;
 
             try {
                 let fetchUrl, headers, requestBody;
-
                 if(apiData.provider === 'gemini') {
                     fetchUrl = `${apiData.url}/v1beta/models/${apiData.model || 'gemini-1.5-flash'}:generateContent?key=${apiData.key}`;
                     headers = { 'Content-Type': 'application/json' };
                     let geminiHistory = [];
                     geminiHistory.push({ role: 'user', parts: [{ text: buildSystemPrompt() }] });
-                    geminiHistory.push({ role: 'model', parts: [{ text: '收到，将严格遵守一切机制设定。' }] });
-                    for(let m of gameState.history) {
-                        geminiHistory.push({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] });
-                    }
+                    geminiHistory.push({ role: 'model', parts: [{ text: '收到，严格遵守。' }] });
+                    for(let m of gameState.history) geminiHistory.push({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] });
                     requestBody = { contents: geminiHistory };
                 } else {
                     let messages = [{role: "system", content: buildSystemPrompt()}, ...gameState.history];
@@ -615,194 +833,189 @@ ${extraRules}
                 const res = await fetch(fetchUrl, { method: 'POST', headers, body: JSON.stringify(requestBody) });
                 if(!res.ok) throw new Error("API错误");
                 const json = await res.json();
-                
                 let reply = apiData.provider === 'gemini' ? json.candidates[0].content.parts[0].text : json.choices[0].message.content;
                 gameState.history.push({role: "assistant", content: reply});
                 
                 parseAndDisplayAI(reply);
 
-            } catch(e) {
-                console.error(e);
-                displayDialogue("系统", "网络连接异常或API报错。");
-            } finally {
+            } catch(e) { displayDialogue("系统", "网络连接异常。"); } 
+            finally {
                 gameState.isGenerating = false;
-                document.getElementById('send-btn').innerText = "发 送";
-                document.getElementById('send-btn').disabled = false;
+                sendBtn.innerText = "发 送"; sendBtn.disabled = false;
                 document.getElementById('game-input').focus();
+            }
+        }
+
+        function applyZeroSumFavor(excludeName, amount) {
+            let deductTotal = amount; let loops = 0;
+            while(deductTotal > 0 && loops < 50) {
+                loops++; let candidates = gameState.harem.filter(c => c.name !== excludeName && c.favor > 0);
+                if(candidates.length === 0) { if(gameState.favor > 0){ gameState.favor--; document.getElementById('favor-val').innerText = gameState.favor; deductTotal--; } break; } 
+                else { let c = candidates[Math.floor(Math.random() * candidates.length)]; c.favor--; deductTotal--; }
             }
         }
 
         function parseAndDisplayAI(text) {
             let cleanText = text;
-
             const favorMatch = cleanText.match(/\[天宠([+-]\d+)\]/);
-            if(favorMatch) {
-                gameState.favor += parseInt(favorMatch[1]);
-                document.getElementById('favor-val').innerText = gameState.favor;
-            }
+            if(favorMatch) { gameState.favor += parseInt(favorMatch[1]); document.getElementById('favor-val').innerText = gameState.favor; }
             const rankMatch = cleanText.match(/\[位份[：:](.*?)\]/);
-            if(rankMatch) {
-                gameState.rank = rankMatch[1].trim();
-                showToast(`🌸 恭喜小主，获封：${gameState.rank}`);
-            }
+            if(rankMatch) { gameState.rank = rankMatch[1].trim(); showToast(`🌸 获封：${gameState.rank}`); }
             const bgMatch = cleanText.match(/\[背景[：:](.*?)\]/);
-            if(bgMatch && bgMap[bgMatch[1].trim()]) {
-                document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[bgMatch[1].trim()]}')`;
+            if(bgMatch && bgMap[bgMatch[1].trim()]) { 
+                document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[bgMatch[1].trim()]}')`; 
+                document.getElementById('loc-display').innerText = `当前位置：${bgMatch[1].trim()}`;
             }
 
-            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').trim();
-
-            let speaker = "系统"; let content = cleanText;
-            const splitMatch = cleanText.match(/^([^：:]+)[：:]([\s\S]+)/);
-            if(splitMatch) { speaker = splitMatch[1].trim(); content = splitMatch[2].trim(); }
-
-            // NPC 立绘逻辑
-            const npcAvatarEl = document.getElementById('npc-avatar-ingame');
-            if(speaker.includes(gameState.empName) || speaker.includes("皇帝") || speaker.includes("皇上")) {
-                if(gameState.empAvatar) { npcAvatarEl.src = gameState.empAvatar; npcAvatarEl.style.display = 'block'; }
-                document.getElementById('gameplay-screen').classList.add('npc-active');
-            } else if (speaker.includes("敏珠") || speaker.includes("慜") || speaker.includes("贵妃")) {
-                npcAvatarEl.src = npcAvatarLibrary[0]; 
-                npcAvatarEl.style.display = 'block';
-                document.getElementById('gameplay-screen').classList.add('npc-active');
-            } else if (speaker !== "系统" && speaker !== gameState.playerName) {
-                if(npcAvatarLibrary.length > 1) {
-                    let hash = 0; for(let i=0; i<speaker.length; i++) hash += speaker.charCodeAt(i);
-                    let idx = (hash % (npcAvatarLibrary.length - 1)) + 1;
-                    npcAvatarEl.src = npcAvatarLibrary[idx];
-                    npcAvatarEl.style.display = 'block';
-                } else {
-                    npcAvatarEl.style.display = 'none';
-                }
-                document.getElementById('gameplay-screen').classList.add('npc-active');
-            } else {
-                document.getElementById('gameplay-screen').classList.remove('npc-active');
+            const upRegex = /\[更新[：:](.*?)\|(.*?)\|(.*?)\|(.*?)\]/g; let upMatch;
+            while ((upMatch = upRegex.exec(cleanText)) !== null) {
+                let nName=upMatch[1].trim(), aff=parseInt(upMatch[2])||0, fav=parseInt(upMatch[3])||0, nRank=upMatch[4].trim();
+                let target = gameState.harem.find(h=>h.name.includes(nName) || nName.includes(h.name));
+                if(target) { target.affection+=aff; target.favor+=fav; if(nRank) target.rank=nRank; if(fav > 0) applyZeroSumFavor(target.name, fav); }
             }
+            gameState.harem.sort((a,b)=>b.favor-a.favor);
 
-            displayDialogue(speaker, content, true);
-        }
+            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').trim();
 
-        function displayDialogue(speaker, text, typewriter = false) {
-            document.getElementById('speaker-name').innerText = speaker;
-            const box = document.getElementById('dialogue-text');
-            box.innerHTML = "";
-            if(typewriter) {
-                let i = 0;
-                let timer = setInterval(() => { box.innerHTML += text.charAt(i); i++; if(i >= text.length) clearInterval(timer); }, 50); 
-            } else {
-                box.innerText = text;
-            }
-        }
-
-        /* ================= 🌟 属性面板与API表单设置 (修复拉取模型) 🌟 ================= */
-        function showPlayerStats() {
-            const grid = document.getElementById('modal-stats-grid');
-            grid.innerHTML = `<div class="stat-item" style="border:none; border-bottom:1px dashed #ccc;"><span>姓名</span><strong>${gameState.playerName}</strong></div>`;
-            grid.innerHTML += `<div class="stat-item" style="border:none; border-bottom:1px dashed #ccc;"><span>家世</span><strong>${document.getElementById('bg-val').innerText}</strong></div>`;
-            grid.innerHTML += `<div class="stat-item" style="border:none; border-bottom:1px dashed #ccc;"><span>位份</span><strong style="color:var(--emp-dark);">${gameState.rank}</strong></div>`;
-            grid.innerHTML += `<div class="stat-item" style="border:none; border-bottom:1px dashed #ccc;"><span>孕期</span><strong style="color:#e91e63">${gameState.pregnancy === 0 ? '无' : gameState.pregnancy+'个月'}</strong></div>`;
+            const chunkRegex = /\[发言\]\s*([^：:]+)[：:]([\s\S]*?)(?=(?:\[发言\]|$))/g;
+            dialogueQueue = []; let cMatch;
+            while ((cMatch = chunkRegex.exec(cleanText)) !== null) dialogueQueue.push({ speaker: cMatch[1].trim(), text: cMatch[2].trim() });
             
-            for(let key in statsConfig) {
-                grid.innerHTML += `<div class="stat-item" style="border:none; border-bottom:1px dashed #eee;"><span>${statsConfig[key].name}</span><strong>${statsConfig[key].v}</strong></div>`;
+            if(dialogueQueue.length === 0) dialogueQueue.push({ speaker: '系统', text: cleanText });
+            showNextDialogue();
+        }
+
+        // ✨ 完美接管双轨制立绘显示 ✨
+        function showNextDialogue() {
+            if(isTyping) { 
+                if(typeTimer) { clearInterval(typeTimer); isTyping = false; }
+                const b = document.getElementById('dialogue-text'); b.innerText = b.getAttribute('data-fulltext');
+                return;
             }
-            document.getElementById('favor-val').innerText = gameState.favor;
+            if(dialogueQueue.length === 0) { document.getElementById('click-hint').style.display='none'; return; }
+            let msg = dialogueQueue.shift();
+            
+            // 每次对话先清空右侧立绘，玩家立绘永远不动
+            clearNpcAvatar();
+            
+            if(msg.speaker.includes(gameState.empName) || msg.speaker.includes("皇帝") || msg.speaker.includes("皇上")) { 
+                if(gameState.empAvatar) {
+                    const p = document.getElementById('npc-framed-ingame'); p.src = gameState.empAvatar; p.style.display = 'block';
+                }
+            } else if(msg.speaker === gameState.playerName || msg.speaker === "我") {
+                // 女主说话，右侧保持空
+            } else if(msg.speaker !== "系统") {
+                // 后宫妃子
+                let targetNpc = gameState.harem.find(h => msg.speaker.includes(h.name) || (h.title !== "" && msg.speaker.includes(h.title)));
+                if(targetNpc && targetNpc.image) {
+                    const id = targetNpc.isTransparent ? 'npc-trans-ingame' : 'npc-framed-ingame';
+                    const p = document.getElementById(id); p.src = targetNpc.image; p.style.display = 'block';
+                }
+            }
+
+            if(dialogueQueue.length > 0) document.getElementById('click-hint').style.display='block'; else document.getElementById('click-hint').style.display='none';
+            displayDialogue(msg.speaker, msg.text, true);
+        }
+
+        function displayDialogue(s,t,tw=false) {
+            document.getElementById('speaker-name').innerText=s; const b=document.getElementById('dialogue-text'); b.innerHTML=""; b.setAttribute('data-fulltext', t);
+            if(tw){ 
+                isTyping = true; let i=0; 
+                if(typeTimer) clearInterval(typeTimer);
+                typeTimer = setInterval(()=>{
+                    b.innerHTML+=t.charAt(i);i++;
+                    if(i>=t.length){ clearInterval(typeTimer); isTyping=false; }
+                }, 25); 
+            } else b.innerText=t;
+        }
+
+        /* --- ✨ 纯形容词、图文并茂的弹窗渲染 ✨ --- */
+        function showPlayerStats() {
+            document.getElementById('player-name-val').innerText = gameState.playerName;
+            document.getElementById('player-rank-val').innerText = gameState.rank;
+            document.getElementById('player-bg-display').innerText = document.getElementById('bg-val').innerText;
+            document.getElementById('player-preg-val').innerText = gameState.pregnancy > 0 ? `怀孕${gameState.pregnancy}月` : "无";
+            document.getElementById('player-child-val').innerText = gameState.children.length > 0 ? gameState.children.join("、") : "无";
+            
+            const grid = document.getElementById('modal-stats-grid'); grid.innerHTML = '';
+            for(let k in statsConfig) {
+                grid.innerHTML += `<div>${getAncientAttr(k, statsConfig[k].v)}</div>`;
+            }
+            
+            document.getElementById('favor-val').innerText = gameState.favor; 
+            
+            const img = document.getElementById('player-detail-img');
+            img.src = gameState.playerAvatar || 'https://i.postimg.cc/placeholder-flower.jpg';
+            img.className = gameState.isPlayerTransparent ? 'al-img-trans' : 'al-img-framed';
+
             showModal('stats-modal');
         }
 
-        function saveWorldbook() {
-            gameState.worldbook = document.getElementById('wb-input').value.trim();
-            document.getElementById('wb-modal').classList.remove('active');
-            showToast("世界书设定已录入！");
-        }
-
         function showHaremList() {
-            const container = document.getElementById('harem-list-container');
-            container.innerHTML = '';
-            gameState.harem.forEach(h => {
-                let fn = h.title + h.rank + " " + h.name;
+            const container = document.getElementById('harem-list-container'); container.innerHTML = '';
+            gameState.harem.forEach((h, idx) => {
+                let titleStr = h.title ? h.title + "·" : "";
+                let fn = titleStr + h.rank + " " + h.name;
                 container.innerHTML += `
-                    <div class="harem-card">
-                        <div class="harem-title">${fn} (年方${h.age})</div>
-                        <div class="harem-info">
-                            <span>性格：${h.personality}</span>
-                            <span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span>
-                        </div>
-                        <div class="harem-info" style="margin-top:5px; justify-content: flex-end;">
-                            <span>对你好感度：<strong style="color:${h.affection<0?'red':'#4CAF50'};">${h.affection>0?'+':''}${h.affection}</strong></span>
-                        </div>
+                    <div class="harem-card" onclick="showConcubineDetail(${idx})">
+                        <div class="harem-title">${fn}</div>
+                        <div class="harem-info"><span>性格：${h.personality}</span><span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span></div>
                     </div>`;
             });
             showModal('harem-modal');
         }
 
-        renderStats();
-
-        /* API 配置与拉取系统 */
-        const providerUrls = { newapi: '', gemini: 'https://generativelanguage.googleapis.com' };
-        const providerSelect = document.getElementById('api-provider');
-        const urlInput = document.getElementById('api-url');
-        const keyInput = document.getElementById('api-key');
-        const modelSelect = document.getElementById('api-model');
-        const fetchBtn = document.getElementById('fetch-models-btn');
-        const apiForm = document.getElementById('api-form');
-
-        providerSelect.addEventListener('change', () => {
-            if(!urlInput.value || Object.values(providerUrls).includes(urlInput.value)) {
-                urlInput.value = providerUrls[providerSelect.value] || '';
-            }
-        });
-
-        fetchBtn.addEventListener('click', async () => {
-            let url = urlInput.value.trim(); 
-            const key = keyInput.value.trim(); 
-            const provider = providerSelect.value;
+        function showConcubineDetail(idx) {
+            const h = gameState.harem[idx];
+            let titleStr = h.title ? h.title + "·" : "";
+            document.getElementById('cd-title-name').innerText = `🌸 ${titleStr}${h.rank} ${h.name} 🌸`;
+            document.getElementById('cd-bg').innerText = h.bg || '未知';
+            document.getElementById('cd-favor').innerText = h.favor;
+            document.getElementById('cd-personality').innerText = h.personality;
+            document.getElementById('cd-preg').innerText = h.pregnancy > 0 ? `怀孕${h.pregnancy}月` : "无";
+            document.getElementById('cd-child').innerText = h.children.length > 0 ? h.children.join("、") : "无";
+            document.getElementById('cd-affection').innerText = `${h.affection>0?'+':''}${h.affection}`;
             
+            const grid = document.getElementById('cd-stats-grid'); grid.innerHTML = '';
+            for(let k in h.stats) {
+                grid.innerHTML += `<div>${getAncientAttr(k, h.stats[k])}</div>`;
+            }
+
+            const img = document.getElementById('cd-img');
+            img.src = h.image || 'https://i.postimg.cc/placeholder-flower.jpg';
+            // ✨ 修复BUG：弹窗的类名独立，不再影响外面的立绘 ✨
+            img.className = h.isTransparent ? 'al-img-trans' : 'al-img-framed';
+
+            document.getElementById('harem-modal').classList.remove('active');
+            document.getElementById('concubine-detail-modal').classList.add('active');
+        }
+
+        function saveWorldbook() { gameState.worldbook = document.getElementById('wb-input').value.trim(); document.getElementById('wb-modal').classList.remove('active'); showToast("世界书设定已录入！"); }
+
+        /* ================= API 模块 ================= */
+        renderStats();
+        const providerUrls = { newapi: '', gemini: 'https://generativelanguage.googleapis.com' };
+        const providerSelect = document.getElementById('api-provider'); const urlInput = document.getElementById('api-url'); const keyInput = document.getElementById('api-key'); const modelSelect = document.getElementById('api-model'); const fetchBtn = document.getElementById('fetch-models-btn'); const apiForm = document.getElementById('api-form');
+        providerSelect.addEventListener('change', () => { if(!urlInput.value || Object.values(providerUrls).includes(urlInput.value)) urlInput.value = providerUrls[providerSelect.value] || ''; });
+        fetchBtn.addEventListener('click', async () => {
+            let url = urlInput.value.trim(); const key = keyInput.value.trim(); const provider = providerSelect.value;
             if (!url || !key) return showToast('请先填写 API 地址和密钥！');
             if (url.endsWith('/')) url = url.slice(0, -1);
-            
             const randomKey = key.includes(',') ? key.split(',').map(i => i.trim())[Math.floor(Math.random() * key.split(',').length)] : key;
             const fetchUrl = provider === 'gemini' ? `${url}/v1beta/models?key=${randomKey}` : `${url}/v1/models`;
             const headers = provider === 'gemini' ? {} : { Authorization: `Bearer ${key}` };
-
             fetchBtn.textContent = '正在拉取...'; fetchBtn.disabled = true;
             try {
                 const res = await fetch(fetchUrl, { method: 'GET', headers: headers });
                 if (!res.ok) throw new Error(`响应错误: ${res.status}`);
                 const json = await res.json();
-                
                 let models = (provider !== 'gemini' && json.data) ? json.data.map(e => e.id) : ((provider === 'gemini' && json.models) ? json.models.map(e => e.name.replace('models/', '')) : []);
                 modelSelect.innerHTML = '';
-                if (models.length > 0) {
-                    models.forEach(m => modelSelect.innerHTML += `<option value="${m}">${m}</option>`);
-                    showToast('✅ 模型拉取成功！请在下拉框中选择。');
-                } else throw new Error("未找到模型数据");
-            } catch (err) {
-                modelSelect.innerHTML = '<option value="">拉取失败，请检查网络或密钥</option>'; 
-                showToast(`❌ 拉取失败: ${err.message}`);
-            } finally {
-                fetchBtn.textContent = '获取/拉取模型列表'; fetchBtn.disabled = false;
-            }
+                if (models.length > 0) { models.forEach(m => modelSelect.innerHTML += `<option value="${m}">${m}</option>`); showToast('✅ 模型拉取成功！请在下拉框中选择。'); } else throw new Error("未找到模型数据");
+            } catch (err) { modelSelect.innerHTML = '<option value="">拉取失败，请检查网络或密钥</option>'; showToast(`❌ 拉取失败: ${err.message}`); } finally { fetchBtn.textContent = '获取/拉取模型列表'; fetchBtn.disabled = false; }
         });
-
-        apiForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const set = { provider: providerSelect.value, url: urlInput.value.trim(), key: keyInput.value.trim(), model: modelSelect.value };
-            localStorage.setItem('palace_api_settings', JSON.stringify(set));
-            showToast('✅ API 设置已永久保存！');
-        });
-
-        function loadApiSettings() {
-            const saved = JSON.parse(localStorage.getItem('palace_api_settings') || '{}');
-            if(saved.url) { 
-                providerSelect.value = saved.provider || 'newapi'; 
-                urlInput.value = saved.url; 
-                keyInput.value = saved.key; 
-                if(saved.model) {
-                    modelSelect.innerHTML = `<option value="${saved.model}">${saved.model}</option>`;
-                    modelSelect.value = saved.model;
-                }
-            }
-        }
+        apiForm.addEventListener('submit', (e) => { e.preventDefault(); const set = { provider: providerSelect.value, url: urlInput.value.trim(), key: keyInput.value.trim(), model: modelSelect.value }; localStorage.setItem('palace_api_settings', JSON.stringify(set)); showToast('✅ API 设置已永久保存！'); backFromApi(); });
+        function loadApiSettings() { const saved = JSON.parse(localStorage.getItem('palace_api_settings') || '{}'); if(saved.url) { providerSelect.value = saved.provider || 'newapi'; urlInput.value = saved.url; keyInput.value = saved.key; if(saved.model) { modelSelect.innerHTML = `<option value="${saved.model}">${saved.model}</option>`; modelSelect.value = saved.model; } } }
         loadApiSettings();
     </script>
 </body>
