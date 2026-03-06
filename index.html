@@ -702,7 +702,10 @@
                     assignedImg = tempPools[poolKey].splice(randIdx, 1)[0]; // 抽走并删除
                 }
 
-                let hasTitle = Math.random() < 0.5; // 50%概率有封号
+                let hasTitle = Math.random() < 0.2; // ✨ 概率死死压到 20%，物以稀为贵
+                let assignedTitle = hasTitle ? titles[Math.floor(Math.random()*titles.length)] : "";
+                let baseRank = isNew ? (i===count?'常在':'答应') : getInitRank(age);
+                let finalRank = assignedTitle ? assignedTitle + baseRank : baseRank; // 直接合并成"宁贵人"或"答应"
                 
                 // ✨ 名字逻辑（韩国名绝不配满族姓）
                 let surname, givenName, fullName;
@@ -723,13 +726,15 @@
                 const bgs = ["太傅嫡女", "总督庶女", "巡抚嫡女", "皇商世家", "江南富商", "武林世家", "知府庶女", "异国贡女", "没落侯府", "平民百姓"];
 
                 h.push({
-                    title: hasTitle ? titles[Math.floor(Math.random()*titles.length)] : "",
-                    rank: isNew ? (i===count?'常在':'答应') : getInitRank(age),
+                    title: "", // 彻底废弃独立封号，防止 UI 出现"·"的弱智重叠
+                    rank: finalRank, // 直接叫"宁贵人"或者"答应"
                     name: fullName,
                     bg: bgs[Math.floor(Math.random()*bgs.length)],
                     age: age, favor: f, personality: personalities[Math.floor(Math.random()*personalities.length)], affection: isNew?0:(Math.floor(Math.random()*101)-50),
                     stats: cStats, image: assignedImg, isTransparent: true, pregnancy: 0, children: []
                 });
+
+         
             }
             gameState.harem = h.sort((a,b) => b.favor - a.favor);
         }
@@ -864,7 +869,7 @@
                 } else {
                     document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["女主卧室"]}')`; document.getElementById('loc-display').innerText = "当前位置：寝宫";
                     let luckyNpc = gameState.harem[Math.floor(Math.random() * gameState.harem.length)];
-                    nightEventText = `系统提示：皇上今夜翻了【${luckyNpc.title}${luckyNpc.rank}${luckyNpc.name}】的牌子。玩家独寝过渡。`;
+                    nightEventText = `系统提示：皇上今夜翻了【${luckyNpc.rank} ${luckyNpc.name}】的牌子。玩家独寝过渡。`;
                 }
             }
 
@@ -880,8 +885,8 @@
             const wbText = gameState.worldbook ? `【世界书】\n${gameState.worldbook}\n` : "";
             
             let haremText = "【后宫名单】\n";
-            gameState.harem.forEach(h => { haremText += `- ${h.title}${h.rank}${h.name} (好感:${h.affection}, 宠:${h.favor})\n`; });
-
+            // 👇 变成了只有 rank 和 name
+            gameState.harem.forEach(h => { haremText += `- ${h.rank} ${h.name} (好感:${h.affection}, 宠:${h.favor})\n`; });
             // 👇 强力注入孽缘名单与偶遇判定
             let loversText = "【红尘暗缘(秘密情郎)】\n";
             let huli = gameState.lovers.find(l=>l.id==='huli');
@@ -1147,10 +1152,22 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             showModal('harem-modal');
         }
 
+        function showHaremList() {
+            const container = document.getElementById('harem-list-container'); container.innerHTML = '';
+            gameState.harem.forEach((h, idx) => {
+                let fn = h.rank + " " + h.name; // 清爽格式：位份 姓名
+                container.innerHTML += `
+                    <div class="harem-card" onclick="showConcubineDetail(${idx})">
+                        <div class="harem-title">${fn}</div>
+                        <div class="harem-info"><span>性格：${h.personality}</span><span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span></div>
+                    </div>`;
+            });
+            showModal('harem-modal');
+        }
+
         function showConcubineDetail(idx) {
             const h = gameState.harem[idx];
-            let titleStr = h.title ? h.title + "·" : "";
-            document.getElementById('cd-title-name').innerText = `🌸 ${titleStr}${h.rank} ${h.name} 🌸`;
+            document.getElementById('cd-title-name').innerText = `🌸 ${h.rank} ${h.name} 🌸`; // 清爽大标题
             document.getElementById('cd-bg').innerText = h.bg || '未知';
             document.getElementById('cd-favor').innerText = h.favor;
             document.getElementById('cd-personality').innerText = h.personality;
@@ -1165,7 +1182,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
             const img = document.getElementById('cd-img');
             img.src = h.image || 'https://i.postimg.cc/placeholder-flower.jpg';
-            // ✨ 修复BUG：弹窗的类名独立，不再影响外面的立绘 ✨
             img.className = h.isTransparent ? 'al-img-trans' : 'al-img-framed';
 
             document.getElementById('harem-modal').classList.remove('active');
