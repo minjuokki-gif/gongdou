@@ -689,9 +689,9 @@
             
             // ✨ 丰富名字（区分古言/韩系）
             let korNames = ["海仁", "知恩", "昭熙", "旻恩", "恩彩", "泰妍", "智媛", "秀智", "允儿"];
-            let cnNames = ["清秋", "知微", "宛筠", "南乔", "星河", "语冰", "揽月", "长乐", "允真", "如懿", "容音", "眉庄", "陵容", "若曦", "甄嬛", "玉娆", "世兰", "紫嫣", "雨晴", "芷若", "婉清", "书瑶", "初夏", "映雪"];
+            let cnNames = ["清秋", "知微", "宛筠", "南乔", "星河", "语冰", "揽月", "长乐", "允真", "如懿", "容音", "眉庄", "陵容", "若曦", "玉嬛", "玉娆", "世兰", "紫嫣", "雨晴", "芷若", "婉清", "书瑶", "初夏", "映雪"];
             
-            let usedFullNames = new Set(); // 防止全名重复
+            let usedGivenNames = new Set(); // ✨ 升级为：严格查杀重复的闺名！
             
             let count = Math.floor(Math.random() * 3) + 3; 
             let favoredCount = 0; let exclusiveCount = 0; 
@@ -705,7 +705,6 @@
 
                 let cStats = {}; ['charm','intel','cunning','dance','needle','health','luck','charisma'].forEach(k => cStats[k] = Math.floor(Math.random()*10)+1);
                 
-                // ✨ 立绘不重复抽取
                 let poolKey;
                 if(cStats.charm <= 2) poolKey = 'level0_2';
                 else if(cStats.charm <= 4) poolKey = 'level3_4';
@@ -713,7 +712,6 @@
                 else if(cStats.charm <= 8) poolKey = 'level7_8';
                 else poolKey = 'level9_10';
                 
-                // 如果当前级别池子空了，借用相邻的
                 if(tempPools[poolKey].length === 0) {
                     for(let k in tempPools) { if(tempPools[k].length > 0) { poolKey = k; break; } }
                 }
@@ -721,18 +719,18 @@
                 let assignedImg = "https://i.postimg.cc/placeholder-flower.jpg";
                 if(tempPools[poolKey] && tempPools[poolKey].length > 0) {
                     let randIdx = Math.floor(Math.random() * tempPools[poolKey].length);
-                    assignedImg = tempPools[poolKey].splice(randIdx, 1)[0]; // 抽走并删除
+                    assignedImg = tempPools[poolKey].splice(randIdx, 1)[0];
                 }
 
-                let hasTitle = Math.random() < 0.2; // ✨ 概率死死压到 20%，物以稀为贵
+                let hasTitle = Math.random() < 0.2;
                 let assignedTitle = hasTitle ? titles[Math.floor(Math.random()*titles.length)] : "";
                 let baseRank = isNew ? (i===count?'常在':'答应') : getInitRank(age);
-                let finalRank = assignedTitle ? assignedTitle + baseRank : baseRank; // 直接合并成"宁贵人"或"答应"
+                let finalRank = assignedTitle ? assignedTitle + baseRank : baseRank;
                 
-                // ✨ 名字逻辑（韩国名绝不配满族姓）
+                // ✨ 严格检查闺名是否重复
                 let surname, givenName, fullName;
                 do {
-                    let isKoreanName = Math.random() < 0.3; // 30%概率出韩国名
+                    let isKoreanName = Math.random() < 0.3;
                     if(isKoreanName) {
                         surname = hanKorSurnames[Math.floor(Math.random()*hanKorSurnames.length)];
                         givenName = korNames[Math.floor(Math.random()*korNames.length)];
@@ -742,8 +740,8 @@
                         givenName = cnNames[Math.floor(Math.random()*cnNames.length)];
                     }
                     fullName = surname + givenName;
-                } while(usedFullNames.has(fullName));
-                usedFullNames.add(fullName);
+                } while(usedGivenNames.has(givenName)); // ✨ 只要闺名出现过，立刻重摇！
+                usedGivenNames.add(givenName); // 记录已被使用的闺名
 
                 const bgs = ["太傅嫡女", "总督庶女", "巡抚嫡女", "皇商世家", "江南富商", "武林世家", "知府庶女", "异国贡女", "没落侯府", "平民百姓"];
 
@@ -1278,10 +1276,40 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
         }
 
         function saveHistory(idx) {
-            gameState.history[idx].content = document.getElementById(`hist-edit-${idx}`).value;
+            let newText = document.getElementById(`hist-edit-${idx}`).value;
+            gameState.history[idx].content = newText;
+            
+            // ✨ 如果修改的是最后一条记录，立刻同步到外面的主屏幕！
+            if (idx === gameState.history.length - 1) {
+                // 1. 同步文字内容（洗掉暗号标签，只显示人话）
+                let cleanText = newText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').trim();
+                const chunkRegex = /\[发言\]\s*([^：:]+)[：:]([\s\S]*?)(?=(?:\[发言\]|$))/g;
+                let cMatch, lastSpeaker = gameState.history[idx].role === 'assistant' ? '系统' : gameState.playerName, lastText = cleanText;
+                while ((cMatch = chunkRegex.exec(cleanText)) !== null) {
+                    lastSpeaker = cMatch[1].trim(); 
+                    lastText = cMatch[2].trim();
+                }
+                displayDialogue(lastSpeaker, lastText);
+
+                // 2. 同步背景切换（如果手动加了背景标签，直接切图）
+                const bgMatch = newText.match(/\[背景\s*[：:]\s*(.*?)\]/);
+                if(bgMatch) { 
+                    let targetBg = bgMatch[1].trim();
+                    let exactKey = Object.keys(bgMap).find(k => k === targetBg || targetBg.includes(k) || k.includes(targetBg));
+                    if (exactKey) {
+                        gameState.currentLoc = exactKey; 
+                        document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[exactKey]}')`;
+                        document.getElementById('loc-display').innerText = `当前位置：${exactKey.replace(/\d+/g, '')}`; 
+                    } else {
+                        gameState.currentLoc = targetBg;
+                        document.getElementById('loc-display').innerText = `当前位置：${targetBg}`; 
+                    }
+                }
+            }
+
             autoSave(); 
             renderHistoryList();
-            showToast("💾 剧情记录已修改！");
+            showToast("💾 剧情记录已修改，并实时同步至画面！");
         }
 
 /* ================= 🌸 浮生孽缘系统逻辑 ================= */
