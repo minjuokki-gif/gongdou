@@ -876,7 +876,7 @@ ${haremText}${wbText}${extraRules}
                 
                 parseAndDisplayAI(reply);
 
-            } catch(e) { displayDialogue("系统", "网络连接异常。"); } 
+            } catch(e) { displayDialogue("系统", "报错查明：" + e.message); } 
             finally {
                 gameState.isGenerating = false;
                 sendBtn.innerText = "发 送"; sendBtn.disabled = false;
