@@ -154,6 +154,7 @@
         <div class="menu-item" id="menu-harem-btn" style="display:none; color: #d02090;" onclick="showHaremList()">后宫花名册</div>
         <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="showModal('wb-modal')">世界书设定</div>
         <div class="menu-item" id="menu-lovers-btn" style="display:none; color: #c71585; font-weight:bold;" onclick="showLoversList()">💌 浮生孽缘 (私密)</div>
+        <div class="menu-item" id="menu-history-btn" style="display:none; color: #8b4513; font-weight:bold;" onclick="showHistory()">📜 剧情回放 (编辑)</div>
         <div class="menu-item" id="menu-regen-btn" style="display:none; color: #e91e63;" onclick="regenerateLastResponse()">回溯(重塑)</div>
         <div class="menu-item" onclick="exportSave()">💾 导出存档</div>
         <div class="menu-item" onclick="document.getElementById('import-file').click()">📂 导入存档</div>
@@ -407,6 +408,16 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="history-modal" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content" style="background: #fdf5e6; border-color: #8b4513;">
+            <h3 style="text-align:center; color: #8b4513; margin-top:0;">📜 剧情回放卷宗 📜</h3>
+            <p style="font-size:12px; color:#666; text-align:center;">阅览过往剧情，或手动修改 AI 判定的错误</p>
+            <div id="history-list-container" style="max-height: 60vh; overflow-y: auto; padding: 10px; background: rgba(255,255,255,0.7); border: 1px solid #d2b48c; border-radius: 8px;">
+            </div>
+            <button class="close-btn" style="margin-top:15px; background: #8b4513;" onclick="document.getElementById('history-modal').classList.remove('active')">合上卷宗</button>
+        </div>
+    </div>
+
     <div id="toast"></div>
 
     <script>
@@ -448,9 +459,9 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             if(screenId === 'gameplay-screen') {
-                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn'].forEach(id=>document.getElementById(id).style.display='block');
+                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn'].forEach(id=>document.getElementById(id).style.display='block');
             } else {
-                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn'].forEach(id=>document.getElementById(id).style.display='none');
+                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn'].forEach(id=>document.getElementById(id).style.display='none');
             }
         }
         function backFromApi() { switchScreen(prevScreen); }
@@ -890,6 +901,8 @@
 
         /* ================= 🌟 AI 对话与双轨制显示 🌟 ================= */
        function buildSystemPrompt() {
+            // 👇 新加这一行，把所有地图名字串起来
+            let bgList = Object.keys(bgMap).join("、");
             let statsText = ""; for(let k in statsConfig) statsText += `${statsConfig[k].name}:${statsConfig[k].v} `;
             const empP = document.getElementById('emp-personality-val').innerText;
             const pregText = gameState.pregnancy === 0 ? "无" : `怀孕${gameState.pregnancy}个月`;
@@ -924,7 +937,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 2. 每次回复分2-5个 [发言] 块。格式：[发言] 姓名：（动作）内容。
 
 【！！！强制系统指令（必须在回复的最末尾单独一行输出）！！！】
-1. 只要剧情涉及去新的地方，必须加：[背景: 场景名]（如：御书房、御花园白天1、太医院）！
+1. 换场景必加：[背景: 场景名]（你必须且只能从以下专属地图库中，结合剧情与时辰选择最合适的一个：${bgList}。若去了图库外的地方，请直接输出[背景: 你自编的地点]）。
 2. 皇帝对玩家好感变动，必须加：[天宠+X] 或 [天宠-X]！
 3. 玩家位份变化，必须加：[位份: 新位份]！
 4. 妃嫔犯错被贬，必须加惩罚指令！示例：[更新: 林旻恩|-10|-50|官女子] (好感-10，圣宠狂扣50，位份填纯名字，绝不能带“位份:”二字！)
@@ -1043,9 +1056,19 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             const bgMatch = cleanText.match(/\[背景\s*[：:]\s*(.*?)\]/);
             if(bgMatch) { 
                 let targetBg = bgMatch[1].trim();
-                if(bgMap[targetBg]) {
-                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[targetBg]}')`; 
-                    document.getElementById('loc-display').innerText = `当前位置：${targetBg}`;
+                
+                // 1. 简单粗暴的匹配：AI点的菜，在不在咱们的地图菜单里？
+                let exactKey = Object.keys(bgMap).find(k => k === targetBg || targetBg.includes(k) || k.includes(targetBg));
+                
+                if (exactKey) {
+                    // 2. 菜单里有这道菜（比如 AI 选了"御花园夜晚"），完美切图！
+                    gameState.currentLoc = exactKey; 
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[exactKey]}')`;
+                    document.getElementById('loc-display').innerText = `当前位置：${exactKey.replace(/\d+/g, '')}`; // 顺手把"白天1"的数字去掉
+                } else {
+                    // 3. 菜单里没有（比如 AI 选了"屋顶"），只更新文字，保留代入感！
+                    gameState.currentLoc = targetBg;
+                    document.getElementById('loc-display').innerText = `当前位置：${targetBg}`; 
                 }
             }
 
@@ -1212,6 +1235,54 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
         }
 
         function saveWorldbook() { gameState.worldbook = document.getElementById('wb-input').value.trim(); document.getElementById('wb-modal').classList.remove('active'); showToast("世界书设定已录入！"); }
+
+/* ================= 📜 剧情回放与编辑系统 ================= */
+        function showHistory() {
+            renderHistoryList();
+            showModal('history-modal');
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag]));
+        }
+
+        function renderHistoryList() {
+            const container = document.getElementById('history-list-container');
+            container.innerHTML = '';
+            if(!gameState.history || gameState.history.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#999;">暂无剧情记录</div>'; return;
+            }
+            gameState.history.forEach((msg, idx) => {
+                let isUser = msg.role === 'user';
+                let color = isUser ? '#4682b4' : '#c71585';
+                let roleName = isUser ? '【玩家 / 系统触发】' : '【AI 剧情生成】';
+                
+                container.innerHTML += `
+                    <div style="margin-bottom:15px; border-bottom:1px dashed #d2b48c; padding-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <strong style="color:${color}; font-size:13px;">第 ${idx+1} 回. ${roleName}</strong>
+                            <button class="btn-sm" style="background:#8b4513; font-size:12px;" onclick="editHistory(${idx})">✏️ 修改</button>
+                        </div>
+                        <div id="hist-content-${idx}" style="font-size:14px; line-height:1.6; color:#333; white-space:pre-wrap;">${escapeHTML(msg.content)}</div>
+                        <textarea id="hist-edit-${idx}" class="wb-textarea" style="display:none; height:120px; border-color:#8b4513; margin-top:5px; font-size:14px;">${msg.content}</textarea>
+                        <button id="hist-save-${idx}" class="btn-sm" style="display:none; background:#2e8b57; margin-top:5px; width:100%; padding:8px;" onclick="saveHistory(${idx})">💾 保存修改并生效</button>
+                    </div>`;
+            });
+            setTimeout(() => { container.scrollTop = container.scrollHeight; }, 50);
+        }
+
+        function editHistory(idx) {
+            document.getElementById(`hist-content-${idx}`).style.display = 'none';
+            document.getElementById(`hist-edit-${idx}`).style.display = 'block';
+            document.getElementById(`hist-save-${idx}`).style.display = 'block';
+        }
+
+        function saveHistory(idx) {
+            gameState.history[idx].content = document.getElementById(`hist-edit-${idx}`).value;
+            autoSave(); 
+            renderHistoryList();
+            showToast("💾 剧情记录已修改！");
+        }
 
 /* ================= 🌸 浮生孽缘系统逻辑 ================= */
         let currentLoverIdx = 0;
