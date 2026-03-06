@@ -153,6 +153,7 @@
         <div class="menu-item" id="menu-stats-btn" style="display:none;" onclick="showPlayerStats()">查看我的档案</div>
         <div class="menu-item" id="menu-harem-btn" style="display:none; color: #d02090;" onclick="showHaremList()">后宫花名册</div>
         <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="showModal('wb-modal')">世界书设定</div>
+        <div class="menu-item" id="menu-lovers-btn" style="display:none; color: #c71585; font-weight:bold;" onclick="showLoversList()">💌 浮生孽缘 (私密)</div>
         <div class="menu-item" id="menu-regen-btn" style="display:none; color: #e91e63;" onclick="regenerateLastResponse()">回溯(重塑)</div>
         <div class="menu-item" onclick="exportSave()">💾 导出存档</div>
         <div class="menu-item" onclick="document.getElementById('import-file').click()">📂 导入存档</div>
@@ -256,10 +257,25 @@
                 <button class="map-btn" onclick="enterLocation('御书房')">御书房</button>
                 <button class="map-btn" onclick="enterLocation('御花园白天1')">御花园</button>
                 <button class="map-btn" onclick="enterLocation('太医院')">太医院</button>
+                <button class="map-btn" onclick="enterLocation('观星台')">观星台</button>
                 <button class="map-btn" onclick="startVisit()">拜访妃嫔</button>
                 <button class="map-btn" onclick="enterLocation('女主卧室')">回自己寝宫</button>
+                <button class="map-btn" onclick="showOutMap()" style="background:#ffd700; color:#b8860b; font-weight:bold;">令牌出宫</button>
             </div>
             <button class="next-month-btn" onclick="endDay()">🌙 结束本旬 (推进时间与结算)</button>
+        </div>
+
+        <div class="map-overlay" id="out-map-overlay">
+            <h3 style="text-align:center; color: #b8860b; margin-top:0;">🏮 京城街道 🏮</h3>
+            <div class="map-grid">
+                <button class="map-btn" onclick="enterLocation('京城酒楼')">古代酒楼</button>
+                <button class="map-btn" onclick="enterLocation('布坊')">布坊</button>
+                <button class="map-btn" onclick="enterLocation('普陀山')">普陀山</button>
+                <button class="map-btn" onclick="enterLocation('珠宝店')">珠宝店</button>
+                <button class="map-btn" onclick="enterLocation('香料铺')">香料铺</button>
+                <button class="map-btn" onclick="enterLocation('京城学堂')">京城学堂</button>
+            </div>
+            <button class="next-month-btn" style="background:#4682b4;" onclick="backToPalaceMap()">‹ 验看腰牌，返回宫门</button>
         </div>
 
         <div class="game-dialogue-box" id="dialogue-container" onclick="showNextDialogue()">
@@ -350,6 +366,47 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="lovers-modal" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content" style="border-color: #c71585; background: #fff0f5;">
+            <h3 style="text-align:center; color: #c71585; margin-top:0;">🌸 浮生孽缘 🌸</h3>
+            <p style="font-size:12px; color:#c71585; text-align:center; font-weight:bold;">万不可让圣上瞧见这本秘录...</p>
+            <div id="lovers-list-container"></div>
+            <button class="close-btn" style="margin-top:15px; background: #c71585;" onclick="document.getElementById('lovers-modal').classList.remove('active')">阅后即焚 (关闭)</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="lover-detail-modal" style="z-index: 6100;" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content" style="background: #fffafa; border-color: #c71585;">
+            <h3 style="text-align:center; color:#c71585; margin-top:0;" id="ld-title-name">暗香秘录档案</h3>
+            <div class="archive-layout">
+                <div class="al-left">
+                    <p style="margin:5px 0;"><b>人设：</b><span id="ld-type" style="color:#e91e63; font-weight:bold;"></span></p>
+                    <p style="margin:5px 0; font-size:13px; color:#666;" id="ld-intro"></p>
+                    <p style="margin:8px 0;"><b>私情热度：</b><span id="ld-affection" style="color:#ff1493; font-weight:bold;"></span></p>
+                    <p style="margin:5px 0;"><b>皇帝疑心：</b><span id="ld-suspicion" style="color:red; font-weight:bold;"></span></p>
+                    <p style="margin:5px 0;"><b>隐秘珠胎：</b><span id="ld-child" style="color:#4682b4; font-weight:bold;"></span></p>
+                    <button class="close-btn" style="margin-top:10px; background:#c71585;" onclick="openLetterModal()">🕊️ 青鸟传书</button>
+                </div>
+                <div class="al-right">
+                    <img id="ld-img" class="al-img-framed" style="border-color:#c71585;" src="" alt="立绘">
+                </div>
+            </div>
+            <button class="close-btn" style="background:#555; margin-top:10px;" onclick="document.getElementById('lover-detail-modal').classList.remove('active')">藏匿档案</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="letter-modal" style="z-index: 6200;" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content" style="background: #fffafa; border-color: #ff69b4;">
+            <h3 style="text-align:center; color: #ff69b4; margin-top:0;" id="letter-title">青鸟传书</h3>
+            <div id="letter-display" style="height:150px; overflow-y:auto; background:#fff; border:1px dashed #c71585; border-radius:8px; padding:10px; margin-bottom:10px; font-size:14px; line-height:1.6;">
+                <div style="color:#888; text-align:center;">（暂未寄出信件）</div>
+            </div>
+            <textarea id="letter-input" class="wb-textarea" style="height:80px; border-color:#ff69b4;" placeholder="写下你的绵绵情话，或是绝情之词..."></textarea>
+            <button class="close-btn" id="send-letter-btn" style="background:#ff69b4; margin-bottom:5px;" onclick="sendLetterToLover()">放飞青鸟</button>
+            <button class="close-btn" style="background:#ccc; color:#333;" onclick="document.getElementById('letter-modal').classList.remove('active')">关窗</button>
+        </div>
+    </div>
+
     <div id="toast"></div>
 
     <script>
@@ -364,7 +421,13 @@
             favor: 0, year: 1, month: 1, period: 0, rank: '待定', 
             pregnancy: 0, children: [], 
             worldbook: '', harem: [], history: [], isGenerating: false, currentLoc: '皇帝正殿',
-            isPlayerTransparent: false, isEmpTransparent: false 
+            isPlayerTransparent: false, isEmpTransparent: false,
+            // 👇 新增的孽缘系统数据
+            lovers: [
+                { id: 'guoshi', name: '司星沉', title: '轮椅国师', type: '阴湿病娇', intro: '常年以轮椅代步，苍白羸弱。常驻观星台。他手握大夏星轨，看你的眼神像淬了毒的暗藤，妄图用天命将你生生世世囚禁。', affection: 0, suspicion: 0, isKnown: false, children: [], image: 'https://i.postimg.cc/hGwq7826/lun-yi-guo-shi.png' },
+                { id: 'jiangjun', name: '萧铎', title: '少年将军', type: '阳光修狗', intro: '每年六月和腊月回京述职。意气风发，笑容比烈日耀眼。在战场上是杀神，在你榻前却是只疯狂摇尾巴的直球大修狗。', affection: 0, suspicion: 0, isKnown: false, children: [], image: 'https://i.postimg.cc/d0DY1N9v/zhong-quan-jiang-jun.png' },
+                { id: 'huli', name: '晏洵', title: '粉尾狐妖', type: '天真纯欲', intro: '普陀山迷路的粉色九尾狐。生得一双湿漉漉的桃花眼，最喜欢黏着你叫姐姐，情事上却极具野兽的掠夺性。', affection: 0, suspicion: 0, isKnown: false, children: [], image: 'https://i.postimg.cc/T3txTvgd/fen-jiu-wei-hu.png' }
+            ]
         };
         let gameState = JSON.parse(JSON.stringify(defaultState));
         let dialogueQueue = []; let isTyping = false; let typeTimer = null;
@@ -385,9 +448,9 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             if(screenId === 'gameplay-screen') {
-                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn'].forEach(id=>document.getElementById(id).style.display='block');
+                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn'].forEach(id=>document.getElementById(id).style.display='block');
             } else {
-                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn'].forEach(id=>document.getElementById(id).style.display='none');
+                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn'].forEach(id=>document.getElementById(id).style.display='none');
             }
         }
         function backFromApi() { switchScreen(prevScreen); }
@@ -492,7 +555,17 @@
             "宫门": "https://i.postimg.cc/g2LNYxts/宫门.jpg", "御花园白天1": "https://i.postimg.cc/YCLbpvDN/小院子.jpg",
             "御花园白天2": "https://i.postimg.cc/JzHP1sYc/庭院.jpg", "御书房": "https://i.postimg.cc/XYBQVr1X/御书房.jpg",
             "御膳房": "https://i.postimg.cc/Z5vVTWs9/御膳房.jpg", "浴池": "https://i.postimg.cc/zGH0Jy2y/浴池.jpg", "皇后内殿3": "https://i.postimg.cc/NfMdzJ1Z/皇后内殿3.jpg",
-            "宫宴": "https://i.postimg.cc/MG12dyNq/gong-yan.jpg"
+            "宫宴": "https://i.postimg.cc/MG12dyNq/gong-yan.jpg",
+            // 👇 下面是全新加入的地图
+            "观星台": "https://i.postimg.cc/Xv3qhLjW/观星阁.jpg",
+            "京城街道": "https://i.postimg.cc/2yT7by2c/侧面街道商铺.jpg",
+            "京城酒楼": "https://i.postimg.cc/sxK4QxTy/gu-dai-jiu-lou.jpg",
+            "布坊": "https://i.postimg.cc/ZnJL5pxt/bu-fang.jpg",
+            "普陀山": "https://i.postimg.cc/wM9kjLcP/pu-tuo-shan.jpg",
+            "珠宝店": "https://i.postimg.cc/J0K5D0PY/zhu-bao-dian.jpg",
+            "香料铺": "https://i.postimg.cc/D05PJ0BY/xiang-liao-pu.jpg",
+            "京城学堂": "https://i.postimg.cc/GprtNKLn/xue-tang.jpg",
+            "冷宫": "https://i.postimg.cc/g0dj5sYt/leng-gong.jpg"
         };
 
         function openPresetModal() {
@@ -701,16 +774,33 @@
             document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["宫门"]}')`;
             document.getElementById('loc-display').innerText = "当前位置：宫门";
             document.getElementById('map-overlay').classList.add('active');
+            document.getElementById('out-map-overlay').classList.remove('active'); // 确保隐藏宫外面板
             clearNpcAvatar(); // 回到地图清除右侧立绘
+        }
+
+        // 新增：打开出宫面板
+        function showOutMap() {
+            document.getElementById('map-overlay').classList.remove('active');
+            document.getElementById('out-map-overlay').classList.add('active');
+            document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["京城街道"]}')`;
+            document.getElementById('loc-display').innerText = "当前位置：京城街道";
+            clearNpcAvatar();
+        }
+
+        // 新增：退回宫门面板
+        function backToPalaceMap() {
+            document.getElementById('out-map-overlay').classList.remove('active');
+            showMap();
         }
 
         async function enterLocation(locName) {
             document.getElementById('map-overlay').classList.remove('active');
+            document.getElementById('out-map-overlay').classList.remove('active'); // 无论是哪个面板，进了地点都关掉
             document.getElementById('loc-display').innerText = `当前位置：${locName}`;
             document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[locName]}')`;
             clearNpcAvatar(); // 切换场景先清空右侧
 
-            gameState.history.push({role: "user", content: `系统提示：玩家来到了 ${locName}。安排偶遇事件。`});
+            gameState.history.push({role: "user", content: `系统提示：玩家来到了 ${locName}。安排偶遇事件。若在宫外，请描写热闹的市井或神秘的奇遇。`});
             await requestAI();
         }
 
@@ -783,30 +873,51 @@
         }
 
         /* ================= 🌟 AI 对话与双轨制显示 🌟 ================= */
-        function buildSystemPrompt() {
+       function buildSystemPrompt() {
             let statsText = ""; for(let k in statsConfig) statsText += `${statsConfig[k].name}:${statsConfig[k].v} `;
             const empP = document.getElementById('emp-personality-val').innerText;
             const pregText = gameState.pregnancy === 0 ? "无" : `怀孕${gameState.pregnancy}个月`;
             const wbText = gameState.worldbook ? `【世界书】\n${gameState.worldbook}\n` : "";
             
             let haremText = "【后宫名单】\n";
-            gameState.harem.forEach(h => { haremText += `- ${h.title}${h.rank}${h.name} (好感:${h.affection}, 性格:${h.personality}, 宠:${h.favor})\n`; });
+            gameState.harem.forEach(h => { haremText += `- ${h.title}${h.rank}${h.name} (好感:${h.affection}, 宠:${h.favor})\n`; });
 
-            let extraRules = statsConfig['cunning'].v <= 5 ? "【隐藏】玩家【心机】低，极易被暗算。\n" : "";
+            // 👇 强力注入孽缘名单与偶遇判定
+            let loversText = "【红尘暗缘(秘密情郎)】\n";
+            let huli = gameState.lovers.find(l=>l.id==='huli');
+            gameState.lovers.forEach(l => { if(l.isKnown) loversText += `- ${l.name} (${l.title}, 人设:${l.type}, 对你好感:${l.affection}, 皇帝疑心:${l.suspicion}%)\n`; });
+            
+            let encounterHints = "";
+            if(gameState.currentLoc === "观星台") encounterHints += "【命运触发】玩家来到了观星台，请务必安排阴湿病娇国师【司星沉】出场并与玩家互动。\n";
+            if(gameState.currentLoc === "普陀山" && !huli.isKnown) encounterHints += "【命运触发】玩家来到了普陀山，请务必安排天真纯欲的粉尾狐妖【晏洵】迷路初遇玩家。\n";
+            else if(huli.isKnown && ["京城街道","京城酒楼","布坊","珠宝店","香料铺","京城学堂"].includes(gameState.currentLoc)) encounterHints += "【命运触发】玩家在宫外，极大概率偶遇黏人的粉尾狐妖【晏洵】。\n";
+            if((gameState.month === 6 || gameState.month === 12) && ["御花园白天1","御花园白天2","御书房","太医院","宫门"].includes(gameState.currentLoc)) encounterHints += "【命运触发】现在是回京述职的月份，玩家在宫内极大概率偶遇阳光修狗将军【萧铎】。\n";encounterHints += "【寻常偶遇】若未触发上述命运事件且在宫内走动，请务必从【后宫名单】中挑一位或多位妃嫔与玩家偶遇、宫斗或闲聊，绝对不要每次都遇到皇帝！\n";
 
-            return `你是《水云间》文字游戏引擎，必须严格遵守以下强制模板，严禁遗漏！
-玩家：${gameState.playerName}，家世：${document.getElementById('bg-val').innerText}，位份：${gameState.rank}，孕期：${pregText}。
+            let extraRules = statsConfig['cunning'].v <= 5 ? "【隐藏】玩家心机低，极易被暗算。\n" : "";
+
+            return `你是《水云间》文字游戏引擎，必须严格遵守响应规则！
+玩家：${gameState.playerName}，位份：${gameState.rank}，孕期：${pregText}。
 属性：${statsText}。皇帝性格：${empP}。
-${haremText}${wbText}${extraRules}
-【规则】
-1. 不替玩家说话！用“你”称呼玩家。
-2. 对话分块：一句话尽量在一个框内说完！每次最多5块。
-3. 格式：[发言] NPC姓名：（动作）内容
-4. 皇帝宠爱每次[天宠+X]最多+1或+2。注意圣宠是零和的。
-5. 结算标签（只能放在最后一块）：[天宠+X] [更新: 姓名|好感变动|圣宠变动|新位份] [背景: 场景名]。
+${haremText}${loversText}${encounterHints}${wbText}${extraRules}
+
+【剧情与对话规则】
+1. 严禁代答！只准用“你”称呼玩家。
+2. 每次回复分2-5个 [发言] 块。格式：[发言] 姓名：（动作）内容。
+
+【！！！强制系统指令（必须在回复的最末尾单独一行输出）！！！】
+1. 只要剧情涉及去新的地方，必须加：[背景: 场景名]（如：御书房、御花园白天1、太医院）！
+2. 皇帝对玩家好感变动，必须加：[天宠+X] 或 [天宠-X]！
+3. 玩家位份变化，必须加：[位份: 新位份]！
+4. 妃嫔犯错被贬，必须加惩罚指令！示例：[更新: 林旻恩|-10|-50|官女子] (好感-10，圣宠狂扣50，位份填纯名字，绝不能带“位份:”二字！)
+5. 皇帝宠爱每次[天宠+X]最多+1或+2。注意圣宠是零和的。
 6. 若玩家拜访妃嫔，请自编宫殿名，并附带 [背景: 嫔妃豪华内殿1]。
-7. 只要剧情提到了换场景(如:去御花园、回宫)，你必须在最后一行输出: [背景: 场景名]！
-8. 只要提到了升位份，必须在最后一行输出: [位份: 新位份]！`;
+7. 结算标签（只能放在最后一块）：[天宠+X] [更新: 姓名|好感变动|圣宠变动|新位份] [背景: 场景名]。
+8. 只要提到了升位份，必须在最后一行输出: [位份: 新位份]。
+
+【完美输出示例】
+[发言] 皇帝：（大怒）她竟敢如此放肆！传旨，降林旻恩为官女子，褫夺封号，禁足一月！
+[发言] 苏培盛：（躬身）奴才遵旨。
+[天宠+2] [背景: 皇帝正殿] [更新: 林旻恩|0|-50|官女子]`;
         }
 
         async function sendGameMessage() {
@@ -876,7 +987,7 @@ ${haremText}${wbText}${extraRules}
                 
                 parseAndDisplayAI(reply);
 
-            } catch(e) { displayDialogue("系统", "报错查明：" + e.message); } 
+            } catch(e) { displayDialogue("系统", "网络连接异常。"); } 
             finally {
                 gameState.isGenerating = false;
                 sendBtn.innerText = "发 送"; sendBtn.disabled = false;
@@ -914,8 +1025,25 @@ ${haremText}${wbText}${extraRules}
             while ((upMatch = upRegex.exec(cleanText)) !== null) {
                 let nName=upMatch[1].trim(), aff=parseInt(upMatch[2])||0, fav=parseInt(upMatch[3])||0, nRank=upMatch[4].trim();
                 let target = gameState.harem.find(h=>h.name.includes(nName) || nName.includes(h.name));
-                if(target) { target.affection+=aff; target.favor+=fav; if(nRank) target.rank=nRank; if(fav > 0) applyZeroSumFavor(target.name, fav); }
+                if(target) { 
+                    target.affection += aff; 
+                    target.favor += fav; 
+                    if(target.favor < 0) target.favor = 0; // 圣宠绝对不能扣成负数
+                    
+                    if(nRank) { 
+                        // 狠狠清洗AI加的废话
+                        nRank = nRank.replace(/位份[：:]?/g, '').replace(/降为/g, '').replace(/升为/g, '').trim();
+                        target.rank = nRank; 
+                        
+                        // 自动褫夺封号机制：只要降到这几个低级位份，封号直接扒掉！
+                        if(["官女子", "答应", "庶人", "冷宫", "废妃"].includes(nRank)) {
+                            target.title = ""; 
+                        }
+                    }
+                    if(fav > 0) applyZeroSumFavor(target.name, fav); 
+                }
             }
+
             gameState.harem.sort((a,b)=>b.favor-a.favor);
 
             cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').trim();
@@ -951,10 +1079,18 @@ ${haremText}${wbText}${extraRules}
             } else if(msg.speaker === gameState.playerName || msg.speaker === "我") {
                 // 女主说话，右侧保持空
             } else if(msg.speaker !== "系统") {
-                // 后宫妃子
+                // 先找后宫妃子
                 let targetNpc = gameState.harem.find(h => msg.speaker.includes(h.name) || (h.title !== "" && msg.speaker.includes(h.title)));
+                let isTrans = targetNpc ? targetNpc.isTransparent : false;
+                
+                // 没找到妃子？那说明来的是地下情郎！
+                if(!targetNpc && gameState.lovers) {
+                    targetNpc = gameState.lovers.find(l => msg.speaker.includes(l.name) || (l.title !== "" && msg.speaker.includes(l.title)));
+                    if(targetNpc) isTrans = true; // ✨ 情郎强制使用透明大立绘！
+                }
+
                 if(targetNpc && targetNpc.image) {
-                    const id = targetNpc.isTransparent ? 'npc-trans-ingame' : 'npc-framed-ingame';
+                    const id = isTrans ? 'npc-trans-ingame' : 'npc-framed-ingame';
                     const p = document.getElementById(id); p.src = targetNpc.image; p.style.display = 'block';
                 }
             }
@@ -1037,6 +1173,94 @@ ${haremText}${wbText}${extraRules}
         }
 
         function saveWorldbook() { gameState.worldbook = document.getElementById('wb-input').value.trim(); document.getElementById('wb-modal').classList.remove('active'); showToast("世界书设定已录入！"); }
+
+/* ================= 🌸 浮生孽缘系统逻辑 ================= */
+        let currentLoverIdx = 0;
+
+        function showLoversList() {
+            if(!gameState.lovers) gameState.lovers = defaultState.lovers;
+            const container = document.getElementById('lovers-list-container'); container.innerHTML = '';
+            gameState.lovers.forEach((l, idx) => {
+                let affStr = l.isKnown ? `<strong style="color:#ff1493;">${l.affection}</strong>` : `<span style="color:#999;">未相识</span>`;
+                container.innerHTML += `
+                    <div class="harem-card" style="border-color:#c71585;" onclick="showLoverDetail(${idx})">
+                        <div class="harem-title" style="color:#c71585;">${l.title} · ${l.name}</div>
+                        <div class="harem-info"><span>${l.type}</span><span>热度：${affStr}</span></div>
+                    </div>`;
+            });
+            showModal('lovers-modal');
+        }
+
+        function showLoverDetail(idx) {
+            currentLoverIdx = idx; const l = gameState.lovers[idx];
+            document.getElementById('ld-title-name').innerText = `🌸 暗缘 · ${l.name} 🌸`;
+            document.getElementById('ld-type').innerText = l.type;
+            document.getElementById('ld-intro').innerText = l.intro;
+            document.getElementById('ld-affection').innerText = l.isKnown ? l.affection : "未相识 (0)";
+            document.getElementById('ld-suspicion').innerText = `${l.suspicion}% (满100%触发捉奸)`;
+            document.getElementById('ld-child').innerText = l.children.length > 0 ? l.children.join("、") : "无 (表面龙裔)";
+            document.getElementById('ld-img').src = l.image;
+            document.getElementById('lovers-modal').classList.remove('active');
+            document.getElementById('lover-detail-modal').classList.add('active');
+        }
+
+        function openLetterModal() {
+            const l = gameState.lovers[currentLoverIdx];
+            document.getElementById('letter-title').innerText = `青鸟传书 · ${l.name}`;
+            document.getElementById('letter-display').innerHTML = `<div style="color:#888; text-align:center;">提笔写下你想对他说的话...</div>`;
+            document.getElementById('letter-input').value = "";
+            document.getElementById('lover-detail-modal').classList.remove('active');
+            showModal('letter-modal');
+        }
+
+        async function sendLetterToLover() {
+            const text = document.getElementById('letter-input').value.trim();
+            if(!text) return;
+            const apiData = JSON.parse(localStorage.getItem('palace_api_settings') || '{}');
+            if(!apiData.url || !apiData.key) return showToast("请先配置API！");
+
+            const l = gameState.lovers[currentLoverIdx];
+            l.isKnown = true; 
+            
+            const display = document.getElementById('letter-display');
+            display.innerHTML = `<div style="margin-bottom:10px;"><b style="color:var(--dark-color);">你：</b><br>${text}</div><div id="lover-reply-loading" style="color:#ff69b4;">青鸟正飞越红墙...</div>`;
+            document.getElementById('letter-input').value = "";
+            
+            const btn = document.getElementById('send-letter-btn');
+            btn.innerText = "传书中..."; btn.disabled = true;
+
+            const prompt = `你是《水云间》中的${l.title}【${l.name}】。人设：${l.type}。${l.intro}。
+后宫里的妃嫔（玩家，你的秘密情人）给你偷偷传了一封信：“${text}”
+请以你的口吻回信。要求：符合人设，带有一点动作神态描写，充满禁忌拉扯感，字数100字左右。只输出回信，不带多余格式。`;
+
+            try {
+                let fetchUrl, headers, requestBody;
+                if(apiData.provider === 'gemini') {
+                    fetchUrl = `${apiData.url}/v1beta/models/${apiData.model}:generateContent?key=${apiData.key}`;
+                    headers = { 'Content-Type': 'application/json' };
+                    requestBody = { contents: [{ role: 'user', parts: [{ text: prompt }] }] };
+                } else {
+                    fetchUrl = `${apiData.url}/v1/chat/completions`;
+                    headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiData.key}` };
+                    requestBody = { model: apiData.model, messages: [{role: "user", content: prompt}] };
+                }
+                const res = await fetch(fetchUrl, { method: 'POST', headers, body: JSON.stringify(requestBody) });
+                const json = await res.json();
+                let reply = apiData.provider === 'gemini' ? json.candidates[0].content.parts[0].text : json.choices[0].message.content;
+                
+                document.getElementById('lover-reply-loading').remove();
+                display.innerHTML += `<div><b style="color:#c71585;">${l.name}：</b><br>${reply}</div>`;
+                
+                l.affection += 5; l.suspicion += Math.floor(Math.random() * 3);
+                gameState.history.push({role: "user", content: `系统提示：玩家通过青鸟传书与情郎${l.name}私通，感情升温。皇帝疑心微增至${l.suspicion}%。`});
+
+            } catch(e) { 
+                document.getElementById('lover-reply-loading').innerText = "青鸟被大内侍卫射落了（网络异常）。"; 
+            } finally {
+                btn.innerText = "放飞青鸟"; btn.disabled = false;
+                display.scrollTop = display.scrollHeight;
+            }
+        }
 
         /* ================= API 模块 ================= */
         renderStats();
