@@ -149,7 +149,7 @@
         <span></span><span></span><span></span>
     </div>
     <div class="menu-dropdown" id="menu-dropdown">
-        <div class="menu-item" onclick="location.reload()">重启入宫</div>
+        <div class="menu-item" onclick="clearSaveAndRestart()" style="color: #ff4500; font-weight:bold;">☠️ 重启入宫 (删档重来)</div>
         <div class="menu-item" id="menu-stats-btn" style="display:none;" onclick="showPlayerStats()">查看我的档案</div>
         <div class="menu-item" id="menu-harem-btn" style="display:none; color: #d02090;" onclick="showHaremList()">后宫花名册</div>
         <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="showModal('wb-modal')">世界书设定</div>
@@ -528,8 +528,10 @@
             { name: "幽兰吐蕊", url: "https://i.postimg.cc/4d8MBKmb/650jia-zeng-si.png" },
             { name: "娇云怯雨", url: "https://i.postimg.cc/9QT6CFnD/950jia-zeng-qi.png" },
             { name: "青花瓷韵", url: "https://i.postimg.cc/KzsqtdHw/sheng-qi-5-qing-hua-ci-da-bao-ban-shen-zeng-pin.png" },
-            { name: "仙姿玉貌", url: "https://i.postimg.cc/W3fW0QHf/e-zeng-song-fu-li-ban-shen.png" }
+            { name: "仙姿玉貌", url: "https://i.postimg.cc/W3fW0QHf/e-zeng-song-fu-li-ban-shen.png" },
+            { name: "皎如明玉", url: "https://i.postimg.cc/Fzscnnkm/jiao-yu.png" }
         ];
+
 
         const empPresets = [
             { name: "白发妖孽", url: "https://i.postimg.cc/ZKrkh5gZ/bai-fa-hu-nan.png" },
@@ -657,6 +659,15 @@
             let h = [];
             // 深拷贝立绘池，用于防重复抽卡
             let tempPools = JSON.parse(JSON.stringify(portraitPools));
+            
+            // 👇 强插固定VIP：皇后 朴敏珠（女同、太后族亲、渴望自由的白月光）
+            h.push({
+                title: "", rank: "皇后", name: "朴敏珠", bg: "太后本家嫡女",
+                age: 22, favor: 15, // 皇帝只当她是摆设，圣宠极低，相敬如宾
+                personality: "温软避世(渴望自由，唯独对玩家深情)", affection: 100, // 对玩家好感开局直接拉满！
+                stats: {charm:9, intel:8, cunning:3, dance:7, needle:8, health:4, luck:6, charisma:10}, // 性子软，心机低
+                image: "https://i.postimg.cc/3xLqLPy5/gui-fei-min-zhu.png", isTransparent: true, pregnancy: 0, children: []
+            });
             
             const titles = ["婉", "华", "宁", "丽", "静", "惠", "顺", "娇", "熙", "敬", "端", "舒", "嘉", "纯"];
             const personalities = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
@@ -898,7 +909,10 @@
             else if(huli.isKnown && ["京城街道","京城酒楼","布坊","珠宝店","香料铺","京城学堂"].includes(gameState.currentLoc)) encounterHints += "【命运触发】玩家在宫外，极大概率偶遇黏人的粉尾狐妖【晏洵】。\n";
             if((gameState.month === 6 || gameState.month === 12) && ["御花园白天1","御花园白天2","御书房","太医院","宫门"].includes(gameState.currentLoc)) encounterHints += "【命运触发】现在是回京述职的月份，玩家在宫内极大概率偶遇阳光修狗将军【萧铎】。\n";encounterHints += "【寻常偶遇】若未触发上述命运事件且在宫内走动，请务必从【后宫名单】中挑一位或多位妃嫔与玩家偶遇、宫斗或闲聊，绝对不要每次都遇到皇帝！\n";
 
-            let extraRules = statsConfig['cunning'].v <= 5 ? "【隐藏】玩家心机低，极易被暗算。\n" : "";
+            let extraRules = "";
+            extraRules += "【核心设定】皇后朴敏珠是太后族亲，潜邸时便是福晋，但与皇帝毫无感情、相敬如宾。她性子温软、不参与宫斗、极度渴望宫墙外的自由。最重要的是，她是女同，唯独对玩家充满极致的温柔与爱意。\n";
+            if(statsConfig['cunning'].v <= 4) extraRules += "【隐藏】玩家心机极低，单纯天真，极易被别人暗算和利用。\n";
+            else if(statsConfig['cunning'].v >= 8) extraRules += "【隐藏】玩家城府极深，八面玲珑，手段狠辣绝不吃亏。任何人（包括皇帝或妃嫔）试图算计玩家，都会被玩家立刻识破并无情反杀！\n";
 
             return `你是《水云间》文字游戏引擎，必须严格遵守响应规则！
 玩家：${gameState.playerName}，位份：${gameState.rank}，孕期：${pregText}。
@@ -934,12 +948,20 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             input.value = "";
             
             let contentText = text;
-            if(/翌日|次日|第二天/.test(text)) {
+            
+            // 1. 时间流转判定
+            if(/翌日|次日|第二天|转眼/.test(text)) {
                 gameState.period++; 
                 if(gameState.period>2){ gameState.period=0; gameState.month++; if(gameState.month>12){ gameState.year++; gameState.month=1; } } 
                 updateTimeDisplay();
                 contentText = `[系统：时间流转，现为${periods[gameState.period]}] 玩家：` + text;
+            } 
+            
+            // 2. ✨ 强行逼迫 AI 切场景的“隐秘纸条”
+            if(/去|前往|回|到|离开|移步/.test(text)) {
+                contentText += " 【系统强制指令：检测到玩家发生移动，请根据语境，务必在回复的最后单独一行加上对应的 [背景: 场景名] 标签！】";
             }
+
 
             displayDialogue(gameState.playerName, text);
             
@@ -997,6 +1019,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 gameState.isGenerating = false;
                 sendBtn.innerText = "发 送"; sendBtn.disabled = false;
                 document.getElementById('game-input').focus();
+                autoSave(); // ✨ 每次AI回复完，偷偷存档！
             }
         }
 
@@ -1275,6 +1298,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             } finally {
                 btn.innerText = "放飞青鸟"; btn.disabled = false;
                 display.scrollTop = display.scrollHeight;
+                autoSave(); // ✨ 每次传完情书，偷偷存档！
             }
         }
 
@@ -1303,6 +1327,54 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
         apiForm.addEventListener('submit', (e) => { e.preventDefault(); const set = { provider: providerSelect.value, url: urlInput.value.trim(), key: keyInput.value.trim(), model: modelSelect.value }; localStorage.setItem('palace_api_settings', JSON.stringify(set)); showToast('✅ API 设置已永久保存！'); backFromApi(); });
         function loadApiSettings() { const saved = JSON.parse(localStorage.getItem('palace_api_settings') || '{}'); if(saved.url) { providerSelect.value = saved.provider || 'newapi'; urlInput.value = saved.url; keyInput.value = saved.key; if(saved.model) { modelSelect.innerHTML = `<option value="${saved.model}">${saved.model}</option>`; modelSelect.value = saved.model; } } }
         loadApiSettings();
+        /* ================= 💾 自动无缝存读档系统 ================= */
+        function autoSave() {
+            if(gameState.rank !== '待定') { // 只有正式入宫后才保存，防止存了个空壳
+                localStorage.setItem('palace_auto_save', JSON.stringify(gameState));
+            }
+        }
+
+        function autoLoad() {
+            const saved = localStorage.getItem('palace_auto_save');
+            if (saved) {
+                try {
+                    let loadedState = JSON.parse(saved);
+                    gameState = Object.assign({}, defaultState, loadedState);
+                    
+                    if(gameState.rank !== '待定') {
+                        updateTimeDisplay();
+                        document.getElementById('loc-display').innerText = `当前位置：${gameState.currentLoc || '皇帝正殿'}`;
+                        document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[gameState.currentLoc] || bgMap["皇帝正殿"]}')`;
+                        
+                        // 恢复常驻立绘
+                        if(gameState.playerAvatar) {
+                            const pid = gameState.isPlayerTransparent ? 'player-trans-ingame' : 'player-framed-ingame';
+                            const pImg = document.getElementById(pid);
+                            if(pImg){ pImg.src = gameState.playerAvatar; pImg.style.display = 'block'; }
+                        }
+                        
+                        switchScreen('gameplay-screen');
+                        
+                        // 恢复屏幕上的最后一句对话
+                        if(gameState.history.length > 0) {
+                            const lastMsg = gameState.history[gameState.history.length - 1];
+                            displayDialogue(lastMsg.role === 'assistant' ? '系统/角色' : gameState.playerName, lastMsg.content);
+                        }
+                        showToast("💾 已自动为您恢复上次游玩进度！");
+                    }
+                } catch(e) { console.error("自动读档失败", e); }
+            }
+        }
+
+        function clearSaveAndRestart() {
+            if(confirm("⚠️ 确定要放弃当前所有进度（包括后宫、好感和子嗣），重新选秀入宫吗？")) {
+                localStorage.removeItem('palace_auto_save');
+                location.reload();
+            }
+        }
+        
+        // 游戏网页一打开，立刻尝试自动读档！
+        window.addEventListener('DOMContentLoaded', autoLoad);
     </script>
 </body>
 </html>
