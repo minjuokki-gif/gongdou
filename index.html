@@ -295,6 +295,10 @@
         <div class="modal-content" style="background: #fff0f5; border-color: #ff69b4;">
             <h3 style="text-align:center; color: var(--dark-color); margin-top:0;">🌸 我的档案 🌸</h3>
             <div class="favor-box">👑 当前天宠：<span id="favor-val">0</span> 👑</div>
+            <div style="display:flex; gap:10px; margin-bottom:15px; padding: 0 10px;">
+                <button onclick="cheatStats()" style="flex:1; background:#ffd700; color:#d2691e; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2);">💊 服下十全大补丸</button>
+                <button onclick="openPresetModal()" style="flex:1; background:#e91e63; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2);">👗 一键更换立绘</button>
+            </div>
             <div class="archive-layout">
                 <div class="al-left">
                     <p style="margin:5px 0;"><b>姓名：</b><span id="player-name-val"></span></p>
@@ -540,7 +544,8 @@
             { name: "娇云怯雨", url: "https://i.postimg.cc/9QT6CFnD/950jia-zeng-qi.png" },
             { name: "青花瓷韵", url: "https://i.postimg.cc/KzsqtdHw/sheng-qi-5-qing-hua-ci-da-bao-ban-shen-zeng-pin.png" },
             { name: "仙姿玉貌", url: "https://i.postimg.cc/W3fW0QHf/e-zeng-song-fu-li-ban-shen.png" },
-            { name: "皎如明玉", url: "https://i.postimg.cc/Fzscnnkm/jiao-yu.png" }
+            { name: "皎如明玉", url: "https://i.postimg.cc/Fzscnnkm/jiao-yu.png" },
+            { name: "雍容华贵", url: "https://i.postimg.cc/pd4mx8YY/zheng-pin-yi.png" }
         ];
 
 
@@ -595,9 +600,33 @@
         function selectPreset(url) {
             gameState.playerAvatar = url; gameState.isPlayerTransparent = true;
             document.getElementById('avatar-preview').src = url; document.getElementById('avatar-preview').style.display = 'block'; document.getElementById('avatar-hint').style.display = 'none';
+            
+            // 如果是在游戏中换装，直接同步到主屏幕！
+            const pImgIngame = document.getElementById('player-trans-ingame');
+            if(pImgIngame) { pImgIngame.src = url; if(gameState.rank !== '待定') pImgIngame.style.display = 'block'; }
+            const framedImg = document.getElementById('player-framed-ingame');
+            if(framedImg) framedImg.style.display = 'none'; 
+            
+            // 同步更新档案面板的图
+            const pDetailImg = document.getElementById('player-detail-img');
+            if(pDetailImg) { pDetailImg.src = url; pDetailImg.className = 'al-img-trans'; }
+
             document.getElementById('preset-modal').classList.remove('active');
-            document.getElementById('sys-feedback').innerHTML = "【系统】已换上绝美透明大立绘！(容貌+2)";
-            statsConfig['charm'].v = Math.min(10, statsConfig['charm'].v + 2); renderStats();
+            
+            if(gameState.rank === '待定') {
+                document.getElementById('sys-feedback').innerHTML = "【系统】已换上绝美透明大立绘！(容貌+2)";
+                statsConfig['charm'].v = Math.min(10, statsConfig['charm'].v + 2); renderStats();
+            } else {
+                showToast("👗 立绘更换成功！"); autoSave();
+            }
+        }
+
+        function cheatStats() {
+            for(let k in statsConfig) statsConfig[k].v = 10;
+            document.getElementById('bg-val').innerText = '正一品太傅嫡女';
+            gameState.playerBg = '正一品太傅嫡女';
+            gameState.playerStats = JSON.parse(JSON.stringify(statsConfig));
+            autoSave(); showPlayerStats(); showToast("💊 满血复活！属性全满，晋升太傅嫡女！");
         }
 
         function openEmpPresetModal() {
@@ -764,6 +793,7 @@
             try {
                 gameState.playerName = document.getElementById('surname').value + document.getElementById('firstname').value;
                 gameState.empName = document.getElementById('emp-surname').value + document.getElementById('emp-firstname').value;
+                gameState.playerBg = document.getElementById('bg-val').innerText; gameState.playerStats = JSON.parse(JSON.stringify(statsConfig));
                 gameState.favor = 0; gameState.year = 1; gameState.month = 1; gameState.period = 0; gameState.rank = '待定'; gameState.pregnancy = 0; gameState.worldbook = '';
                 gameState.history = []; gameState.children = [];
                 generateHarem(); 
@@ -921,9 +951,10 @@
             if((gameState.month === 6 || gameState.month === 12) && ["御花园白天1","御花园白天2","御书房","太医院","宫门"].includes(gameState.currentLoc)) encounterHints += "【命运触发】现在是回京述职的月份，玩家在宫内极大概率偶遇阳光修狗将军【萧铎】。\n";encounterHints += "【寻常偶遇】若未触发上述命运事件且在宫内走动，请务必从【后宫名单】中挑一位或多位妃嫔与玩家偶遇、宫斗或闲聊，绝对不要每次都遇到皇帝！\n";
 
             let extraRules = "";
+            extraRules += "【红牌警告】国师【司星沉】双腿残疾，永远只能坐轮椅！严禁对他使用站立、走动、迈步等腿部动作描写！\n";
             extraRules += "【核心设定】皇后朴敏珠是太后族亲，潜邸时便是福晋，但与皇帝毫无感情、相敬如宾。她性子温软、不参与宫斗、极度渴望宫墙外的自由。最重要的是，她是女同，唯独对玩家充满极致的温柔与爱意。\n";
-            if(statsConfig['cunning'].v <= 4) extraRules += "【隐藏】玩家心机极低，单纯天真，极易被别人暗算和利用。\n";
-            else if(statsConfig['cunning'].v >= 8) extraRules += "【隐藏】玩家城府极深，八面玲珑，手段狠辣绝不吃亏。任何人（包括皇帝或妃嫔）试图算计玩家，都会被玩家立刻识破并无情反杀！\n";
+            if(statsConfig['cunning'].v <= 4) extraRules += "【隐藏】玩家心机极低，极易被别人暗算和利用。\n";
+            else if(statsConfig['cunning'].v >= 8) extraRules += "【隐藏】玩家城府极深，手段狠辣。任何人试图算计玩家，都会被立刻反杀！\n";
 
             return `你是《水云间》文字游戏引擎，必须严格遵守响应规则！
 玩家：${gameState.playerName}，位份：${gameState.rank}，孕期：${pregText}。
@@ -935,14 +966,13 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 2. 每次回复分2-5个 [发言] 块。格式：[发言] 姓名：（动作）内容。
 
 【！！！强制系统指令（必须在回复的最末尾单独一行输出）！！！】
-1. 换场景必加：[背景: 场景名]（你必须且只能从以下专属地图库中，结合剧情与时辰选择最合适的一个：${bgList}。若去了图库外的地方，请直接输出[背景: 你自编的地点]）。
-2. 皇帝对玩家好感变动，必须加：[天宠+X] 或 [天宠-X]！
-3. 玩家位份变化，必须加：[位份: 新位份]！
-4. 妃嫔犯错被贬，必须加惩罚指令！示例：[更新: 林旻恩|-10|-50|官女子] (好感-10，圣宠狂扣50，位份填纯名字，绝不能带“位份:”二字！)
-5. 皇帝宠爱每次[天宠+X]最多+1或+2。注意圣宠是零和的。
-6. 若玩家拜访妃嫔，请自编宫殿名并附带 [背景: 嫔妃豪华内殿1]；但若拜访的是【皇后朴敏珠】，必须附带 [背景: 皇后内殿3]！
-7. 结算标签（只能放在最后一块）：[天宠+X] [更新: 姓名|好感变动|圣宠变动|新位份] [背景: 场景名]。
-8. 只要提到了升位份，必须在最后一行输出: [位份: 新位份]。
+1. 换场景必加：[背景: 场景名]（你必须且只能从地图库中选：${bgList}。若无合适选自编）。
+2. 皇帝对玩家好感变动：[天宠+X] 或 [天宠-X]！
+3. 玩家位份变化：[位份: 新位份]！
+4. 妃嫔犯错被贬或死：[更新: 姓名|好感变动|圣宠变动|新位份(或冷宫/死亡)]！若是赐死/病逝位份填“死亡”。
+5. 情郎好感与疑心变动：[更新: 情郎姓名|好感变动|疑心变动|]。或单发 [疑心+X] / [疑心-X]。【铁律】皇上无千里眼，若非抓奸在床或证据确凿，严禁在宫外私密场合凭空起疑心！
+6. 怀孕与流产：若太医诊出有喜或遇害流产，必须加 [怀孕: 姓名] 或 [流产: 姓名]（玩家自己则填“玩家”）。
+7. 结算标签：[天宠+X] [更新: 姓名|好感|圣宠|位份] [背景: 场景名]。
 
 【完美输出示例】
 [发言] 皇帝：（大怒）她竟敢如此放肆！传旨，降林旻恩为官女子，褫夺封号，禁足一月！
@@ -1070,39 +1100,55 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 }
             }
 
+            // ✨ 疑心双向变动雷达
+            const suspMatch = cleanText.match(/\[疑心\s*([+-]\d+)\]/);
+            if (suspMatch && gameState.lovers) {
+                let sVal = parseInt(suspMatch[1]);
+                let targetLover = gameState.lovers.find(l => text.includes(l.name) || text.includes(l.title));
+                if (targetLover) { targetLover.suspicion = Math.max(0, targetLover.suspicion + sVal); }
+            }
+
+            // ✨ 怀孕与流产雷达
+            const pregMatch = cleanText.match(/\[怀孕\s*[：:]\s*(.*?)\]/);
+            if(pregMatch) {
+                let pName = pregMatch[1].trim();
+                if(pName === '玩家' || pName.includes(gameState.playerName)) { if(gameState.pregnancy === 0){ gameState.pregnancy = 1; showToast("🌸 太医喜报：娘娘有喜了！"); } }
+                else { let t = gameState.harem.find(h=>h.name.includes(pName)); if(t && t.pregnancy === 0){ t.pregnancy = 1; showToast(`🌸 喜报：${t.name} 有喜了！`); } }
+            }
+
+            const misMatch = cleanText.match(/\[流产\s*[：:]\s*(.*?)\]/);
+            if(misMatch) {
+                let mName = misMatch[1].trim();
+                if(mName === '玩家' || mName.includes(gameState.playerName)) { gameState.pregnancy = 0; showToast("🥀 噩耗：你不幸小产了，痛失龙嗣..."); }
+                else { let t = gameState.harem.find(h=>h.name.includes(mName)); if(t){ t.pregnancy = 0; showToast(`🥀 噩耗：${t.name} 不幸小产了...`); } }
+            }
+
+            // ✨ 更新后宫与情郎
             const upRegex = /\[更新[：:](.*?)\|(.*?)\|(.*?)\|(.*?)\]/g; let upMatch;
             while ((upMatch = upRegex.exec(cleanText)) !== null) {
                 let nName=upMatch[1].trim(), aff=parseInt(upMatch[2])||0, fav=parseInt(upMatch[3])||0, nRank=upMatch[4].trim();
+                
                 let target = gameState.harem.find(h=>h.name.includes(nName) || nName.includes(h.name));
                 if(target) { 
-                    target.affection += aff; 
-                    target.favor += fav; 
-                    if(target.favor < 0) target.favor = 0; // 圣宠绝对不能扣成负数
-                    
+                    target.affection += aff; target.favor = Math.max(0, target.favor + fav); 
                     if(nRank) { 
-                        // 狠狠清洗AI加的废话
                         nRank = nRank.replace(/位份[：:]?/g, '').replace(/降为/g, '').replace(/升为/g, '').trim();
                         target.rank = nRank; 
-                        
-                        // 自动褫夺封号机制：只要降到这几个低级位份，封号直接扒掉！
-                        if(["官女子", "答应", "庶人", "冷宫", "废妃"].includes(nRank)) {
-                            target.title = ""; 
-                        }
+                        if(["官女子", "答应", "庶人", "冷宫", "废妃", "死亡", "赐死", "病逝"].includes(nRank)) target.title = ""; 
+                        if(["死亡", "赐死", "病逝", "殁"].includes(nRank)) { target.isDead = true; target.rank = "👻已故"; }
                     }
                     if(fav > 0) applyZeroSumFavor(target.name, fav); 
+                } else if(gameState.lovers) {
+                    let lover = gameState.lovers.find(l=>l.name.includes(nName) || nName.includes(l.name));
+                    if(lover) { lover.isKnown = true; lover.affection += aff; lover.suspicion = Math.max(0, lover.suspicion + fav); }
                 }
             }
+            
+            // ✨ 情郎出场自动解锁
+            if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
 
             gameState.harem.sort((a,b)=>b.favor-a.favor);
-
-            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').trim();
-
-            const chunkRegex = /\[发言\]\s*([^：:]+)[：:]([\s\S]*?)(?=(?:\[发言\]|$))/g;
-            dialogueQueue = []; let cMatch;
-            while ((cMatch = chunkRegex.exec(cleanText)) !== null) dialogueQueue.push({ speaker: cMatch[1].trim(), text: cMatch[2].trim() });
-            
-            if(dialogueQueue.length === 0) dialogueQueue.push({ speaker: '系统', text: cleanText });
-            showNextDialogue();
+            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').trim();
         }
 
         // ✨ 完美接管双轨制立绘显示 ✨
@@ -1182,26 +1228,13 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             showModal('stats-modal');
         }
 
-        function showHaremList() {
-            const container = document.getElementById('harem-list-container'); container.innerHTML = '';
-            gameState.harem.forEach((h, idx) => {
-                let titleStr = h.title ? h.title + "·" : "";
-                let fn = titleStr + h.rank + " " + h.name;
-                container.innerHTML += `
-                    <div class="harem-card" onclick="showConcubineDetail(${idx})">
-                        <div class="harem-title">${fn}</div>
-                        <div class="harem-info"><span>性格：${h.personality}</span><span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span></div>
-                    </div>`;
-            });
-            showModal('harem-modal');
-        }
 
         function showHaremList() {
             const container = document.getElementById('harem-list-container'); container.innerHTML = '';
             gameState.harem.forEach((h, idx) => {
                 let fn = h.rank + " " + h.name; // 清爽格式：位份 姓名
                 container.innerHTML += `
-                    <div class="harem-card" onclick="showConcubineDetail(${idx})">
+                    <div class="harem-card" style="${h.isDead ? 'filter: grayscale(100%); opacity: 0.7; background: #f0f0f0;' : ''}" onclick="showConcubineDetail(${idx})">
                         <div class="harem-title">${fn}</div>
                         <div class="harem-info"><span>性格：${h.personality}</span><span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span></div>
                     </div>`;
@@ -1227,6 +1260,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             const img = document.getElementById('cd-img');
             img.src = h.image || 'https://i.postimg.cc/placeholder-flower.jpg';
             img.className = h.isTransparent ? 'al-img-trans' : 'al-img-framed';
+            img.style.filter = h.isDead ? "grayscale(100%)" : "none";
 
             document.getElementById('harem-modal').classList.remove('active');
             document.getElementById('concubine-detail-modal').classList.add('active');
@@ -1441,6 +1475,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                     gameState = Object.assign({}, defaultState, loadedState);
                     
                     if(gameState.rank !== '待定') {
+                    if(gameState.playerStats) Object.assign(statsConfig, gameState.playerStats); if(gameState.playerBg) document.getElementById('bg-val').innerText = gameState.playerBg;
                         updateTimeDisplay();
                         document.getElementById('loc-display').innerText = `当前位置：${gameState.currentLoc || '皇帝正殿'}`;
                         document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[gameState.currentLoc] || bgMap["皇帝正殿"]}')`;
