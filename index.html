@@ -439,9 +439,9 @@
             isPlayerTransparent: false, isEmpTransparent: false,
             // 👇 新增的孽缘系统数据
             lovers: [
-                { id: 'guoshi', name: '司星沉', title: '轮椅国师', type: '阴湿病娇', intro: '常年以轮椅代步，苍白羸弱。常驻观星台。他手握大夏星轨，看你的眼神像淬了毒的暗藤，妄图用天命将你生生世世囚禁。', affection: 0, suspicion: 0, isKnown: false, children: [], image: 'https://i.postimg.cc/hGwq7826/lun-yi-guo-shi.png' },
-                { id: 'jiangjun', name: '萧铎', title: '少年将军', type: '阳光修狗', intro: '每年六月和腊月回京述职。意气风发，笑容比烈日耀眼。在战场上是杀神，在你榻前却是只疯狂摇尾巴的直球大修狗。', affection: 0, suspicion: 0, isKnown: false, children: [], image: 'https://i.postimg.cc/d0DY1N9v/zhong-quan-jiang-jun.png' },
-                { id: 'huli', name: '晏洵', title: '粉尾狐妖', type: '天真纯欲', intro: '普陀山迷路的粉色九尾狐。生得一双湿漉漉的桃花眼，最喜欢黏着你叫姐姐，情事上却极具野兽的掠夺性。', affection: 0, suspicion: 0, isKnown: false, children: [], image: 'https://i.postimg.cc/T3txTvgd/fen-jiu-wei-hu.png' }
+                { id: 'guoshi', name: '司星沉', title: '轮椅国师', type: '阴湿病娇', intro: '常年以轮椅代步，苍白羸弱。常驻观星台。他手握大夏星轨，看你的眼神像淬了毒的暗藤，妄图用天命将你生生世世囚禁。', affection: 0, suspicion: 0, isKnown: false, children: [], image: 'https://i.postimg.cc/mDS4pt4w/lun-yi-guo-shi.png' },
+                { id: 'jiangjun', name: '萧铎', title: '少年将军', type: '阳光修狗', intro: '每年六月和腊月回京述职。意气风发，笑容比烈日耀眼。在战场上是杀神，在你榻前却是只疯狂摇尾巴的直球大狗勾。', affection: 0, suspicion: 0, isKnown: false, children: [], image: 'https://i.postimg.cc/Y97kxQ5P/zhong-quan-jiang-jun.png' },
+                { id: 'huli', name: '晏洵', title: '粉尾狐妖', type: '天真纯欲', intro: '普陀山迷路的粉色九尾狐。生得一双湿漉漉的桃花眼，最喜欢黏着你叫姐姐，情事上却极具野兽的掠夺性。', affection: 0, suspicion: 0, isKnown: false, children: [], image: 'https://i.postimg.cc/SN1Sp29h/fen-jiu-wei-hu.png' }
             ]
         };
         let gameState = JSON.parse(JSON.stringify(defaultState));
@@ -538,24 +538,23 @@
         
         /* ✨ 绝美立绘素材库 ✨ */
         const playerPresets = [
-            { name: "绝代风华", url: "https://i.postimg.cc/qRZb2951/1250jia-zeng-jiu.png" },
-            { name: "清雅绝尘", url: "https://i.postimg.cc/g01LRsKL/550jia-zeng-san.png" },
-            { name: "幽兰吐蕊", url: "https://i.postimg.cc/4d8MBKmb/650jia-zeng-si.png" },
-            { name: "娇云怯雨", url: "https://i.postimg.cc/9QT6CFnD/950jia-zeng-qi.png" },
-            { name: "青花瓷韵", url: "https://i.postimg.cc/KzsqtdHw/sheng-qi-5-qing-hua-ci-da-bao-ban-shen-zeng-pin.png" },
-            { name: "仙姿玉貌", url: "https://i.postimg.cc/W3fW0QHf/e-zeng-song-fu-li-ban-shen.png" },
-            { name: "皎如明玉", url: "https://i.postimg.cc/Fzscnnkm/jiao-yu.png" },
-            { name: "雍容华贵", url: "https://i.postimg.cc/pd4mx8YY/zheng-pin-yi.png" }
+            { name: "绝代风华", url: "https://i.postimg.cc/Gt1BGBKC/1250jia-zeng-jiu.png" },
+            { name: "清雅绝尘", url: "https://i.postimg.cc/mrtFsWkY/550jia-zeng-san.png" },
+            { name: "幽兰吐蕊", url: "https://i.postimg.cc/HnCJXJ2B/650jia-zeng-si.png" },
+            { name: "娇云怯雨", url: "https://i.postimg.cc/Gt1BGBQ7/950jia-zeng-qi.png" },
+            { name: "青花瓷韵", url: "https://i.postimg.cc/ncpjLDMs/sheng-qi-5-qing-hua-ci-da-bao-ban-shen-zeng-pin.png" },
+            { name: "仙姿玉貌", url: "https://i.postimg.cc/QCrB1Bms/e-zeng-song-fu-li-ban-shen.png" },
+            { name: "皎如明玉", url: "https://i.postimg.cc/wxhRHVqb/jiao-yu.png" },
+            { name: "雍容华贵", url: "https://i.postimg.cc/FsNdKL13/zheng-pin-yi.png" }
         ];
 
-
         const empPresets = [
-            { name: "白发妖孽", url: "https://i.postimg.cc/ZKrkh5gZ/bai-fa-hu-nan.png" },
-            { name: "白衣谪仙", url: "https://i.postimg.cc/pTnGY0Mn/bai-yi-bai-fa.png" },
-            { name: "绿衣银发", url: "https://i.postimg.cc/Znwd9Ssn/lu-yi-yin-fa.png" },
-            { name: "幽蓝深邃", url: "https://i.postimg.cc/sxThBrHY/lan-hei-yi-hei-fa.png" },
-            { name: "黑发血眸", url: "https://i.postimg.cc/prb00DPy/hei-fa-xue-mou.png" },
-            { name: "黑衣玄魅", url: "https://i.postimg.cc/GtXyBCgz/hei-yi-hei-fa.png" }
+            { name: "白发妖孽", url: "https://i.postimg.cc/7L2Y9Hff/bai-fa-hu-nan.png" },
+            { name: "白衣谪仙", url: "https://i.postimg.cc/5ynxyjkv/bai-yi-bai-fa.png" },
+            { name: "绿衣银发", url: "https://i.postimg.cc/YqDrwGFw/lu-yi-yin-fa.png" },
+            { name: "幽蓝深邃", url: "https://i.postimg.cc/6qY9qT1f/lan-hei-yi-hei-fa.png" },
+            { name: "黑发血眸", url: "https://i.postimg.cc/90JW0zNy/hei-fa-xue-mou.png" },
+            { name: "黑衣玄魅", url: "https://i.postimg.cc/x8t08qFz/hei-yi-hei-fa.png" }
         ];
 
         const portraitPools = {
@@ -1075,8 +1074,26 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
         function parseAndDisplayAI(text) {
             let cleanText = text;
+            // ✨ 霸道女主夺宠机制！限制在 0-100 之间，最高单次增减为 5
             const favorMatch = cleanText.match(/\[天宠\s*([+-]\d+)\]/);
-            if(favorMatch) { gameState.favor += parseInt(favorMatch[1]); document.getElementById('favor-val').innerText = gameState.favor; }
+            if(favorMatch) { 
+                let addFav = parseInt(favorMatch[1]);
+                if (addFav > 5) addFav = 5; if (addFav < -5) addFav = -5;
+                let proposed = Math.max(0, Math.min(100, gameState.favor + addFav));
+                
+                if (proposed >= 70) {
+                    gameState.harem.forEach(c => { if(c.favor >= 70) c.favor = 69; }); // 把其他专宠踹下来
+                }
+                if (proposed >= 40) {
+                    let count40 = gameState.harem.filter(c => c.favor >= 40).length;
+                    if (count40 >= 4) { // 名额满了，把最低的那个挤到39
+                        let sorted = gameState.harem.filter(c => c.favor >= 40).sort((a,b)=>a.favor-b.favor);
+                        if(sorted.length > 0) sorted[0].favor = 39;
+                    }
+                }
+                gameState.favor = proposed; 
+                document.getElementById('favor-val').innerText = gameState.favor; 
+            }
             
             const rankMatch = cleanText.match(/\[位份\s*[：:]\s*(.*?)\]/);
             if(rankMatch) { gameState.rank = rankMatch[1].trim(); showToast(`🌸 获封：${gameState.rank}`); }
@@ -1130,19 +1147,33 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 
                 let target = gameState.harem.find(h=>h.name.includes(nName) || nName.includes(h.name));
                 if(target) { 
-                    target.affection += aff; target.favor = Math.max(0, target.favor + fav); 
+                    target.affection += aff; 
+                    
+                    if (fav > 5) fav = 5; if (fav < -5) fav = -5;
+                    let oldFavor = target.favor;
+                    let proposed = Math.max(0, Math.min(100, target.favor + fav)); 
+                    
+                    // ✨ 阶级壁垒：NPC想上位得看名额满没满！
+                    if (proposed >= 70 && oldFavor < 70) {
+                        let has70 = (gameState.favor >= 70) || gameState.harem.some(c => c !== target && c.favor >= 70);
+                        if (has70) proposed = 69; // 已经有专宠了，只能卡在 69！
+                    }
+                    if (proposed >= 40 && oldFavor < 40) {
+                        let count40 = (gameState.favor >= 40 ? 1 : 0) + gameState.harem.filter(c => c !== target && c.favor >= 40).length;
+                        if (count40 >= 4) proposed = 39; // 宠妃名额满了，卡在 39！
+                    }
+                    
+                    target.favor = proposed;
+                    let actualAdd = target.favor - oldFavor;
+                    
                     if(nRank) { 
                         nRank = nRank.replace(/位份[：:]?/g, '').replace(/降为/g, '').replace(/升为/g, '').trim();
                         target.rank = nRank; 
                         if(["官女子", "答应", "庶人", "冷宫", "废妃", "死亡", "赐死", "病逝"].includes(nRank)) target.title = ""; 
                         if(["死亡", "赐死", "病逝", "殁"].includes(nRank)) { target.isDead = true; target.rank = "👻已故"; }
                     }
-                    if(fav > 0) applyZeroSumFavor(target.name, fav); 
-                } else if(gameState.lovers) {
-                    let lover = gameState.lovers.find(l=>l.name.includes(nName) || nName.includes(l.name));
-                    if(lover) { lover.isKnown = true; lover.affection += aff; lover.suspicion = Math.max(0, lover.suspicion + fav); }
+                    if(actualAdd > 0) applyZeroSumFavor(target.name, actualAdd); 
                 }
-            }
             
             // ✨ 情郎出场自动解锁
             if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
