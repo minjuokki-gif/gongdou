@@ -195,7 +195,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="preset-modal" onclick="if(event.target==this) this.classList.remove('active')">
+    <div class="modal-overlay" id="preset-modal" style="z-index: 6500;" onclick="if(event.target==this) this.classList.remove('active')">
         <div class="modal-content">
             <h3 style="text-align:center; color:var(--dark-color); margin-top:0;">👗 挑选初始立绘</h3>
             <p style="font-size:12px; color:#666; text-align:center;">选中后，将常驻在游戏左侧陪伴您</p>
@@ -1149,6 +1149,13 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
             gameState.harem.sort((a,b)=>b.favor-a.favor);
             cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').trim();
+            // 补回丢失的解析发言与显示代码
+            const chunkRegex = /(?:\[|【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[|【)发言(?:\]|】))|$)/g;
+            dialogueQueue = []; let cMatch;
+            while ((cMatch = chunkRegex.exec(cleanText)) !== null) dialogueQueue.push({ speaker: cMatch[1].trim(), text: cMatch[2].trim() });
+            
+            if(dialogueQueue.length === 0 && cleanText) dialogueQueue.push({ speaker: '系统', text: cleanText });
+            showNextDialogue();
         }
 
         // ✨ 完美接管双轨制立绘显示 ✨
