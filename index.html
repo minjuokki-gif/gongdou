@@ -904,7 +904,39 @@
             await requestAI();
         }
 
-        // ✨✨✨ 替换原有的 endDay 函数（植入沙盒引擎） ✨✨✨
+        // ✨✨✨ 记事簿系统 (必须独立，绝对不能被包在别人肚子里) ✨✨✨
+        function logToChronicle(msg) {
+            if (!gameState.chronicles) gameState.chronicles = [];
+            let periodStr = `入宫${gameState.year}年${gameState.month}月 ${periods[gameState.period]}`;
+            if (gameState.chronicles.length === 0 || gameState.chronicles[0].time !== periodStr) {
+                gameState.chronicles.unshift({ time: periodStr, events: [] });
+            }
+            if (!gameState.chronicles[0].events.includes(msg)) {
+                gameState.chronicles[0].events.push(msg);
+            }
+        }
+
+        function showChronicle() {
+            if (!gameState.chronicles) gameState.chronicles = [];
+            const container = document.getElementById('chronicle-list-container');
+            container.innerHTML = '';
+            if (gameState.chronicles.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">后宫风平浪静，暂无大事发生。</div>';
+            } else {
+                gameState.chronicles.forEach(c => {
+                    let evs = c.events.length > 0 ? c.events.map(e => `<li style="margin-bottom:6px;">${e}</li>`).join('') : '<li style="color:#999; list-style:none;">本旬宫中岁月静好。</li>';
+                    container.innerHTML += `
+                        <div style="margin-bottom:15px; border-bottom:1px dashed #2e8b57; padding-bottom:10px;">
+                            <strong style="color:#d2691e; font-size:15px;">【${c.time}】</strong>
+                            <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 14px; color: #333;">${evs}</ul>
+                        </div>
+                    `;
+                });
+            }
+            showModal('chronicle-modal');
+        }
+
+        // ✨ 三年大选、子嗣与孕期结算 + 全自动沙盒引擎 ✨
         async function endDay() {
             gameState.period++; 
             if(gameState.period > 2) { 
@@ -940,10 +972,10 @@
             let periodStr = `入宫${gameState.year}年${gameState.month}月 ${periods[gameState.period]}`;
             if (gameState.chronicles.length === 0 || gameState.chronicles[0].time !== periodStr) {
                 gameState.chronicles.unshift({ time: periodStr, events: [] });
-                if (gameState.chronicles.length > 50) gameState.chronicles.pop(); // 防止存档爆炸，只存50旬
+                if (gameState.chronicles.length > 50) gameState.chronicles.pop(); 
             }
 
-            // 👑👑👑 后台全自动沙盒宫斗引擎 👑👑👑
+            // 👑 后台全自动沙盒宫斗引擎 👑
             if (gameState.harem && gameState.harem.length > 0) {
                 let livingHarem = gameState.harem.filter(h => !h.isDead && h.rank !== "冷宫" && h.rank !== "皇后");
                 
@@ -962,7 +994,7 @@
                         let n1 = shuffled[0]; let n2 = shuffled[1];
                         
                         if (n1.stats.cunning - n2.stats.cunning > 2) {
-                            n2.favor = Math.max(0, n2.favor - 10); // 心机低的被害扣宠
+                            n2.favor = Math.max(0, n2.favor - 10);
                             if (n1.stats.cunning > 7 && Math.random() < 0.4) {
                                 if (n2.pregnancy > 0) {
                                     n2.pregnancy = 0;
