@@ -1082,6 +1082,7 @@
                 let childInfo = h.children.length > 0 ? `, 子嗣:${h.children.join("、")}` : "";
                 haremText += `- ${h.rank} ${h.name} (家世:${h.bg}, ${h.age}岁, 性格:${h.personality}, 容貌:${h.stats.charm}, 心机:${h.stats.cunning}, 好感:${h.affection}, 宠:${h.favor}${pregInfo}${childInfo})\n`; 
             });
+            let loversText = "【红尘暗缘(秘密情郎)】\n";
             let huli = gameState.lovers.find(l=>l.id==='huli');
             gameState.lovers.forEach(l => { if(l.isKnown) loversText += `- ${l.name} (${l.title}, 人设:${l.type}, 对你好感:${l.affection}, 皇帝疑心:${l.suspicion}%)\n`; });
             
@@ -1204,7 +1205,14 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 
                 parseAndDisplayAI(reply);
 
-            } catch(e) { displayDialogue("系统", "网络连接异常。"); } 
+            } catch(e) { 
+                displayDialogue("系统", "系统报错啦：" + e.message); 
+                console.error(e); 
+                // ✨ 新增防卡死机制：如果发出去失败了，得把刚才压进去的那句话退回来，不然会永久卡死！
+                if(gameState.history.length > 0 && gameState.history[gameState.history.length-1].role === 'user') {
+                    gameState.history.pop();
+                }
+            } 
             finally {
                 gameState.isGenerating = false;
                 sendBtn.innerText = "发 送"; sendBtn.disabled = false;
@@ -1625,7 +1633,8 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 gameState.history.push({role: "user", content: `系统提示：玩家通过青鸟传书与情郎${l.name}私通，感情升温。皇帝疑心微增至${l.suspicion}%。`});
 
             } catch(e) { 
-                document.getElementById('lover-reply-loading').innerText = "青鸟被大内侍卫射落了（网络异常）。"; 
+                document.getElementById('lover-reply-loading').innerText = "青鸟被大内侍卫射落了（系统报错：" + e.message + "）。"; 
+                console.error(e);
             } finally {
                 btn.innerText = "放飞青鸟"; btn.disabled = false;
                 display.scrollTop = display.scrollHeight;
