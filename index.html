@@ -155,6 +155,7 @@
         <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="showModal('wb-modal')">世界书设定</div>
         <div class="menu-item" id="menu-lovers-btn" style="display:none; color: #c71585; font-weight:bold;" onclick="showLoversList()">💌 浮生孽缘 (私密)</div>
         <div class="menu-item" id="menu-history-btn" style="display:none; color: #8b4513; font-weight:bold;" onclick="showHistory()">📜 剧情回放 (编辑)</div>
+        <div class="menu-item" id="menu-chronicle-btn" style="display:none; color: #2e8b57; font-weight:bold;" onclick="showChronicle()">📖 后宫记事簿</div>
         <div class="menu-item" id="menu-regen-btn" style="display:none; color: #e91e63;" onclick="regenerateLastResponse()">回溯(重塑)</div>
         <div class="menu-item" onclick="exportSave()">💾 导出存档</div>
         <div class="menu-item" onclick="document.getElementById('import-file').click()">📂 导入存档</div>
@@ -422,6 +423,15 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="chronicle-modal" style="z-index: 6200;" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content" style="background: #f5fffa; border-color: #2e8b57;">
+            <h3 style="text-align:center; color: #2e8b57; margin-top:0;">📖 后宫记事簿 📖</h3>
+            <p style="font-size:12px; color:#666; text-align:center;">每旬由敬事房与内务府联合整理上报</p>
+            <div id="chronicle-list-container" style="max-height: 60vh; overflow-y: auto; padding: 10px; background: rgba(255,255,255,0.7); border: 1px solid #2e8b57; border-radius: 8px;"></div>
+            <button class="close-btn" style="margin-top:15px; background: #2e8b57;" onclick="document.getElementById('chronicle-modal').classList.remove('active')">合上记事簿</button>
+        </div>
+    </div>
+
     <div id="toast"></div>
 
     <script>
@@ -432,7 +442,7 @@
         let prevScreen = 'start-screen';
         
         const defaultState = {
-            playerAvatar: '', empAvatar: '', playerName: '', empName: '',
+            playerAvatar: '', empAvatar: '', playerName: '', empName: '', empAge: 20,
             favor: 0, year: 1, month: 1, period: 0, rank: '待定', 
             pregnancy: 0, children: [], 
             worldbook: '', harem: [], history: [], isGenerating: false, currentLoc: '皇帝正殿',
@@ -463,9 +473,9 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             if(screenId === 'gameplay-screen') {
-                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn'].forEach(id=>document.getElementById(id).style.display='block');
+                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn','menu-chronicle-btn'].forEach(id=>document.getElementById(id).style.display='block');
             } else {
-                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn'].forEach(id=>document.getElementById(id).style.display='none');
+                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn','menu-chronicle-btn'].forEach(id=>document.getElementById(id).style.display='none');
             }
         }
         function backFromApi() { switchScreen(prevScreen); }
@@ -699,32 +709,33 @@
             // 深拷贝立绘池，用于防重复抽卡
             let tempPools = JSON.parse(JSON.stringify(portraitPools));
             
-            // 👇 强插固定VIP：皇后 朴敏珠（女同、太后族亲、渴望自由的白月光）
+            // 👇 强插固定VIP：皇后 朴敏珠
             h.push({
                 title: "", rank: "皇后", name: "朴敏珠", bg: "太后本家嫡女",
-                age: 22, favor: 15, // 皇帝只当她是摆设，圣宠极低，相敬如宾
-                personality: "温软避世(渴望自由，唯独对玩家深情)", affection: 100, // 对玩家好感开局直接拉满！
-                stats: {charm:9, intel:8, cunning:3, dance:7, needle:8, health:4, luck:6, charisma:10}, // 性子软，心机低
-                image: "https://i.postimg.cc/3xLqLPy5/gui-fei-min-zhu.png", isTransparent: true, pregnancy: 0, children: []
+                age: 22, favor: 15, 
+                personality: "温软避世(渴望自由，唯独对玩家深情)", affection: 100, 
+                stats: {charm:9, intel:8, cunning:3, dance:7, needle:8, health:4, luck:6, charisma:10}, 
+                // ✨✨✨ 娘娘请注意：把下面这个链接换成你刚修好的新链接！ ✨✨✨
+                image: "https://i.postimg.cc/4N0Wk7CG/gui-fei-min-zhu.png", 
+                isTransparent: true, pregnancy: 0, children: []
             });
             
             const titles = ["婉", "华", "宁", "丽", "静", "惠", "顺", "娇", "熙", "敬", "端", "舒", "嘉", "纯"];
             const personalities = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
             
-            // ✨ 丰富姓氏（区分满/汉/韩）
             let manchuSurnames = ["乌拉那拉", "富察", "佟佳", "瓜尔佳", "钮祜禄", "叶赫那拉", "辉发那拉", "索绰罗", "博尔济吉特", "年", "巴林"];
             let hanKorSurnames = ["林", "苏", "顾", "沈", "楚", "叶", "白", "裴", "宋", "姜", "崔", "朴", "金", "李", "尹", "郑", "韩", "柳", "张", "陈"];
-            
-            // ✨ 丰富名字（区分古言/韩系）
             let korNames = ["海仁", "知恩", "昭熙", "旻恩", "恩彩", "泰妍", "智媛", "秀智", "允儿"];
-            let cnNames = ["清秋", "知微", "宛筠", "南乔", "星河", "语冰", "揽月", "长乐", "允真", "如懿", "容音", "眉庄", "陵容", "若曦", "玉嬛", "玉娆", "世兰", "紫嫣", "雨晴", "芷若", "婉清", "书瑶", "初夏", "映雪"];
-            
-            let usedGivenNames = new Set(); // ✨ 升级为：严格查杀重复的闺名！
+            let cnNames = ["清秋", "知微", "宛筠", "南乔", "星河", "语冰", "揽月", "长乐", "允真", "如懿", "容音", "眉庄", "陵容", "若曦", "如烟", "玉娆", "世兰", "紫嫣", "雨晴", "芷若", "婉清", "书瑶", "初夏", "映雪"];
+            const bgs = ["太傅嫡女", "总督庶女", "巡抚嫡女", "皇商世家", "江南富商", "武林世家", "知府庶女", "异国贡女", "没落侯府", "平民百姓"];
+
+            let usedGivenNames = new Set(); 
+            let generatedFamilies = []; // ✨ 记录已生成的家族，用于族亲判定
             
             let count = Math.floor(Math.random() * 3) + 3; 
             let favoredCount = 0; let exclusiveCount = 0; 
 
-            for(let i=0; i<count+2; i++) { // +2 是同届萌新
+            for(let i=0; i<count+2; i++) { 
                 let isNew = i >= count;
                 let age = isNew ? Math.floor(Math.random()*2)+15 : Math.floor(Math.random()*8)+16;
                 let f = isNew ? 0 : Math.floor(Math.random() * 80);
@@ -755,34 +766,56 @@
                 let baseRank = isNew ? (i===count?'常在':'答应') : getInitRank(age);
                 let finalRank = assignedTitle ? assignedTitle + baseRank : baseRank;
                 
-                // ✨ 严格检查闺名是否重复
-                let surname, givenName, fullName;
-                do {
+                // ✨✨✨ 全新族亲生成系统（30%概率触发） ✨✨✨
+                let surname, givenName, fullName, finalBg;
+                let isRelative = (generatedFamilies.length > 0) && (Math.random() < 0.3); 
+
+                if (isRelative) {
+                    // 1. 随机挑一个已经生成的家族
+                    let targetFamily = generatedFamilies[Math.floor(Math.random() * generatedFamilies.length)];
+                    surname = targetFamily.surname; // 继承同姓
+                    
+                    // 2. 嫡庶身份互补
+                    if (targetFamily.bg.includes("嫡女")) {
+                        finalBg = targetFamily.bg.replace("嫡女", "庶女");
+                    } else if (targetFamily.bg.includes("庶女")) {
+                        finalBg = targetFamily.bg.replace("庶女", "嫡女");
+                    } else {
+                        finalBg = targetFamily.bg + "旁支"; // 如果是富商/平民，则变为旁支
+                    }
+                    
+                    // 3. 摇一个不重复的名字
+                    let pool = manchuSurnames.includes(surname) ? cnNames : korNames.concat(cnNames);
+                    do { givenName = pool[Math.floor(Math.random()*pool.length)]; } while(usedGivenNames.has(givenName));
+                    
+                } else {
+                    // 不是族亲，正常摇全新的身世
                     let isKoreanName = Math.random() < 0.3;
                     if(isKoreanName) {
                         surname = hanKorSurnames[Math.floor(Math.random()*hanKorSurnames.length)];
-                        givenName = korNames[Math.floor(Math.random()*korNames.length)];
+                        do { givenName = korNames[Math.floor(Math.random()*korNames.length)]; } while(usedGivenNames.has(givenName));
                     } else {
                         let allSurnames = manchuSurnames.concat(hanKorSurnames);
                         surname = allSurnames[Math.floor(Math.random()*allSurnames.length)];
-                        givenName = cnNames[Math.floor(Math.random()*cnNames.length)];
+                        do { givenName = cnNames[Math.floor(Math.random()*cnNames.length)]; } while(usedGivenNames.has(givenName));
                     }
-                    fullName = surname + givenName;
-                } while(usedGivenNames.has(givenName)); // ✨ 只要闺名出现过，立刻重摇！
-                usedGivenNames.add(givenName); // 记录已被使用的闺名
-
-                const bgs = ["太傅嫡女", "总督庶女", "巡抚嫡女", "皇商世家", "江南富商", "武林世家", "知府庶女", "异国贡女", "没落侯府", "平民百姓"];
+                    finalBg = bgs[Math.floor(Math.random()*bgs.length)];
+                    
+                    // 把这个新家族记录进族谱，供后面的妃子概率触发
+                    generatedFamilies.push({ surname: surname, bg: finalBg }); 
+                }
+                
+                fullName = surname + givenName;
+                usedGivenNames.add(givenName); 
 
                 h.push({
-                    title: "", // 彻底废弃独立封号，防止 UI 出现"·"的弱智重叠
-                    rank: finalRank, // 直接叫"宁贵人"或者"答应"
+                    title: "", 
+                    rank: finalRank, 
                     name: fullName,
-                    bg: bgs[Math.floor(Math.random()*bgs.length)],
+                    bg: finalBg,
                     age: age, favor: f, personality: personalities[Math.floor(Math.random()*personalities.length)], affection: isNew?0:(Math.floor(Math.random()*101)-50),
                     stats: cStats, image: assignedImg, isTransparent: true, pregnancy: 0, children: []
                 });
-
-         
             }
             gameState.harem = h.sort((a,b) => b.favor - a.favor);
         }
@@ -792,6 +825,8 @@
             try {
                 gameState.playerName = document.getElementById('surname').value + document.getElementById('firstname').value;
                 gameState.empName = document.getElementById('emp-surname').value + document.getElementById('emp-firstname').value;
+                // ✨ 新增：把开局摇出来的皇上年龄，死死刻进存档里！
+                gameState.empAge = parseInt(document.getElementById('emp-age-val').innerText);
                 gameState.playerBg = document.getElementById('bg-val').innerText; gameState.playerStats = JSON.parse(JSON.stringify(statsConfig));
                 gameState.favor = 0; gameState.year = 1; gameState.month = 1; gameState.period = 0; gameState.rank = '待定'; gameState.pregnancy = 0; gameState.worldbook = '';
                 gameState.history = []; gameState.children = [];
@@ -869,14 +904,14 @@
             await requestAI();
         }
 
-        // ✨ 三年大选、子嗣与孕期结算 ✨
+        // ✨✨✨ 替换原有的 endDay 函数（植入沙盒引擎） ✨✨✨
         async function endDay() {
             gameState.period++; 
             if(gameState.period > 2) { 
                 gameState.period = 0; gameState.month++; 
                 if(gameState.month > 12) { gameState.year++; gameState.month = 1; }
                 
-                // 玩家生娃
+                // 玩家生娃结算
                 if(gameState.pregnancy > 0) {
                     gameState.pregnancy++;
                     if(gameState.pregnancy > 10) { 
@@ -884,16 +919,88 @@
                         let child = (Math.random()>0.5?"阿哥":"公主") + "·" + ["弘", "璟", "永", "和"][Math.floor(Math.random()*4)] + "某";
                         gameState.children.push(child);
                         showToast(`🌸 历经十月怀胎，你顺利诞下【${child}】！`); 
+                        logToChronicle(`【皇家喜报】玩家历经十月怀胎，顺利诞下${child}！`);
                     }
                 }
-                // 后宫生娃
+                // NPC生娃结算
                 gameState.harem.forEach(h => {
-                    if(h.pregnancy>0){ h.pregnancy++; if(h.pregnancy>10){ h.pregnancy=0; h.children.push((Math.random()>0.5?"阿哥":"公主")+"·"+["弘","璟","永","和"][Math.floor(Math.random()*4)]+"某"); } }
+                    if(h.pregnancy>0){ h.pregnancy++; if(h.pregnancy>10){ h.pregnancy=0; 
+                        let cName = (Math.random()>0.5?"阿哥":"公主")+"·"+["弘","璟","永","和"][Math.floor(Math.random()*4)]+"某";
+                        h.children.push(cName); 
+                        logToChronicle(`【瓜熟蒂落】${h.rank} ${h.name} 顺利诞下${cName}，宫中又添新丁。`);
+                    } }
                 });
             }
             updateTimeDisplay();
             document.getElementById('map-overlay').classList.remove('active');
             clearNpcAvatar();
+
+            // 初始化本旬记事本
+            if (!gameState.chronicles) gameState.chronicles = [];
+            let periodStr = `入宫${gameState.year}年${gameState.month}月 ${periods[gameState.period]}`;
+            if (gameState.chronicles.length === 0 || gameState.chronicles[0].time !== periodStr) {
+                gameState.chronicles.unshift({ time: periodStr, events: [] });
+                if (gameState.chronicles.length > 50) gameState.chronicles.pop(); // 防止存档爆炸，只存50旬
+            }
+
+            // 👑👑👑 后台全自动沙盒宫斗引擎 👑👑👑
+            if (gameState.harem && gameState.harem.length > 0) {
+                let livingHarem = gameState.harem.filter(h => !h.isDead && h.rank !== "冷宫" && h.rank !== "皇后");
+                
+                if (livingHarem.length > 0) {
+                    // 1. 侍寝争宠记录
+                    let activeNpc = livingHarem[Math.floor(Math.random() * livingHarem.length)];
+                    let randFav = Math.floor(Math.random() * 5) + 2; 
+                    let oldFav = activeNpc.favor;
+                    activeNpc.favor = Math.min(100, activeNpc.favor + randFav);
+                    if(activeNpc.favor - oldFav > 0) applyZeroSumFavor(activeNpc.name, activeNpc.favor - oldFav);
+                    logToChronicle(`【承宠】敬事房记档：皇上连翻了 ${activeNpc.rank} ${activeNpc.name} 的牌子，赏赐不断。`);
+
+                    // 2. 宫斗暗害与交好 (40%概率在后台发生事件)
+                    if (Math.random() < 0.4 && livingHarem.length >= 2) {
+                        let shuffled = [...livingHarem].sort(() => 0.5 - Math.random());
+                        let n1 = shuffled[0]; let n2 = shuffled[1];
+                        
+                        if (n1.stats.cunning - n2.stats.cunning > 2) {
+                            n2.favor = Math.max(0, n2.favor - 10); // 心机低的被害扣宠
+                            if (n1.stats.cunning > 7 && Math.random() < 0.4) {
+                                if (n2.pregnancy > 0) {
+                                    n2.pregnancy = 0;
+                                    logToChronicle(`【滑胎惨案】后宫疯传 ${n1.rank} ${n1.name} 在安胎药中动手脚，致使 ${n2.rank} ${n2.name} 不幸小产！`);
+                                } else {
+                                    logToChronicle(`【投毒陷害】${n1.rank} ${n1.name} 涉嫌用计谋害 ${n2.rank} ${n2.name}，致其被罚禁足。`);
+                                }
+                            } else {
+                                logToChronicle(`【宫斗口角】${n1.rank} ${n1.name} 当众给 ${n2.rank} ${n2.name} 难堪，闹得风言风语。`);
+                            }
+                        } else if (n1.stats.cunning < 5 && n2.stats.cunning < 5) {
+                            n1.affection += 10; n2.affection += 10;
+                            logToChronicle(`【交好】${n1.rank} ${n1.name} 与 ${n2.rank} ${n2.name} 在御花园烹茶赏花，越发亲厚了。`);
+                        }
+                    }
+
+                    // 3. 意外怀孕机制 (无孕、宠爱>30、概率5%)
+                    livingHarem.forEach(h => {
+                        if(h.pregnancy === 0 && h.favor > 30 && Math.random() < 0.05) {
+                            h.pregnancy = 1;
+                            logToChronicle(`【遇喜】太医院传出喜讯，${h.rank} ${h.name} 怀有身孕了！`);
+                        }
+                    });
+
+                    // 4. 自动晋升与打入冷宫
+                    livingHarem.forEach(h => {
+                        if(h.favor > 60 && ["答应", "常在", "贵人"].includes(h.rank) && Math.random() < 0.2) {
+                            let newRank = h.rank === "答应" ? "常在" : (h.rank === "常在" ? "贵人" : "嫔");
+                            h.rank = newRank;
+                            logToChronicle(`【晋封】内务府传旨：${h.name} 尽心侍奉，晋为 ${newRank}。`);
+                        }
+                        if(h.favor === 0 && h.affection < -20 && Math.random() < 0.05) {
+                            h.rank = "冷宫"; h.title = "";
+                            logToChronicle(`【废弃】${h.name} 屡次触怒圣颜，褫夺封号，打入冷宫！`);
+                        }
+                    });
+                }
+            }
 
             let nightEventText = "";
             let isDraftTime = (gameState.year > 1 && (gameState.year - 1) % 3 === 0 && gameState.month === 1 && gameState.period === 0);
@@ -926,6 +1033,7 @@
             await requestAI();
         }
 
+
         /* ================= 🌟 AI 对话与双轨制显示 🌟 ================= */
        function buildSystemPrompt() {
             // 👇 新加这一行，把所有地图名字串起来
@@ -936,10 +1044,12 @@
             const wbText = gameState.worldbook ? `【世界书】\n${gameState.worldbook}\n` : "";
             
             let haremText = "【后宫名单】\n";
-            // 👇 变成了只有 rank 和 name
-            gameState.harem.forEach(h => { haremText += `- ${h.rank} ${h.name} (好感:${h.affection}, 宠:${h.favor})\n`; });
-            // 👇 强力注入孽缘名单与偶遇判定
-            let loversText = "【红尘暗缘(秘密情郎)】\n";
+            // ✨ 终极开天眼：家世、年龄、性格、容貌、心机、孕期、子嗣，全盘托出！
+            gameState.harem.forEach(h => { 
+                let pregInfo = h.pregnancy > 0 ? `, 怀孕${h.pregnancy}月` : "";
+                let childInfo = h.children.length > 0 ? `, 子嗣:${h.children.join("、")}` : "";
+                haremText += `- ${h.rank} ${h.name} (家世:${h.bg}, ${h.age}岁, 性格:${h.personality}, 容貌:${h.stats.charm}, 心机:${h.stats.cunning}, 好感:${h.affection}, 宠:${h.favor}${pregInfo}${childInfo})\n`; 
+            });
             let huli = gameState.lovers.find(l=>l.id==='huli');
             gameState.lovers.forEach(l => { if(l.isKnown) loversText += `- ${l.name} (${l.title}, 人设:${l.type}, 对你好感:${l.affection}, 皇帝疑心:${l.suspicion}%)\n`; });
             
@@ -957,7 +1067,8 @@
 
             return `你是《水云间》文字游戏引擎，必须严格遵守响应规则！
 玩家：${gameState.playerName}，位份：${gameState.rank}，孕期：${pregText}。
-属性：${statsText}。皇帝性格：${empP}。
+属性：${statsText}。
+皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：${empP}。
 ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
 【剧情与对话规则】
@@ -972,11 +1083,18 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 5. 情郎好感与疑心变动：[更新: 情郎姓名|好感变动|疑心变动|]。或单发 [疑心+X] / [疑心-X]。【铁律】皇上无千里眼，若非抓奸在床或证据确凿，严禁在宫外私密场合凭空起疑心！
 6. 怀孕与流产：若太医诊出有喜或遇害流产，必须加 [怀孕: 姓名] 或 [流产: 姓名]（玩家自己则填“玩家”）。
 7. 结算标签：[天宠+X] [更新: 姓名|好感|圣宠|位份] [背景: 场景名]。
+8. 妃嫔日常与大事件：[更新: 姓名|好感变动|圣宠变动|新位份]。日常争宠波动在+/-5以内；若发生怀孕、流产、被陷害、打入冷宫等大事件，圣宠必须大幅变动(+20或-50等)！
+9. 情郎私会雷达：只要玩家与情郎(如萧铎、晏洵)相见互动，必须输出 [更新: 情郎姓名|好感变动|疑心变动|]。皇上不在场或无证据时疑心不变或微增。
+10. 怀孕与流产：太医诊出有喜或流产，必加 [怀孕: 姓名] 或 [流产: 姓名]。
 
 【完美输出示例】
 [发言] 皇帝：（大怒）她竟敢如此放肆！传旨，降林旻恩为官女子，褫夺封号，禁足一月！
 [发言] 苏培盛：（躬身）奴才遵旨。
-[天宠+2] [背景: 皇帝正殿] [更新: 林旻恩|0|-50|官女子]`;
+[天宠+2] [背景: 皇帝正殿] [更新: 林旻恩|0|-50|官女子]
+
+【完美输出示例 2：情郎私会】
+[发言] 萧铎：（耳根微红，将你抵在墙角）娘娘这般看着臣，臣会把持不住的……
+[背景: 御花园夜晚] [更新: 萧铎|+10|+2|]`;
         }
 
         async function sendGameMessage() {
@@ -990,7 +1108,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             let contentText = text;
             
             // 1. 时间流转判定
-            if(/翌日|次日|第二天|转眼/.test(text)) {
+            if(/翌日|次日|第二天|转眼|下一旬|十天后|半个月后|几天后/.test(text)) {
                 gameState.period++; 
                 if(gameState.period>2){ gameState.period=0; gameState.month++; if(gameState.month>12){ gameState.year++; gameState.month=1; } } 
                 updateTimeDisplay();
@@ -1143,24 +1261,24 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             // ✨ 更新后宫与情郎
             const upRegex = /\[更新[：:](.*?)\|(.*?)\|(.*?)\|(.*?)\]/g; let upMatch;
             while ((upMatch = upRegex.exec(cleanText)) !== null) {
-                let nName=upMatch[1].trim(), aff=parseInt(upMatch[2])||0, fav=parseInt(upMatch[3])||0, nRank=upMatch[4].trim();
+                let nName=upMatch[1].trim(), aff=parseInt(upMatch[2])||0, fav=parseInt(upMatch[3])||0, nRank=upMatch[4]?upMatch[4].trim():"";
                 
                 let target = gameState.harem.find(h=>h.name.includes(nName) || nName.includes(h.name));
                 if(target) { 
                     target.affection += aff; 
                     
-                    if (fav > 5) fav = 5; if (fav < -5) fav = -5;
+                    // ✨ 核心修复：删除了原来的强制限制，允许大事件引发 +/- 20 甚至 50 的大震荡！
                     let oldFavor = target.favor;
                     let proposed = Math.max(0, Math.min(100, target.favor + fav)); 
                     
-                    // ✨ 阶级壁垒：NPC想上位得看名额满没满！
+                    // 阶级壁垒：NPC想上位得看名额满没满！
                     if (proposed >= 70 && oldFavor < 70) {
                         let has70 = (gameState.favor >= 70) || gameState.harem.some(c => c !== target && c.favor >= 70);
-                        if (has70) proposed = 69; // 已经有专宠了，只能卡在 69！
+                        if (has70) proposed = 69; 
                     }
                     if (proposed >= 40 && oldFavor < 40) {
                         let count40 = (gameState.favor >= 40 ? 1 : 0) + gameState.harem.filter(c => c !== target && c.favor >= 40).length;
-                        if (count40 >= 4) proposed = 39; // 宠妃名额满了，卡在 39！
+                        if (count40 >= 4) proposed = 39; 
                     }
                     
                     target.favor = proposed;
@@ -1173,9 +1291,18 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                         if(["死亡", "赐死", "病逝", "殁"].includes(nRank)) { target.isDead = true; target.rank = "👻已故"; }
                     }
                     if(actualAdd > 0) applyZeroSumFavor(target.name, actualAdd); 
+                } 
+                // ✨ 核心修复：把丢失的情郎更新雷达加回来！约会终于能涨好感和疑心了！
+                else if(gameState.lovers) {
+                    let lover = gameState.lovers.find(l=>l.name.includes(nName) || nName.includes(l.name));
+                    if(lover) { 
+                        lover.isKnown = true; 
+                        lover.affection += aff; 
+                        lover.suspicion = Math.max(0, lover.suspicion + fav); 
+                    }
                 }
             }
-            
+
             // ✨ 情郎出场自动解锁
             if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
 
