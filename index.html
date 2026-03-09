@@ -1353,6 +1353,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                         }
                     }
                 }
+            }
 
             // ✨ 情郎出场自动解锁
             if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
