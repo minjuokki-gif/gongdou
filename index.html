@@ -152,7 +152,7 @@
         <div class="menu-item" onclick="clearSaveAndRestart()" style="color: #ff4500; font-weight:bold;">☠️ 重启入宫 (删档重来)</div>
         <div class="menu-item" id="menu-stats-btn" style="display:none;" onclick="showPlayerStats()">查看我的档案</div>
         <div class="menu-item" id="menu-harem-btn" style="display:none; color: #d02090;" onclick="showHaremList()">后宫花名册</div>
-        <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="showModal('wb-modal')">世界书设定</div>
+        <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="openWorldbook()">世界书设定</div>
         <div class="menu-item" id="menu-lovers-btn" style="display:none; color: #c71585; font-weight:bold;" onclick="showLoversList()">💌 浮生孽缘 (私密)</div>
         <div class="menu-item" id="menu-history-btn" style="display:none; color: #8b4513; font-weight:bold;" onclick="showHistory()">📜 剧情回放 (编辑)</div>
         <div class="menu-item" id="menu-chronicle-btn" style="display:none; color: #2e8b57; font-weight:bold;" onclick="showChronicle()">📖 后宫记事簿</div>
@@ -936,14 +936,13 @@
             showModal('chronicle-modal');
         }
 
-        // ✨ 三年大选、子嗣与孕期结算 + 全自动沙盒引擎 ✨
-        async function endDay() {
+        // 👑👑👑 核心：时间流转与沙盒引擎 (独立出来，聊天和按钮都能调它！) 👑👑👑
+        function advanceTimeAndRunSandbox() {
             gameState.period++; 
             if(gameState.period > 2) { 
                 gameState.period = 0; gameState.month++; 
                 if(gameState.month > 12) { gameState.year++; gameState.month = 1; }
                 
-                // 玩家生娃结算
                 if(gameState.pregnancy > 0) {
                     gameState.pregnancy++;
                     if(gameState.pregnancy > 10) { 
@@ -954,7 +953,6 @@
                         logToChronicle(`【皇家喜报】玩家历经十月怀胎，顺利诞下${child}！`);
                     }
                 }
-                // NPC生娃结算
                 gameState.harem.forEach(h => {
                     if(h.pregnancy>0){ h.pregnancy++; if(h.pregnancy>10){ h.pregnancy=0; 
                         let cName = (Math.random()>0.5?"阿哥":"公主")+"·"+["弘","璟","永","和"][Math.floor(Math.random()*4)]+"某";
@@ -964,10 +962,7 @@
                 });
             }
             updateTimeDisplay();
-            document.getElementById('map-overlay').classList.remove('active');
-            clearNpcAvatar();
 
-            // 初始化本旬记事本
             if (!gameState.chronicles) gameState.chronicles = [];
             let periodStr = `入宫${gameState.year}年${gameState.month}月 ${periods[gameState.period]}`;
             if (gameState.chronicles.length === 0 || gameState.chronicles[0].time !== periodStr) {
@@ -975,20 +970,19 @@
                 if (gameState.chronicles.length > 50) gameState.chronicles.pop(); 
             }
 
-            // 👑 后台全自动沙盒宫斗引擎 👑
             if (gameState.harem && gameState.harem.length > 0) {
                 let livingHarem = gameState.harem.filter(h => !h.isDead && h.rank !== "冷宫" && h.rank !== "皇后");
                 
                 if (livingHarem.length > 0) {
-                    // 1. 侍寝争宠记录
                     let activeNpc = livingHarem[Math.floor(Math.random() * livingHarem.length)];
                     let randFav = Math.floor(Math.random() * 5) + 2; 
                     let oldFav = activeNpc.favor;
                     activeNpc.favor = Math.min(100, activeNpc.favor + randFav);
-                    if(activeNpc.favor - oldFav > 0) applyZeroSumFavor(activeNpc.name, activeNpc.favor - oldFav);
-                    logToChronicle(`【承宠】敬事房记档：皇上连翻了 ${activeNpc.rank} ${activeNpc.name} 的牌子，赏赐不断。`);
+                    let actualAdd = activeNpc.favor - oldFav;
+                    if(actualAdd > 0) applyZeroSumFavor(activeNpc.name, actualAdd);
+                    
+                    logToChronicle(`【承宠】敬事房记档：皇上连翻了 ${activeNpc.rank} ${activeNpc.name} 的牌子 (圣宠 +${actualAdd})。`);
 
-                    // 2. 宫斗暗害与交好 (40%概率在后台发生事件)
                     if (Math.random() < 0.4 && livingHarem.length >= 2) {
                         let shuffled = [...livingHarem].sort(() => 0.5 - Math.random());
                         let n1 = shuffled[0]; let n2 = shuffled[1];
@@ -998,7 +992,7 @@
                             if (n1.stats.cunning > 7 && Math.random() < 0.4) {
                                 if (n2.pregnancy > 0) {
                                     n2.pregnancy = 0;
-                                    logToChronicle(`【滑胎惨案】后宫疯传 ${n1.rank} ${n1.name} 在安胎药中动手脚，致使 ${n2.rank} ${n2.name} 不幸小产！`);
+                                    logToChronicle(`【滑胎惨案】后宫疯传 ${n1.rank} ${n1.name} 在安胎药中动手脚，致使 ${n2.rank} ${n2.name} 不幸小产！(圣宠暴跌)`);
                                 } else {
                                     logToChronicle(`【投毒陷害】${n1.rank} ${n1.name} 涉嫌用计谋害 ${n2.rank} ${n2.name}，致其被罚禁足。`);
                                 }
@@ -1011,16 +1005,11 @@
                         }
                     }
 
-                    // 3. 意外怀孕机制 (无孕、宠爱>30、概率5%)
                     livingHarem.forEach(h => {
                         if(h.pregnancy === 0 && h.favor > 30 && Math.random() < 0.05) {
                             h.pregnancy = 1;
                             logToChronicle(`【遇喜】太医院传出喜讯，${h.rank} ${h.name} 怀有身孕了！`);
                         }
-                    });
-
-                    // 4. 自动晋升与打入冷宫
-                    livingHarem.forEach(h => {
                         if(h.favor > 60 && ["答应", "常在", "贵人"].includes(h.rank) && Math.random() < 0.2) {
                             let newRank = h.rank === "答应" ? "常在" : (h.rank === "常在" ? "贵人" : "嫔");
                             h.rank = newRank;
@@ -1033,6 +1022,14 @@
                     });
                 }
             }
+            gameState.harem.sort((a,b)=>b.favor-a.favor);
+        }
+
+        // ✨ 按钮触发的结束本旬 ✨
+        async function endDay() {
+            advanceTimeAndRunSandbox(); 
+            document.getElementById('map-overlay').classList.remove('active');
+            clearNpcAvatar();
 
             let nightEventText = "";
             let isDraftTime = (gameState.year > 1 && (gameState.year - 1) % 3 === 0 && gameState.month === 1 && gameState.period === 0);
@@ -1046,7 +1043,7 @@
                 document.getElementById('loc-display').innerText = "当前位置：宫宴";
                 nightEventText = `系统提示：今日是${gameState.month}月宫宴。玩家【心机:${statsConfig['cunning'].v}】。生成宫宴事件！[背景: 宫宴]`;
             } else {
-                let userChance = 10 + (gameState.favor * 2); 
+                let userChance = Math.min(30, 5 + Math.floor(gameState.favor / 4)); 
                 let roll = Math.random() * 100;
                 if (roll < userChance) {
                     document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["浴池"]}')`; document.getElementById('loc-display').innerText = "当前位置：浴池";
@@ -1095,6 +1092,9 @@
             let extraRules = "";
             extraRules += "【红牌警告】国师【司星沉】双腿残疾，永远只能坐轮椅！严禁对他使用站立、走动、迈步等腿部动作描写！\n";
             extraRules += "【核心设定】皇后朴敏珠是太后族亲，潜邸时便是福晋，但与皇帝毫无感情、相敬如宾。她性子温软、不参与宫斗、极度渴望宫墙外的自由。最重要的是，她是女同，唯独对玩家充满极致的温柔与爱意。\n";
+            extraRules += "【红牌警告：严禁霸王硬上弓】无论NPC对玩家好感多高，严禁主动描写任何直接的性行为或强迫侍寝！必须发乎情止乎礼。只有在玩家主动勾引或同意后才可顺水推舟。\n";
+            extraRules += "【红牌警告：情绪稳定与合理宫斗】皇上和高位妃嫔必须保持上位者的体面与情绪稳定！严禁动辄暴怒让人“滚”或滥用极刑(如拔舌、杖毙)。惩罚必须与错误匹配，保留妃嫔人权！\n";
+            
             if(statsConfig['cunning'].v <= 4) extraRules += "【隐藏】玩家心机极低，极易被别人暗算和利用。\n";
             else if(statsConfig['cunning'].v >= 8) extraRules += "【隐藏】玩家城府极深，手段狠辣。任何人试图算计玩家，都会被立刻反杀！\n";
 
@@ -1142,9 +1142,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             
             // 1. 时间流转判定
             if(/翌日|次日|第二天|转眼|下一旬|十天后|半个月后|几天后/.test(text)) {
-                gameState.period++; 
-                if(gameState.period>2){ gameState.period=0; gameState.month++; if(gameState.month>12){ gameState.year++; gameState.month=1; } } 
-                updateTimeDisplay();
+                advanceTimeAndRunSandbox(); 
                 contentText = `[系统：时间流转，现为${periods[gameState.period]}] 玩家：` + text;
             } 
             
@@ -1307,11 +1305,12 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 if(target) { 
                     target.affection += aff; 
                     
-                    // ✨ 核心修复：删除了原来的强制限制，允许大事件引发 +/- 20 甚至 50 的大震荡！
+                    if (fav > 20) fav = 20; 
+                    if (fav < -50) fav = -50;
+                    
                     let oldFavor = target.favor;
                     let proposed = Math.max(0, Math.min(100, target.favor + fav)); 
                     
-                    // 阶级壁垒：NPC想上位得看名额满没满！
                     if (proposed >= 70 && oldFavor < 70) {
                         let has70 = (gameState.favor >= 70) || gameState.harem.some(c => c !== target && c.favor >= 70);
                         if (has70) proposed = 69; 
@@ -1331,17 +1330,29 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                         if(["死亡", "赐死", "病逝", "殁"].includes(nRank)) { target.isDead = true; target.rank = "👻已故"; }
                     }
                     if(actualAdd > 0) applyZeroSumFavor(target.name, actualAdd); 
-                } 
-                // ✨ 核心修复：把丢失的情郎更新雷达加回来！约会终于能涨好感和疑心了！
-                else if(gameState.lovers) {
-                    let lover = gameState.lovers.find(l=>l.name.includes(nName) || nName.includes(l.name));
+                } else {
+                    let lover = gameState.lovers ? gameState.lovers.find(l=>l.name.includes(nName) || nName.includes(l.name)) : null;
                     if(lover) { 
                         lover.isKnown = true; 
                         lover.affection += aff; 
                         lover.suspicion = Math.max(0, lover.suspicion + fav); 
+                    } 
+                    else if (nRank && !["死亡", "赐死", "病逝", "殁", "冷宫", "废妃", ""].includes(nRank.replace(/位份[：:]?/g, '').trim())) {
+                        let cStats = {}; ['charm','intel','cunning','dance','needle','health','luck','charisma'].forEach(k => cStats[k] = Math.floor(Math.random()*10)+1);
+                        let personalities = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
+                        let nBg = cleanText.includes("进贡") ? "异国贡女" : (cleanText.includes("族亲") ? "世家旁支" : (cleanText.includes("宫女") || cleanText.includes("奴婢") ? "宫女上位" : "特殊入宫"));
+                        let cleanRank = nRank.replace(/位份[：:]?/g, '').trim();
+                        
+                        gameState.harem.push({
+                            title: "", rank: cleanRank, name: nName, bg: nBg, age: Math.floor(Math.random()*6)+15, favor: Math.max(0, fav), 
+                            personality: personalities[Math.floor(Math.random()*personalities.length)], affection: aff, stats: cStats, 
+                            image: "https://i.postimg.cc/brZRCxg6/shen-gong-qu-xy-insvaas9-1030.png", isTransparent: true, pregnancy: 0, children: []
+                        });
+                        if (typeof logToChronicle === 'function') {
+                            logToChronicle(`【新人入宫】宫中新进了一位 ${cleanRank} ${nName}（出身：${nBg}），已正式录入花名册。`);
+                        }
                     }
                 }
-            }
 
             // ✨ 情郎出场自动解锁
             if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
@@ -1472,7 +1483,17 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             document.getElementById('concubine-detail-modal').classList.add('active');
         }
 
-        function saveWorldbook() { gameState.worldbook = document.getElementById('wb-input').value.trim(); document.getElementById('wb-modal').classList.remove('active'); showToast("世界书设定已录入！"); }
+        function saveWorldbook() { 
+            gameState.worldbook = document.getElementById('wb-input').value.trim(); 
+            document.getElementById('wb-modal').classList.remove('active'); 
+            showToast("世界书设定已录入！"); 
+            autoSave(); 
+        }
+
+        function openWorldbook() {
+            document.getElementById('wb-input').value = gameState.worldbook || '';
+            showModal('wb-modal');
+        }
 
 /* ================= 📜 剧情回放与编辑系统 ================= */
         function showHistory() {
