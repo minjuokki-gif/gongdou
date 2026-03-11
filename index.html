@@ -503,8 +503,12 @@
         /* ================= 永久兼容的存读档 ================= */
         function exportSave() {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gameState));
-            const dl = document.getElementById('downloadAnchorElem'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "水云间存档.json"); dl.click();
-            document.getElementById('menu-dropdown').classList.remove('active'); showToast("存档已导出！");
+            const dl = document.getElementById('downloadAnchorElem'); 
+            dl.setAttribute("href", dataStr); 
+            dl.setAttribute("download", `水云间存档_${gameState.year}年${gameState.month}月.json`); 
+            dl.click();
+            document.getElementById('menu-dropdown').classList.remove('active'); 
+            showToast("存档已导出！");
         }
         function importSave(e) {
             const file = e.target.files[0]; if(!file) return;
@@ -945,20 +949,13 @@
                 
                 if(gameState.pregnancy > 0) {
                     gameState.pregnancy++;
-                    if(gameState.pregnancy > 10) { 
-                        gameState.pregnancy = 0; 
-                        let child = (Math.random()>0.5?"阿哥":"公主") + "·" + ["弘", "璟", "永", "和"][Math.floor(Math.random()*4)] + "某";
-                        gameState.children.push(child);
-                        showToast(`🌸 历经十月怀胎，你顺利诞下【${child}】！`); 
-                        logToChronicle(`【皇家喜报】玩家历经十月怀胎，顺利诞下${child}！`);
-                    }
+                    if(gameState.pregnancy >= 10) gameState.pregnancy = 10; // ✨ 锁定在10个月，绝不随机起名，死等AI接生！
                 }
                 gameState.harem.forEach(h => {
-                    if(h.pregnancy>0){ h.pregnancy++; if(h.pregnancy>10){ h.pregnancy=0; 
-                        let cName = (Math.random()>0.5?"阿哥":"公主")+"·"+["弘","璟","永","和"][Math.floor(Math.random()*4)]+"某";
-                        h.children.push(cName); 
-                        logToChronicle(`【瓜熟蒂落】${h.rank} ${h.name} 顺利诞下${cName}，宫中又添新丁。`);
-                    } }
+                    if(h.pregnancy > 0) {
+                        h.pregnancy++;
+                        if(h.pregnancy >= 10) h.pregnancy = 10; // ✨ 锁定在10个月，死等AI接生！
+                    }
                 });
             }
             updateTimeDisplay();
@@ -1084,6 +1081,10 @@
             gameState.lovers.forEach(l => { if(l.isKnown) loversText += `- ${l.name} (${l.title}, 人设:${l.type}, 对你好感:${l.affection}, 皇帝疑心:${l.suspicion}%)\n`; });
             
             let encounterHints = "";
+            // ✨ 临盆警告：只要一到10个月，拿刀架在AI脖子上让它接生并起名！
+            if(gameState.pregnancy >= 10) encounterHints += "【🚨临盆警告】玩家已怀胎十月，即将临盆！请务必在本次剧情中描写生产过程、让皇帝或父母亲自为孩子赐名，并在回复最末尾输出标签 [诞下: 性别·名字|玩家]！\n";
+            gameState.harem.forEach(h => { if(h.pregnancy >= 10) encounterHints += `【🚨临盆警告】${h.name}已怀胎十月，即将临盆！请描写生产与赐名剧情，并输出标签 [诞下: 性别·名字|${h.name}]！\n`; });
+            
             if(gameState.currentLoc === "观星台") encounterHints += "【命运触发】玩家来到了观星台，请务必安排阴湿病娇国师【司星沉】出场并与玩家互动。\n";
             if(gameState.currentLoc === "普陀山" && !huli.isKnown) encounterHints += "【命运触发】玩家来到了普陀山，请务必安排天真纯欲的粉尾狐妖【晏洵】迷路初遇玩家。\n";
             else if(huli.isKnown && ["京城街道","京城酒楼","布坊","珠宝店","香料铺","京城学堂"].includes(gameState.currentLoc)) encounterHints += "【命运触发】玩家在宫外，极大概率偶遇黏人的粉尾狐妖【晏洵】。\n";
@@ -1289,11 +1290,27 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 else { let t = gameState.harem.find(h=>h.name.includes(pName)); if(t && t.pregnancy === 0){ t.pregnancy = 1; showToast(`🌸 喜报：${t.name} 有喜了！`); } }
             }
 
-            const misMatch = cleanText.match(/\[流产\s*[：:]\s*(.*?)\]/);
-            if(misMatch) {
-                let mName = misMatch[1].trim();
-                if(mName === '玩家' || mName.includes(gameState.playerName)) { gameState.pregnancy = 0; showToast("🥀 噩耗：你不幸小产了，痛失龙嗣..."); }
-                else { let t = gameState.harem.find(h=>h.name.includes(mName)); if(t){ t.pregnancy = 0; showToast(`🥀 噩耗：${t.name} 不幸小产了...`); } }
+            // ✨ 皇家金牌接生婆：完全听从AI起的名字，直接上皇家户口！
+            const birthMatch = cleanText.match(/\[诞下\s*[：:]\s*(.*?)\]/);
+            if(birthMatch) {
+                let matchContent = birthMatch[1].trim(); 
+                let parts = matchContent.split(/[|,，]/); // 兼容 | 或 逗号
+                let childName = parts[0].trim(); 
+                let motherName = parts.length > 1 ? parts[1].trim() : "玩家";
+                
+                if(motherName.includes('玩家') || motherName.includes(gameState.playerName)) { 
+                    gameState.pregnancy = 0; 
+                    gameState.children.push(childName); // ✨ 直接用剧情里起的名字！
+                    showToast(`🌸 喜报：顺利诞下【${childName}】！已载入玉牒！`); 
+                    if (typeof logToChronicle === 'function') logToChronicle(`【皇家喜报】玩家顺利诞下${childName}！`);
+                } else { 
+                    let t = gameState.harem.find(h=>motherName.includes(h.name)); 
+                    if(t){ 
+                        t.pregnancy = 0; t.children.push(childName); 
+                        showToast(`🌸 喜报：${t.name} 诞下【${childName}】！`); 
+                        if (typeof logToChronicle === 'function') logToChronicle(`【瓜熟蒂落】${t.rank} ${t.name} 顺利诞下${childName}。`);
+                    } 
+                }
             }
 
             // ✨ 更新后宫与情郎
@@ -1703,7 +1720,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
         loadApiSettings();
         /* ================= 💾 自动无缝存读档系统 ================= */
         function autoSave() {
-            if(gameState.rank !== '待定') { // 只有正式入宫后才保存，防止存了个空壳
+            if(gameState.playerName) { // ✨ 只要有了名字，立刻无条件自动存档！
                 localStorage.setItem('palace_auto_save', JSON.stringify(gameState));
             }
         }
@@ -1715,7 +1732,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                     let loadedState = JSON.parse(saved);
                     gameState = Object.assign({}, defaultState, loadedState);
                     
-                    if(gameState.rank !== '待定') {
+                    if(gameState.playerName) { // ✨ 只要有名字就读取，绝不遗漏进度！
                     if(gameState.playerStats) Object.assign(statsConfig, gameState.playerStats); if(gameState.playerBg) document.getElementById('bg-val').innerText = gameState.playerBg;
                         updateTimeDisplay();
                         document.getElementById('loc-display').innerText = `当前位置：${gameState.currentLoc || '皇帝正殿'}`;
