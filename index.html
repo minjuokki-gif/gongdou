@@ -1521,7 +1521,10 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                     <div style="margin-bottom:15px; border-bottom:1px dashed #d2b48c; padding-bottom:10px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                             <strong style="color:${color}; font-size:13px;">第 ${idx+1} 回. ${roleName}</strong>
-                            <button class="btn-sm" style="background:#8b4513; font-size:12px;" onclick="editHistory(${idx})">✏️ 修改</button>
+                            <div>
+                                <button class="btn-sm" style="background:#8b4513; font-size:12px;" onclick="editHistory(${idx})">✏️ 修改</button>
+                                <button class="btn-sm" style="background:#e91e63; font-size:12px; margin-left:5px;" onclick="deleteHistory(${idx})">🗑️ 删除</button>
+                            </div>
                         </div>
                         <div id="hist-content-${idx}" style="font-size:14px; line-height:1.6; color:#333; white-space:pre-wrap;">${escapeHTML(msg.content)}</div>
                         <textarea id="hist-edit-${idx}" class="wb-textarea" style="display:none; height:120px; border-color:#8b4513; margin-top:5px; font-size:14px;">${msg.content}</textarea>
@@ -1572,6 +1575,15 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             autoSave(); 
             renderHistoryList();
             showToast("💾 剧情记录已修改，并实时同步至画面！");
+        }
+
+        function deleteHistory(idx) {
+            if(confirm("⚠️ 娘娘确定要抹除这段记忆吗？删掉后无法恢复哦！")) {
+                gameState.history.splice(idx, 1); // 咔嚓一刀，从记忆库里删掉
+                autoSave(); // 删完立刻死死存档
+                renderHistoryList(); // 刷新卷宗画面
+                showToast("🗑️ 痕迹已抹除干净！");
+            }
         }
 
 /* ================= 🌸 浮生孽缘系统逻辑 ================= */
