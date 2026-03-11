@@ -1140,6 +1140,22 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             input.value = "";
             
             let contentText = text;
+
+            // ✨ 玩家上帝权限：强行接生双胞胎，不看AI脸色！
+            if(text.includes('[诞下')) {
+                const bMatches = text.match(/\[诞下\s*[：:]\s*(.*?)\]/g);
+                if(bMatches) {
+                    bMatches.forEach(tag => {
+                        let content = tag.match(/\[诞下\s*[：:]\s*(.*?)\]/)[1].trim();
+                        let childName = content.split(/[|,，]/)[0].trim();
+                        gameState.pregnancy = 0; 
+                        if (typeof logToChronicle === 'function') logToChronicle(`【皇家喜报】玩家顺利诞下${childName}！`);
+                        gameState.children.push(childName);
+                        showToast(`🌸 上帝权限：【${childName}】已强行入玉牒！`);
+                    });
+                    autoSave(); displayDialogue("系统", "龙凤胎已强行登记完毕！"); return; // 💥 拦截指令，不用发给AI废话！
+                }
+            }
             
             // 1. 时间流转判定
             if(/翌日|次日|第二天|转眼|下一旬|十天后|半个月后|几天后/.test(text)) {
