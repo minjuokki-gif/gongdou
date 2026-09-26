@@ -343,6 +343,7 @@
                     <img id="cd-img" src="" alt="立绘">
                 </div>
             </div>
+            <button class="close-btn" style="background:#ff8c00; margin-top: 10px; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="editCurrentConcubine()">✏️ 神仙造化 (修改档案 / 一键换脸)</button>
             <button class="close-btn" style="background:#d02090;" onclick="document.getElementById('concubine-detail-modal').classList.remove('active')">返回花名册</button>
         </div>
     </div>
@@ -502,13 +503,16 @@
 
         /* ================= 永久兼容的存读档 ================= */
         function exportSave() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gameState));
+            const dataStr = JSON.stringify(gameState);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
             const dl = document.getElementById('downloadAnchorElem'); 
-            dl.setAttribute("href", dataStr); 
+            dl.setAttribute("href", url); 
             dl.setAttribute("download", `水云间存档_${gameState.year}年${gameState.month}月.json`); 
             dl.click();
+            URL.revokeObjectURL(url);
             document.getElementById('menu-dropdown').classList.remove('active'); 
-            showToast("存档已导出！");
+            showToast("💾 存档已成功导出！");
         }
         function importSave(e) {
             const file = e.target.files[0]; if(!file) return;
@@ -552,6 +556,8 @@
         
         /* ✨ 绝美立绘素材库 ✨ */
         const playerPresets = [
+            { name: "清幽婉高", url: "https://i.postimg.cc/BnRc45Xx/0sheng-qi-04zheng-pin-nu-qing-you-wan-gao.png" },
+            { name: "绮趣娇柔", url: "https://i.postimg.cc/dVgmwRLV/0sheng-qi-05zheng-pin-nu-ji-qu-wan-gao.png" },
             { name: "绝代风华", url: "https://i.postimg.cc/Gt1BGBKC/1250jia-zeng-jiu.png" },
             { name: "清雅绝尘", url: "https://i.postimg.cc/mrtFsWkY/550jia-zeng-san.png" },
             { name: "幽兰吐蕊", url: "https://i.postimg.cc/HnCJXJ2B/650jia-zeng-si.png" },
@@ -1376,10 +1382,14 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                         let nBg = cleanText.includes("进贡") ? "异国贡女" : (cleanText.includes("族亲") ? "世家旁支" : (cleanText.includes("宫女") || cleanText.includes("奴婢") ? "宫女上位" : "特殊入宫"));
                         let cleanRank = nRank.replace(/位份[：:]?/g, '').trim();
                         
+                        let allAvailableImages = [];
+                        for (let key in portraitPools) { allAvailableImages = allAvailableImages.concat(portraitPools[key]); }
+                        let randomFace = allAvailableImages.length > 0 ? allAvailableImages[Math.floor(Math.random() * allAvailableImages.length)] : "https://i.postimg.cc/placeholder-flower.jpg";
+
                         gameState.harem.push({
                             title: "", rank: cleanRank, name: nName, bg: nBg, age: Math.floor(Math.random()*6)+15, favor: Math.max(0, fav), 
                             personality: personalities[Math.floor(Math.random()*personalities.length)], affection: aff, stats: cStats, 
-                            image: "https://i.postimg.cc/brZRCxg6/shen-gong-qu-xy-insvaas9-1030.png", isTransparent: true, pregnancy: 0, children: []
+                            image: randomFace, isTransparent: true, pregnancy: 0, children: []
                         });
                         if (typeof logToChronicle === 'function') {
                             logToChronicle(`【新人入宫】宫中新进了一位 ${cleanRank} ${nName}（出身：${nBg}），已正式录入花名册。`);
@@ -1493,9 +1503,11 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             showModal('harem-modal');
         }
 
+        let currentEditNpcIndex = -1;
         function showConcubineDetail(idx) {
+            currentEditNpcIndex = idx;
             const h = gameState.harem[idx];
-            document.getElementById('cd-title-name').innerText = `🌸 ${h.rank} ${h.name} 🌸`; // 清爽大标题
+            document.getElementById('cd-title-name').innerText = `🌸 ${h.rank} ${h.name} 🌸`;
             document.getElementById('cd-bg').innerText = h.bg || '未知';
             document.getElementById('cd-favor').innerText = h.favor;
             document.getElementById('cd-personality').innerText = h.personality;
@@ -1504,9 +1516,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             document.getElementById('cd-affection').innerText = `${h.affection>0?'+':''}${h.affection}`;
             
             const grid = document.getElementById('cd-stats-grid'); grid.innerHTML = '';
-            for(let k in h.stats) {
-                grid.innerHTML += `<div>${getAncientAttr(k, h.stats[k])}</div>`;
-            }
+            for(let k in h.stats) { grid.innerHTML += `<div>${getAncientAttr(k, h.stats[k])}</div>`; }
 
             const img = document.getElementById('cd-img');
             img.src = h.image || 'https://i.postimg.cc/placeholder-flower.jpg';
@@ -1515,6 +1525,53 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
             document.getElementById('harem-modal').classList.remove('active');
             document.getElementById('concubine-detail-modal').classList.add('active');
+        }
+
+        // 神仙造化：强行修改妃子数据（一键换脸 + 全属性修改版）
+        function editCurrentConcubine() {
+            if (currentEditNpcIndex === -1) return;
+            let target = gameState.harem[currentEditNpcIndex];
+
+            // 1. 改家世
+            let newBg = prompt(`【当前家世】：${target.bg}\n请输入新家世：`, target.bg);
+            if (newBg !== null && newBg.trim() !== "") target.bg = newBg.trim();
+
+            // 2. 一键随机换脸 (点确定就自动盲抽换头，点取消保留原貌)
+            if (confirm(`【换脸】是否要为 ${target.name} 随机更换一张新的立绘？\n(点击"确定"自动随机换脸，点击"取消"保留原貌)`)) {
+                let allAvailableImages = [];
+                for (let key in portraitPools) { allAvailableImages = allAvailableImages.concat(portraitPools[key]); }
+                if(allAvailableImages.length > 0) {
+                    target.image = allAvailableImages[Math.floor(Math.random() * allAvailableImages.length)];
+                    target.isTransparent = true;
+                }
+            }
+
+            // 3. 一口气改满8个属性
+            let statsStr = `${target.stats.charm},${target.stats.intel},${target.stats.cunning},${target.stats.dance},${target.stats.needle},${target.stats.health},${target.stats.luck},${target.stats.charisma}`;
+            let newStatsStr = prompt(`【修改属性】(0-10)\n顺序：容貌,才智,心机,歌舞,女红,体质,福源,魅力\n请用英文逗号隔开修改：`, statsStr);
+            if (newStatsStr !== null) {
+                let arr = newStatsStr.split(',');
+                if(arr.length === 8) {
+                    target.stats.charm = Math.max(0, Math.min(10, parseInt(arr[0])||0));
+                    target.stats.intel = Math.max(0, Math.min(10, parseInt(arr[1])||0));
+                    target.stats.cunning = Math.max(0, Math.min(10, parseInt(arr[2])||0));
+                    target.stats.dance = Math.max(0, Math.min(10, parseInt(arr[3])||0));
+                    target.stats.needle = Math.max(0, Math.min(10, parseInt(arr[4])||0));
+                    target.stats.health = Math.max(0, Math.min(10, parseInt(arr[5])||0));
+                    target.stats.luck = Math.max(0, Math.min(10, parseInt(arr[6])||0));
+                    target.stats.charisma = Math.max(0, Math.min(10, parseInt(arr[7])||0));
+                } else {
+                    alert("⚠️ 格式不对哦！必须是8个用逗号隔开的数字，属性未修改。");
+                }
+            }
+
+            // 4. 清除/修改怀孕卡死
+            let preg = prompt(`【当前孕期】：${target.pregnancy} 个月\n输入 0 强行打胎/卸货，或直接修改月份：`, target.pregnancy);
+            if (preg !== null && !isNaN(parseInt(preg))) { target.pregnancy = parseInt(preg); }
+
+            showToast(`✨ 神仙造化成功！${target.name} 的命运已被改写！`);
+            autoSave(); // 修改完火速存档
+            showConcubineDetail(currentEditNpcIndex); // 重新刷新面板看效果
         }
 
         function saveWorldbook() { 
