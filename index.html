@@ -99,7 +99,7 @@
         /* 对话框 (z-index: 10) */
         .game-dialogue-box { position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 500px; aspect-ratio: 16/9; background-image: url('https://i.postimg.cc/W1B4FyNP/IMG-3644.png'); background-size: 100% 100%; display: flex; flex-direction: column; padding: 12% 10% 5% 12%; box-sizing: border-box; z-index: 10; cursor: pointer;}
         .speaker-name { font-size: 16px; font-weight: bold; color: #b8860b; margin-bottom: 5px; text-shadow: 1px 1px 2px white;}
-        .dialogue-content { color: #4682b4; font-size: 16px; font-weight: bold; line-height: 1.6; letter-spacing: 1px; flex-grow: 1; overflow-y: auto;}
+        .dialogue-content { color: #4682b4; font-size: 16px; font-weight: bold; line-height: 1.6; letter-spacing: 1px; flex-grow: 1; overflow-y: auto; white-space: pre-wrap; }
         
         /* 输入框 */
         .game-input-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); padding: 10px 20px; box-sizing: border-box; display: flex; gap: 10px; z-index: 20; border-top: 1px solid var(--main-color);}
@@ -1485,7 +1485,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 }
             }
 
-            const upRegex = /\[更新[：:](.*?)\Vert{}(.*?)\Vert{}(.*?)\Vert{}(.*?)\]/g; let upMatch;
+            const upRegex = /\[更新[：:](.*?)\|(.*?)\|(.*?)\|(.*?)\]/g; let upMatch;
             while ((upMatch = upRegex.exec(cleanText)) !== null) {
                 let nName=upMatch[1].trim(), aff=parseInt(upMatch[2])||0, fav=parseInt(upMatch[3])||0, nRank=upMatch[4]?upMatch[4].trim():"";
                 
@@ -1556,7 +1556,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').trim();
             
             // 🌟 这是你原本没有任何问题的完美正则，绝对不会切乱！
-            const chunkRegex = /(?:\[\vert{}【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[\vert{}【)发言(?:\]|】))|$)/g;
+            const chunkRegex = /(?:\[|【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[|【)发言(?:\]|】))|$)/g;
             dialogueQueue = []; let cMatch;
             while ((cMatch = chunkRegex.exec(cleanText)) !== null) dialogueQueue.push({ speaker: cMatch[1].trim(), text: cMatch[2].trim() });
             
@@ -1783,7 +1783,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             
             if (idx === gameState.history.length - 1) {
                 let cleanText = newText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').trim();
-                const chunkRegex = /[发言]\s*([^：:]+)[：:]([\s\S]*?)(?=(?:[发言]|$))/g;
+                const chunkRegex = /(?:\[|【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[|【)发言(?:\]|】))|$)/g;
                 let cMatch, lastSpeaker = gameState.history[idx].role === 'assistant' ? '系统' : gameState.playerName, lastText = cleanText;
                 while ((cMatch = chunkRegex.exec(cleanText)) !== null) {
                     lastSpeaker = cMatch[1].trim(); 
