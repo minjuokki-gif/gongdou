@@ -729,13 +729,17 @@
                 isTransparent: true, pregnancy: 0, children: []
             });
             
-            const titles = ["婉", "华", "宁", "丽", "静", "惠", "顺", "娇", "熙", "敬", "端", "舒", "嘉", "纯"];
+            // 纯血《深宫曲》字库提取
+            const titles = ["昭","明","靖","元","妍","贞","嘉","安","定","令","荣","宸","庄","敬","慈","懿","琪","祁","穆","茂","良","佳","恪","瑞","和","慎","端","顺","纯","裕","谦","全","昌","平","肃","哲","敏","芊","华","梅","媚","姣","姝","柔","怡","玫","姗","惠","娴","婉","仪","雅","容","穗","蕊","慧","蕙","徽","睦","恭","秀","丽","清","欢","芬","芳","玉","瑶","琼","琳","静","婧","瑾","瑜","璎","珞","灵","澈","恩","淳","颖","悠","绮","纤","婳","晔","滟","逸","舒","畅","锦","倩","念","茵","衍","鸢","文","希","玺","康","思","欣","馨","晴","沁","澄","泠","丹","兰","黛","娆","薇","茹","依","涟","鸾","景","谧","润","韶","潇","妧","蔚","汐","湘","绣","璇","诩","煦","吟","嫣","英","滢","窈","颐","莹","芷","旖","黎","洁","沐","苒","澜","楚","妤","沛","曼","韵","倾","瑛","宁","凝","熹","僖","吉","祥","愉","悦","宜","勤","莲","诚","密","宝"];
             const personalities = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
             
-            let manchuSurnames = ["乌拉那拉", "富察", "佟佳", "瓜尔佳", "钮祜禄", "叶赫那拉", "辉发那拉", "索绰罗", "博尔济吉特", "年", "巴林"];
-            let hanKorSurnames = ["林", "苏", "顾", "沈", "楚", "叶", "白", "裴", "宋", "姜", "崔", "朴", "金", "李", "尹", "郑", "韩", "柳", "张", "陈"];
-            let korNames = ["海仁", "知恩", "昭熙", "旻恩", "恩彩", "泰妍", "智媛", "秀智", "允儿"];
-            let cnNames = ["清秋", "知微", "宛筠", "南乔", "星河", "语冰", "揽月", "长乐", "允真", "如懿", "容音", "眉庄", "陵容", "若曦", "如烟", "玉娆", "世兰", "紫嫣", "雨晴", "芷若", "婉清", "书瑶", "初夏", "映雪"];
+            // 深宫曲-复姓/满姓
+            let manchuSurnames = ["公孙", "长孙", "独孤", "夏侯", "纳兰", "慕容", "容成", "欧阳", "上官", "司马", "司徒", "拓跋"];
+            // 深宫曲-单姓
+            let hanKorSurnames = ["王","陈","李","黎","成","刘","柳","黄","花","沈","苏","凤","兰","冷","廖","金","洪","荣","戚","秦","关","谷","董","殷","辛","郑","梅","左","武","郁","邓","万","甄","宋","风","向","钟","谢","曾","戴","季","蔺","吴","鄢","景","云","岳","尚","商","姚","迟","饶","展","荆","海","魏","卫","朱","祝","舒","萧","肖","林","凌","连","安","庄","华","年","罗","洛","孙","简","贺","尹","伊","倪","习","叶","童","周","张","章","杨","赵","陆","路","袁","代","易","何","付","田","孟","温","文","闻","江","姜","蒋","冯","郭","虞","余","俞","傅","晏","韩","梁","常","容","闵","卓","言","颜","胡","楚","顾","墨","潘","邱","薛","唐","汤","晋","徐","许","吕","卢","荀","施","齐","司","祁","姬","姒","木","穆","慕","白","夏","谭","方","曲","水","阮","宁","任","史","乔","禇","车","尤","陶","窦","葛","练","廉","费","裴","岑","越","滕","骆","毕","时","平","邵","湛","明","臧","伏","谈","杜","纪","袭","席","娄","危","霍","蔡","柯","昝","莫","房","解","应","丁","宣","崔","嵇","封","靳","段","郗","班","詹","薄","蒲","翟","鱼","慎","耿","竺"];
+            // 抹除韩流名，全用深宫曲原版女名替换
+            let cnNames = ["安然","锦瑟","月仪","瑾年","宓枕","解语","沅栎","婠婠","执宜","梦纾","蓁蓁","归晚","楚楚","云瑶","姒月","妍霏","絮锦","溪暮","玉倾","筠娘","双鲤","芷君","则淇","妤仪","灼华","韶光","腻云","沭华","重月","知意","奉吟","云栖","云翳","羡鱼","嬛嬛","墨染","寄雨","蔚纾","子莹","柒羽","慕情","招摇","芙鸳","无乐","月笙","兰泽","弄影","熹微","月来","安韶","安岁","清鸢","卿辞","寻寻","又双","叒叕","九歌","九韶","清湫","清浅","霓裳","辞柔","剪梅","玉棠","明麒","白芷","尧茜","弋弋","训英","青窈","解忧","玉致","攒玉","云昭","熙媛","沅儿","云裳","云倾","启楚","月牙","子卿","子衿","漱漱","疏疏","宴歌","琬琰","当归","琳琅","觅玉","云书","与荷","寻漪","清鸾","清知","月见","沅芷","追月","余欢","珲音","知颐","之贻","从仪","霜华","芸笙","聆歌","明笑","禾猗","惊瑜","相映","青照","兰因","犹知","云簪","时缨","如枝","凭澜","当当","罗敷","柳娇","蒙欢","梦沅","梦芙","云中","风莲","迟迟","晚晚","娇娇","芊芊","溶溶","莺莺","翩翩","翡翠","蝉语","归鹭","绯婴","弗楹","飞燕","合德","飞滟","宜主","遗光","思琅","琊姬","眉钗","诱霜","若拙","清一","韶苏","惊蛰","小满","谷雨","神爱","长愉","静水","琼章","瑶期","青羽","晓梦","寻鹭","棠梨","以沐","寂月","瑾瑜","鸢歌","鹿苹","栀里","霜思","晚秋","明歌","沉雾","馨予","令窈","宝糖","浮舟","御皖","云婉","珺瑶","枳念","落颜","姝惠","亦如","悠南","白浔","有木","沁雪","景安","菁浔","慕楠","星河","裘凤","栖迟","文茵","汐玉","千秋","婉琴","锦琴","婉兮","云翎","丹蘼","芷瑶","笙寒","竹苓","书意","皓萱","夙诺","秋溪","池乔","妤笙","倾月","霓君","宜玉","柔清","皖雾","烟桃","山奈","鹤轩","婉月","诗妍","迹悄","苏缇","真染","代亦","云霓","绍棠","祎湘","瑾檀","明月","桃夭","清漪","温惠","书棠","青云","槿韫","柔荑","愫音","昭愿","琼琚","皓凝","灵徽","清玥","尔玉","伊南","相思","温浓","昭君"];
+            let korNames = cnNames; // 强制同源，抹除分支
             const bgs = ["太傅嫡女", "总督庶女", "巡抚嫡女", "皇商世家", "江南富商", "武林世家", "知府庶女", "异国贡女", "没落侯府", "平民百姓"];
 
             let usedGivenNames = new Set(); 
@@ -932,16 +936,8 @@
                 gameState.period = 0; gameState.month++; 
                 if(gameState.month > 12) { gameState.year++; gameState.month = 1; }
                 
-                if(gameState.pregnancy > 0) {
-                    gameState.pregnancy++;
-                    if(gameState.pregnancy >= 10) gameState.pregnancy = 10; 
-                }
-                gameState.harem.forEach(h => {
-                    if(h.pregnancy > 0) {
-                        h.pregnancy++;
-                        if(h.pregnancy >= 10) h.pregnancy = 10; 
-                    }
-                });
+                if(gameState.pregnancy > 0) { gameState.pregnancy++; if(gameState.pregnancy >= 10) gameState.pregnancy = 10; }
+                gameState.harem.forEach(h => { if(h.pregnancy > 0) { h.pregnancy++; if(h.pregnancy >= 10) h.pregnancy = 10; } });
             }
             updateTimeDisplay();
 
@@ -956,51 +952,47 @@
                 let livingHarem = gameState.harem.filter(h => !h.isDead && h.rank !== "冷宫" && h.rank !== "皇后");
                 
                 if (livingHarem.length > 0) {
+                    // 1. 侍寝结算 (彻底废除吸血)
                     let activeNpc = livingHarem[Math.floor(Math.random() * livingHarem.length)];
                     let randFav = Math.floor(Math.random() * 5) + 2; 
-                    let oldFav = activeNpc.favor;
                     activeNpc.favor = Math.min(100, activeNpc.favor + randFav);
-                    let actualAdd = activeNpc.favor - oldFav;
-                    if(actualAdd > 0) applyZeroSumFavor(activeNpc.name, actualAdd);
-                    
-                    logToChronicle(`【承宠】敬事房记档：皇上连翻了 ${activeNpc.title||""}${activeNpc.rank} ${activeNpc.name} 的牌子 (圣宠 +${actualAdd})。`);
+                    logToChronicle(`【承宠】敬事房通报，皇上翻了 ${activeNpc.title||""}${activeNpc.rank} ${activeNpc.name} 的牌子 (宠爱+${randFav})。`);
 
-                    if (Math.random() < 0.4 && livingHarem.length >= 2) {
+                    // 2. 宫斗沙盒事件 (造谣、下毒、交恶)
+                    if (Math.random() < 0.6 && livingHarem.length >= 2) {
                         let shuffled = [...livingHarem].sort(() => 0.5 - Math.random());
                         let n1 = shuffled[0]; let n2 = shuffled[1];
                         
-                        if (n1.stats.cunning - n2.stats.cunning > 2) {
-                            n2.favor = Math.max(0, n2.favor - 10);
-                            if (n1.stats.cunning > 7 && Math.random() < 0.4) {
+                        if (n1.stats.cunning - n2.stats.cunning > 3) {
+                            if (n1.stats.cunning > 8 && Math.random() < 0.3) {
                                 if (n2.pregnancy > 0) {
-                                    n2.pregnancy = 0;
-                                    logToChronicle(`【滑胎惨案】后宫疯传 ${n1.title||""}${n1.rank} ${n1.name} 在安胎药中动手脚，致使 ${n2.title||""}${n2.rank} ${n2.name} 不幸小产！(圣宠暴跌)`);
+                                    n2.pregnancy = 0; n2.favor = Math.max(0, n2.favor - 10);
+                                    logToChronicle(`【滑胎悬案】${n2.title||""}${n2.rank} ${n2.name} 误食带有红花之物，不幸小产！宫中暗指是 ${n1.name} 所为。`);
                                 } else {
-                                    logToChronicle(`【投毒陷害】${n1.title||""}${n1.rank} ${n1.name} 涉嫌用计谋害 ${n2.title||""}${n2.rank} ${n2.name}，致其被罚禁足。`);
+                                    n2.favor = Math.max(0, n2.favor - 15);
+                                    logToChronicle(`【造谣生事】${n1.title||""}${n1.rank} ${n1.name} 散播流言，致使 ${n2.title||""}${n2.rank} ${n2.name} 遭圣上训斥，褫夺绿头牌。`);
                                 }
                             } else {
-                                logToChronicle(`【宫斗口角】${n1.title||""}${n1.rank} ${n1.name} 当众给 ${n2.title||""}${n2.rank} ${n2.name} 难堪，闹得风言风语。`);
+                                n1.affection -= 10; n2.affection -= 10;
+                                logToChronicle(`【交恶】${n1.title||""}${n1.rank} ${n1.name} 恃宠生娇，与 ${n2.title||""}${n2.rank} ${n2.name} 发生口角，双双被罚。`);
                             }
-                        } else if (n1.stats.cunning < 5 && n2.stats.cunning < 5) {
+                        } else if (n1.stats.cunning <= 5 && n2.stats.cunning <= 5) {
                             n1.affection += 10; n2.affection += 10;
-                            logToChronicle(`【交好】${n1.title||""}${n1.rank} ${n1.name} 与 ${n2.title||""}${n2.rank} ${n2.name} 在御花园烹茶赏花，越发亲厚了。`);
+                            logToChronicle(`【交好】${n1.title||""}${n1.rank} ${n1.name} 与 ${n2.title||""}${n2.rank} ${n2.name} 品茶下棋，结为同盟。`);
                         }
                     }
 
-                    // 🌟 核心修复2：沙盒晋级检查纯位份，百分百生效同步！
+                    // 3. 升降级与怀孕检查
                     livingHarem.forEach(h => {
-                        if(h.pregnancy === 0 && h.favor > 30 && Math.random() < 0.05) {
-                            h.pregnancy = 1;
-                            logToChronicle(`【遇喜】太医院传出喜讯，${h.title||""}${h.rank} ${h.name} 怀有身孕了！`);
+                        if(h.pregnancy === 0 && h.favor > 40 && Math.random() < 0.08) {
+                            h.pregnancy = 1; logToChronicle(`【遇喜】太医院喜报，${h.title||""}${h.rank} ${h.name} 怀有龙嗣了！`);
                         }
-                        if(h.favor > 60 && ["答应", "常在", "贵人"].includes(h.rank) && Math.random() < 0.2) {
+                        if(h.favor > 65 && ["答应", "常在", "贵人"].includes(h.rank) && Math.random() < 0.15) {
                             let newRank = h.rank === "答应" ? "常在" : (h.rank === "常在" ? "贵人" : "嫔");
-                            h.rank = newRank; 
-                            logToChronicle(`【晋封】内务府传旨：${h.name} 尽心侍奉，晋为 ${newRank}。`);
+                            h.rank = newRank; logToChronicle(`【晋封】内务府传旨：${h.name} 晋为 ${newRank}。`);
                         }
-                        if(h.favor === 0 && h.affection < -20 && Math.random() < 0.05) {
-                            h.rank = "冷宫"; h.title = "";
-                            logToChronicle(`【废弃】${h.name} 屡次触怒圣颜，褫夺封号，打入冷宫！`);
+                        if(h.favor <= 0 && h.affection < -30 && Math.random() < 0.1) {
+                            h.rank = "冷宫"; h.title = ""; logToChronicle(`【废弃】${h.name} 触怒圣颜，褫夺封号，打入冷宫！`);
                         }
                     });
                 }
@@ -1085,12 +1077,23 @@
             return `你是《水云间》文字游戏引擎，必须严格遵守响应规则！
 玩家：${gameState.playerName}，位份：${gameState.rank}，孕期：${pregText}。
 属性：${statsText}。
-皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：${empP}。
+皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：【${empP}】。
 ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
-【剧情与对话规则】
-1. 严禁代答！只准用“你”称呼玩家。
-2. 每次回复分2-5个 [发言] 块。格式：[发言] 姓名：（动作）内容。
+【⚠️ 帝王性格与天宠（圣宠）判定法则】
+你输出 [天宠+X] 或 [天宠-X] 时必须严格遵守以下对应性格，绝不可凭空给分：
+1. 若为【刚正】：喜好规矩体统，极难涨分（+1）；厌恶轻浮算计，抓到越礼作恶必重罚（-15）。
+2. 若为【风流】：极度看脸与才艺，易被取悦（+3~+5）；但喜新厌旧。
+3. 若为【冷漠】：极度戒备寡言，日常几乎不涨分（+0或+1）；发现算计立刻打入冷宫（-50）。
+4. 若为【温柔】：雨露均沾，易得小恩小惠（+1~+2），不忍重罚，极难给专宠。
+5. 若为【天真】：喜爱活泼烂漫与宫外新奇。情绪化极强，好感随心情大起大落（可能暴涨+8，也可能因无聊掉-5）。
+
+【天宠增减量化刻度表】
+- 【微波】+1 ~ +2：规矩请安、平淡对话得体。
+- 【眷顾】+3 ~ +5：展现精妙才艺、侍寝情意融融。
+- 【大恩】+10 ~ +15：初次诊出龙胎、诞育皇嗣。
+- 【严惩】-5 ~ -15：争风吃醋被抓现行、当众失仪。
+- 【雷霆】-20 ~ -50：涉及投毒残害龙嗣、秽乱宫闱（直接降位或打入冷宫）。
 
 【！！！强制系统指令（必须在回复的最末尾单独一行输出）！！！】
 1. 换场景必加：[背景: 场景名]（你必须且只能从地图库中选：${bgList}。若无合适选自编）。
@@ -1101,8 +1104,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 6. 怀孕与流产：若太医诊出有喜或遇害流产，必须加 [怀孕: 姓名] 或 [流产: 姓名]（玩家自己则填“玩家”）。
 7. 结算标签：[天宠+X] [更新: 姓名|好感|圣宠|位份] [背景: 场景名]。
 8. 妃嫔日常与大事件：[更新: 姓名|好感变动|圣宠变动|新位份]。日常争宠波动在+/-5以内；若发生怀孕、流产、被陷害、打入冷宫等大事件，圣宠必须大幅变动(+20或-50等)！
-9. 情郎私会雷达：只要玩家与情郎(如萧铎、晏洵)相见互动，必须输出 [更新: 情郎姓名|好感变动|疑心变动|]。皇上不在场或无证据时疑心不变或微增。
-10. 怀孕与流产：太医诊出有喜或流产，必加 [怀孕: 姓名] 或 [流产: 姓名]。
 
 【完美输出示例】
 [发言] 皇帝：（大怒）她竟敢如此放肆！传旨，降林旻恩为官女子，褫夺封号，禁足一月！
@@ -1231,14 +1232,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             }
         }
 
-        function applyZeroSumFavor(excludeName, amount) {
-            let deductTotal = amount; let loops = 0;
-            while(deductTotal > 0 && loops < 50) {
-                loops++; let candidates = gameState.harem.filter(c => c.name !== excludeName && c.favor > 0);
-                if(candidates.length === 0) { if(gameState.favor > 0){ gameState.favor--; document.getElementById('favor-val').innerText = gameState.favor; deductTotal--; } break; } 
-                else { let c = candidates[Math.floor(Math.random() * candidates.length)]; c.favor--; deductTotal--; }
-            }
-        }
+        
 
         function parseAndDisplayAI(text) {
             let cleanText = text;
@@ -1340,15 +1334,13 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                     }
                     
                     target.favor = proposed;
-                    let actualAdd = target.favor - oldFavor;
                     
                     if(nRank) { 
                         nRank = nRank.replace(/位份[：:]?/g, '').replace(/降为/g, '').replace(/升为/g, '').trim();
-                        target.rank = nRank; // 🌟 核心修复1：晋升只改位份，绝不覆盖封号！
+                        target.rank = nRank; 
                         if(["官女子", "答应", "庶人", "冷宫", "废妃", "死亡", "赐死", "病逝"].includes(nRank)) target.title = ""; 
                         if(["死亡", "赐死", "病逝", "殁"].includes(nRank)) { target.isDead = true; target.rank = "👻已故"; target.title = ""; }
-                    }
-                    if(actualAdd > 0) applyZeroSumFavor(target.name, actualAdd); 
+                    } 
                 } else {
                     let lover = gameState.lovers ? gameState.lovers.find(l=>l.name.includes(nName) || nName.includes(l.name)) : null;
                     if(lover) { 
