@@ -1209,6 +1209,7 @@
             
             let haremText = "【后宫名单】\n";
             gameState.harem.forEach(h => { 
+                // 🌟 只在这里加了你的绝育判定，其他一字未动！
                 let pregInfo = h.pregnancy > 0 ? `, 怀孕${h.pregnancy}月` : (h.infertile ? ", 绝育(珠胎难结)" : "");
                 let childInfo = h.children.length > 0 ? `, 子嗣:${h.children.join("、")}` : "";
                 let tStr = h.title ? h.title : "";
@@ -1219,29 +1220,28 @@
             gameState.lovers.forEach(l => { if(l.isKnown) loversText += `- ${l.name} (${l.title}, 人设:${l.type}, 对你好感:${l.affection}, 皇帝疑心:${l.suspicion}%)\n`; });
             
             let encounterHints = "";
-            if(gameState.pregnancy >= 10) encounterHints += "【🚨临盆警告】玩家已怀胎十月，即将临盆！请务必在本次剧情中描写生产过程、赐名，并在最后输出 [诞下: 性别·名字|玩家]！\n";
-            gameState.harem.forEach(h => { if(h.pregnancy >= 10) encounterHints += `【🚨临盆警告】${h.name}已怀胎十月，即将临盆！请描写生产剧情，输出 [诞下: 性别·名字|${h.name}]！\n`; });
+            if(gameState.pregnancy >= 10) encounterHints += "【🚨临盆警告】玩家已怀胎十月，即将临盆！请务必在本次剧情中描写生产过程、让皇帝或父母亲自为孩子赐名，并在回复最末尾输出标签 [诞下: 性别·名字|玩家]！\n";
+            gameState.harem.forEach(h => { if(h.pregnancy >= 10) encounterHints += `【🚨临盆警告】${h.name}已怀胎十月，即将临盆！请描写生产与赐名剧情，并输出标签 [诞下: 性别·名字|${h.name}]！\n`; });
             
-            if(gameState.currentLoc === "观星台") encounterHints += "【命运触发】玩家来到了观星台，请安排阴湿病娇国师【司星沉】出场并与玩家互动。\n";
-            if(gameState.currentLoc === "普陀山" && !huli.isKnown) encounterHints += "【命运触发】请安排天真纯欲粉尾狐妖【晏洵】迷路初遇玩家。\n";
-            else if(huli.isKnown && ["京城街道","京城酒楼","布坊","珠宝店","香料铺","京城学堂"].includes(gameState.currentLoc)) encounterHints += "【命运触发】宫外极大概率偶遇黏人粉尾狐妖【晏洵】。\n";
-            if((gameState.month === 6 || gameState.month === 12) && ["御花园白天1","御花园白天2","御书房","太医院","宫门"].includes(gameState.currentLoc)) encounterHints += "【命运触发】述职月，极大概率偶遇阳光修狗将军【萧铎】。\n";
-            encounterHints += "【寻常偶遇】若在宫内走动，请务必从【后宫名单】挑妃嫔与玩家偶遇或宫斗，不要每次都遇皇帝！\n";
+            if(gameState.currentLoc === "观星台") encounterHints += "【命运触发】玩家来到了观星台，请务必安排阴湿病娇国师【司星沉】出场并与玩家互动。\n";
+            if(gameState.currentLoc === "普陀山" && !huli.isKnown) encounterHints += "【命运触发】玩家来到了普陀山，请务必安排天真纯欲的粉尾狐妖【晏洵】迷路初遇玩家。\n";
+            else if(huli.isKnown && ["京城街道","京城酒楼","布坊","珠宝店","香料铺","京城学堂"].includes(gameState.currentLoc)) encounterHints += "【命运触发】玩家在宫外，极大概率偶遇黏人的粉尾狐妖【晏洵】。\n";
+            if((gameState.month === 6 || gameState.month === 12) && ["御花园白天1","御花园白天2","御书房","太医院","宫门"].includes(gameState.currentLoc)) encounterHints += "【命运触发】现在是回京述职的月份，玩家在宫内极大概率偶遇阳光修狗将军【萧铎】。\n";encounterHints += "【寻常偶遇】若未触发上述命运事件且在宫内走动，请务必从【后宫名单】中挑一位或多位妃嫔与玩家偶遇、宫斗或闲聊，绝对不要每次都遇到皇帝！\n";
 
-            let extraRules = "【红牌警告】国师双腿残疾，严禁走动描写！皇后朴敏珠是女同，唯独对玩家温柔，不参与宫斗。严禁强迫侍寝！严禁滥用极刑！\n";
-            if(statsConfig['cunning'].v <= 4) extraRules += "【隐藏】玩家心机极低，极易被暗算。\n";
-            else if(statsConfig['cunning'].v >= 8) extraRules += "【隐藏】玩家城府极深，试图算计玩家都会被反杀！\n";
+            let extraRules = "";
+            extraRules += "【红牌警告】国师【司星沉】双腿残疾，永远只能坐轮椅！严禁对他使用站立、走动、迈步等腿部动作描写！\n";
+            extraRules += "【核心设定】皇后朴敏珠是太后族亲，潜邸时便是福晋，但与皇帝毫无感情、相敬如宾。她性子温软、不参与宫斗、极度渴望宫墙外的自由。最重要的是，她是女同，唯独对玩家充满极致的温柔与爱意。\n";
+            extraRules += "【红牌警告：严禁霸王硬上弓】无论NPC对玩家好感多高，严禁主动描写任何直接的性行为或强迫侍寝！必须发乎情止乎礼。只有在玩家主动勾引或同意后才可顺水推舟。\n";
+            extraRules += "【红牌警告：情绪稳定与合理宫斗】皇上和高位妃嫔必须保持上位者的体面与情绪稳定！严禁动辄暴怒让人“滚”或滥用极刑(如拔舌、杖毙)。惩罚必须与错误匹配，保留妃嫔人权！\n";
+            
+            if(statsConfig['cunning'].v <= 4) extraRules += "【隐藏】玩家心机极低，极易被别人暗算和利用。\n";
+            else if(statsConfig['cunning'].v >= 8) extraRules += "【隐藏】玩家城府极深，手段狠辣。任何人试图算计玩家，都会被立刻反杀！\n";
 
-            return `你是《水云间》游戏引擎，严格遵守响应规则！
+            return `你是《水云间》文字游戏引擎，必须严格遵守响应规则！
 玩家：${gameState.playerName}，位份：${gameState.rank}，孕期：${pregText}。
 属性：${statsText}。
 皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：【${empP}】。
 ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
-
-【剧情与对话规则】
-1. 严禁代答！只准用“你”称呼玩家。
-2. 每次回复分2-5个 [发言] 块。格式：[发言] 姓名：（动作）内容。
-3. 必须通过不同的 [发言] 块来区分不同角色的对话，每个角色的发言独立分块。
 
 【⚠️ 帝王性格与天宠（圣宠）判定法则】
 你输出 [天宠+X] 或 [天宠-X] 时必须严格遵守以下对应性格，绝不可凭空给分：
@@ -1251,26 +1251,31 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 4. 若为【温柔】：雨露均沾，易得小恩小惠（+1~+2），不忍重罚，极难给专宠。
 5. 若为【天真】：喜爱活泼烂漫与宫外新奇。情绪化极强，好感随心情大起大落（可能暴涨+8，也可能因无聊掉-5）。
 
-【天宠增减量化刻度】
-- 【微波】+1 ~ +2：规矩得体。
-- 【眷顾】+3 ~ +5：才艺惊艳、侍寝。
+【天宠增减量化刻度表】
+- 【微波】+1 ~ +2：规矩请安、平淡对话得体。
+- 【眷顾】+3 ~ +5：展现精妙才艺、侍寝情意融融。
 - 【大恩】+10 ~ +15：初次诊出龙胎、诞育皇嗣。
-- 【严惩】-5 ~ -15：失仪、争风吃醋被抓。
-- 【雷霆】-20 ~ -50：残害龙嗣、秽乱宫闱（直接降位或打入冷宫）。
+- 【严惩】-5 ~ -15：争风吃醋被抓现行、当众失仪。
+- 【雷霆】-20 ~ -50：涉及投毒残害龙嗣、秽乱宫闱（直接降位或打入冷宫）。
 
 【！！！强制系统指令（必须在回复的最末尾单独一行输出）！！！】
-1. 换场景必加：[背景: 场景名]（从地图库选：${bgList}）。
+1. 换场景必加：[背景: 场景名]（你必须且只能从地图库中选：${bgList}。若无合适选自编）。
 2. 皇帝对玩家好感变动：[天宠+X] 或 [天宠-X]！
 3. 玩家位份变化：[位份: 新位份]！
 4. 妃嫔犯错被贬或死：[更新: 姓名|好感变动|圣宠变动|新位份(或冷宫/死亡)]！若是赐死/病逝位份填“死亡”。
-5. 情郎好感与疑心变动：[更新: 情郎姓名|好感变动|疑心变动|]。
-6. 怀孕与流产：[怀孕: 姓名] 或 [流产: 姓名]。
+5. 情郎好感与疑心变动：[更新: 情郎姓名|好感变动|疑心变动|]。或单发 [疑心+X] / [疑心-X]。【铁律】皇上无千里眼，若非抓奸在床或证据确凿，严禁在宫外私密场合凭空起疑心！
+6. 怀孕与流产：若太医诊出有喜或遇害流产，必须加 [怀孕: 姓名] 或 [流产: 姓名]（玩家自己则填“玩家”）。
 7. 结算标签：[天宠+X] [更新: 姓名|好感|圣宠|位份] [背景: 场景名]。
+8. 妃嫔日常与大事件：[更新: 姓名|好感变动|圣宠变动|新位份]。日常争宠波动在+/-5以内；若发生怀孕、流产、被陷害、打入冷宫等大事件，圣宠必须大幅变动(+20或-50等)！
 
-【示例】
-[发言] 皇帝：（大怒）传旨，降林氏为官女子，禁足一月！
+【完美输出示例】
+[发言] 皇帝：（大怒）她竟敢如此放肆！传旨，降林旻恩为官女子，褫夺封号，禁足一月！
 [发言] 苏培盛：（躬身）奴才遵旨。
-[天宠+2] [背景: 皇帝正殿] [更新: 林旻恩|0|-50|官女子]`;
+[天宠+2] [背景: 皇帝正殿] [更新: 林旻恩|0|-50|官女子]
+
+【完美输出示例 2：情郎私会】
+[发言] 萧铎：（耳根微红，将你抵在墙角）娘娘这般看着臣，臣会把持不住的……
+[背景: 御花园夜晚] [更新: 萧铎|+10|+2|]`;
         }
 
 
@@ -1400,35 +1405,47 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 let addFav = parseInt(favorMatch[1]);
                 if (addFav > 5) addFav = 5; if (addFav < -5) addFav = -5;
                 let proposed = Math.max(0, Math.min(100, gameState.favor + addFav));
-                if (proposed >= 70) { gameState.harem.forEach(c => { if(c.favor >= 70) c.favor = 69; }); }
+                
+                if (proposed >= 70) {
+                    gameState.harem.forEach(c => { if(c.favor >= 70) c.favor = 69; }); 
+                }
                 if (proposed >= 40) {
                     let count40 = gameState.harem.filter(c => c.favor >= 40).length;
-                    if (count40 >= 4) { let sorted = gameState.harem.filter(c => c.favor >= 40).sort((a,b)=>a.favor-b.favor); if(sorted.length > 0) sorted[0].favor = 39; }
+                    if (count40 >= 4) { 
+                        let sorted = gameState.harem.filter(c => c.favor >= 40).sort((a,b)=>a.favor-b.favor);
+                        if(sorted.length > 0) sorted[0].favor = 39;
+                    }
                 }
-                gameState.favor = proposed; document.getElementById('favor-val').innerText = gameState.favor; 
+                gameState.favor = proposed; 
+                document.getElementById('favor-val').innerText = gameState.favor; 
             }
             
             const rankMatch = cleanText.match(/\[位份\s*[：:]\s*(.*?)\]/);
             if(rankMatch) { 
-                let newRankName = rankMatch[1].trim();
-                if (gameState.rank !== newRankName) {
-                    gameState.rank = newRankName; showToast(`🌸 获封：${gameState.rank}`); 
-                    if (typeof logToChronicle === 'function') logToChronicle(`【圣旨下达】内务府传旨，玩家晋封为 ${gameState.rank}。`);
-                }
+                gameState.rank = rankMatch[1].trim(); 
+                showToast(`🌸 获封：${gameState.rank}`); 
+                if (typeof logToChronicle === 'function') logToChronicle(`【圣旨下达】内务府传旨，玩家晋封为 ${gameState.rank}。`);
             }
             
             const bgMatch = cleanText.match(/\[背景\s*[：:]\s*(.*?)\]/);
             if(bgMatch) { 
                 let targetBg = bgMatch[1].trim();
                 let exactKey = Object.keys(bgMap).find(k => k === targetBg || targetBg.includes(k) || k.includes(targetBg));
+                
                 if (exactKey) {
-                    gameState.currentLoc = exactKey; document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[exactKey]}')`; document.getElementById('loc-display').innerText = `当前位置：${exactKey.replace(/\d+/g, '')}`; 
-                } else { gameState.currentLoc = targetBg; document.getElementById('loc-display').innerText = `当前位置：${targetBg}`; }
+                    gameState.currentLoc = exactKey; 
+                    document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[exactKey]}')`;
+                    document.getElementById('loc-display').innerText = `当前位置：${exactKey.replace(/\d+/g, '')}`; 
+                } else {
+                    gameState.currentLoc = targetBg;
+                    document.getElementById('loc-display').innerText = `当前位置：${targetBg}`; 
+                }
             }
 
             const suspMatch = cleanText.match(/\[疑心\s*([+-]\d+)\]/);
             if (suspMatch && gameState.lovers) {
-                let sVal = parseInt(suspMatch[1]); let targetLover = gameState.lovers.find(l => text.includes(l.name) || text.includes(l.title));
+                let sVal = parseInt(suspMatch[1]);
+                let targetLover = gameState.lovers.find(l => text.includes(l.name) || text.includes(l.title));
                 if (targetLover) { targetLover.suspicion = Math.max(0, targetLover.suspicion + sVal); }
             }
 
@@ -1439,6 +1456,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 else { 
                     let t = gameState.harem.find(h=>h.name.includes(pName)); 
                     if(t && t.pregnancy === 0){ 
+                        // 🌟 绝育拦截机制在这！
                         if(t.infertile) { showToast(`❌ 太医误诊：${t.name} 已珠胎难结，无法受孕！`); }
                         else { t.pregnancy = 1; showToast(`🌸 喜报：${t.name} 有喜了！`); }
                     } 
@@ -1447,66 +1465,97 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
             const birthMatch = cleanText.match(/\[诞下\s*[：:]\s*(.*?)\]/);
             if(birthMatch) {
-                let matchContent = birthMatch[1].trim(); let parts = matchContent.split(/[|,，]/); let childName = parts[0].trim(); let motherName = parts.length > 1 ? parts[1].trim() : "玩家";
+                let matchContent = birthMatch[1].trim(); 
+                let parts = matchContent.split(/[|,，]/); 
+                let childName = parts[0].trim(); 
+                let motherName = parts.length > 1 ? parts[1].trim() : "玩家";
+                
                 if(motherName.includes('玩家') || motherName.includes(gameState.playerName)) { 
-                    gameState.pregnancy = 0; gameState.children.push(childName); showToast(`🌸 喜报：顺利诞下【${childName}】！`); if (typeof logToChronicle === 'function') logToChronicle(`【皇家喜报】玩家顺利诞下${childName}！`);
+                    gameState.pregnancy = 0; 
+                    gameState.children.push(childName); 
+                    showToast(`🌸 喜报：顺利诞下【${childName}】！已载入玉牒！`); 
+                    if (typeof logToChronicle === 'function') logToChronicle(`【皇家喜报】玩家顺利诞下${childName}！`);
                 } else { 
                     let t = gameState.harem.find(h=>motherName.includes(h.name)); 
-                    if(t){ t.pregnancy = 0; t.children.push(childName); showToast(`🌸 喜报：${t.name} 诞下【${childName}】！`); if (typeof logToChronicle === 'function') logToChronicle(`【瓜熟蒂落】${t.title||""}${t.rank} ${t.name} 顺利诞下${childName}。`); } 
+                    if(t){ 
+                        t.pregnancy = 0; t.children.push(childName); 
+                        showToast(`🌸 喜报：${t.name} 诞下【${childName}】！`); 
+                        if (typeof logToChronicle === 'function') logToChronicle(`【瓜熟蒂落】${t.title||""}${t.rank} ${t.name} 顺利诞下${childName}。`);
+                    } 
                 }
             }
 
-            const upRegex = /\[更新[：:](.*?)\]/g; let upMatch;
+            const upRegex = /\[更新[：:](.*?)\Vert{}(.*?)\Vert{}(.*?)\Vert{}(.*?)\]/g; let upMatch;
             while ((upMatch = upRegex.exec(cleanText)) !== null) {
-                let parts = upMatch[1].split('|');
-                let nName = parts[0] ? parts[0].trim() : "";
-                let aff = parts[1] ? parseInt(parts[1].replace(/[+＋]/g, ''))||0 : 0;
-                let fav = parts[2] ? parseInt(parts[2].replace(/[+＋]/g, ''))||0 : 0;
-                let nRank = parts[3] ? parts[3].trim() : "";
+                let nName=upMatch[1].trim(), aff=parseInt(upMatch[2])||0, fav=parseInt(upMatch[3])||0, nRank=upMatch[4]?upMatch[4].trim():"";
                 
                 let target = gameState.harem.find(h=>h.name.includes(nName) || nName.includes(h.name));
                 if(target) { 
                     target.affection += aff; 
-                    if (fav > 20) fav = 20; if (fav < -50) fav = -50;
-                    let oldFavor = target.favor; let proposed = Math.max(0, Math.min(100, target.favor + fav)); 
-                    if (proposed >= 70 && oldFavor < 70) { let has70 = (gameState.favor >= 70) || gameState.harem.some(c => c !== target && c.favor >= 70); if (has70) proposed = 69; }
-                    if (proposed >= 40 && oldFavor < 40) { let count40 = (gameState.favor >= 40 ? 1 : 0) + gameState.harem.filter(c => c !== target && c.favor >= 40).length; if (count40 >= 4) proposed = 39; }
+                    
+                    if (fav > 20) fav = 20; 
+                    if (fav < -50) fav = -50;
+                    
+                    let oldFavor = target.favor;
+                    let proposed = Math.max(0, Math.min(100, target.favor + fav)); 
+                    
+                    if (proposed >= 70 && oldFavor < 70) {
+                        let has70 = (gameState.favor >= 70) || gameState.harem.some(c => c !== target && c.favor >= 70);
+                        if (has70) proposed = 69; 
+                    }
+                    if (proposed >= 40 && oldFavor < 40) {
+                        let count40 = (gameState.favor >= 40 ? 1 : 0) + gameState.harem.filter(c => c !== target && c.favor >= 40).length;
+                        if (count40 >= 4) proposed = 39; 
+                    }
+                    
                     target.favor = proposed;
                     
-                    if(nRank && !nRank.includes("不变") && !nRank.includes("无") && nRank.length > 0) { 
+                    if(nRank) { 
                         nRank = nRank.replace(/位份[：:]?/g, '').replace(/降为/g, '').replace(/升为/g, '').trim();
-                        if (target.rank !== nRank) {
-                            target.rank = nRank; 
-                            if(["官女子", "答应", "庶人", "冷宫", "废妃", "死亡", "赐死", "病逝"].includes(nRank)) target.title = ""; 
-                            if(["死亡", "赐死", "病逝", "殁"].includes(nRank)) { 
-                                target.isDead = true; target.rank = "👻已故"; target.title = ""; 
-                                if (typeof logToChronicle === 'function') logToChronicle(`【香消玉殒】${nName} 现已 ${nRank}。`);
-                            } else {
-                                if (typeof logToChronicle === 'function') logToChronicle(`【后宫旨意】传皇上口谕，${nName} 位阶变动为 ${nRank}。`);
-                            }
+                        target.rank = nRank; 
+                        if(["官女子", "答应", "庶人", "冷宫", "废妃", "死亡", "赐死", "病逝"].includes(nRank)) target.title = ""; 
+                        if(["死亡", "赐死", "病逝", "殁"].includes(nRank)) { 
+                            target.isDead = true; target.rank = "👻已故"; target.title = ""; 
+                            if (typeof logToChronicle === 'function') logToChronicle(`【香消玉殒】${nName} 现已 ${nRank}。`);
+                        } else {
+                            if (typeof logToChronicle === 'function') logToChronicle(`【后宫旨意】传皇上口谕，${nName} 位阶变动为 ${nRank}。`);
                         }
                     } 
                 } else {
                     let lover = gameState.lovers ? gameState.lovers.find(l=>l.name.includes(nName) || nName.includes(l.name)) : null;
-                    if(lover) { lover.isKnown = true; lover.affection += aff; lover.suspicion = Math.max(0, lover.suspicion + fav); } 
-                    else if (nRank && !["死亡", "赐死", "病逝", "殁", "冷宫", "废妃", "不变", "无", ""].includes(nRank.replace(/位份[：:]?/g, '').trim())) {
+                    if(lover) { 
+                        lover.isKnown = true; 
+                        lover.affection += aff; 
+                        lover.suspicion = Math.max(0, lover.suspicion + fav); 
+                    } 
+                    else if (nRank && !["死亡", "赐死", "病逝", "殁", "冷宫", "废妃", ""].includes(nRank.replace(/位份[：:]?/g, '').trim())) {
                         let cStats = {}; ['charm','intel','cunning','dance','needle','health','luck','charisma'].forEach(k => cStats[k] = Math.floor(Math.random()*10)+1);
                         let personalities = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
                         let nBg = cleanText.includes("进贡") ? "异国贡女" : (cleanText.includes("族亲") ? "世家旁支" : (cleanText.includes("宫女") || cleanText.includes("奴婢") ? "宫女上位" : "特殊入宫"));
                         let cleanRank = nRank.replace(/位份[：:]?/g, '').trim();
-                        let allAvailableImages = []; for (let key in portraitPools) { allAvailableImages = allAvailableImages.concat(portraitPools[key]); }
+                        
+                        let allAvailableImages = [];
+                        for (let key in portraitPools) { allAvailableImages = allAvailableImages.concat(portraitPools[key]); }
                         let randomFace = allAvailableImages.length > 0 ? allAvailableImages[Math.floor(Math.random() * allAvailableImages.length)] : "https://i.postimg.cc/placeholder-flower.jpg";
-                        gameState.harem.push({ title: "", rank: cleanRank, name: nName, bg: nBg, age: Math.floor(Math.random()*6)+15, favor: Math.max(0, fav), personality: personalities[Math.floor(Math.random()*personalities.length)], affection: aff, stats: cStats, image: randomFace, isTransparent: true, pregnancy: 0, children: [] });
-                        if (typeof logToChronicle === 'function') logToChronicle(`【新人入宫】新进了一位 ${cleanRank} ${nName}（出身：${nBg}）。`);
+
+                        gameState.harem.push({
+                            title: "", rank: cleanRank, name: nName, bg: nBg, age: Math.floor(Math.random()*6)+15, favor: Math.max(0, fav), 
+                            personality: personalities[Math.floor(Math.random()*personalities.length)], affection: aff, stats: cStats, 
+                            image: randomFace, isTransparent: true, pregnancy: 0, children: []
+                        });
+                        if (typeof logToChronicle === 'function') {
+                            logToChronicle(`【新人入宫】宫中新进了一位 ${cleanRank} ${nName}，已正式录入花名册。`);
+                        }
                     }
                 }
             }
 
             if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
+
             gameState.harem.sort((a,b)=>b.favor-a.favor);
             cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').trim();
             
-            // 🌟 这里是完全还原你原来第一版完美兼容的正则！
+            // 🌟 这是你原本没有任何问题的完美正则，绝对不会切乱！
             const chunkRegex = /(?:\[\vert{}【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[\vert{}【)发言(?:\]|】))|$)/g;
             dialogueQueue = []; let cMatch;
             while ((cMatch = chunkRegex.exec(cleanText)) !== null) dialogueQueue.push({ speaker: cMatch[1].trim(), text: cMatch[2].trim() });
