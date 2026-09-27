@@ -556,6 +556,7 @@
         function rollBg() { const bg = backgrounds[Math.floor(Math.random()*backgrounds.length)]; currentBgCost = bg.cost; document.getElementById('bg-val').innerText = bg.name; document.getElementById('bg-cost-val').innerText = `(${bg.cost>0?'-':'+'}${Math.abs(bg.cost)}点)`; renderStats(); }
         
         /* ✨ 绝美立绘素材库 ✨ */
+        /* ✨ 绝美立绘素材库 ✨ */
         const playerPresets = [
             { name: "清幽婉高", url: "https://i.postimg.cc/BnRc45Xx/0sheng-qi-04zheng-pin-nu-qing-you-wan-gao.png" },
             { name: "绮趣娇柔", url: "https://i.postimg.cc/dVgmwRLV/0sheng-qi-05zheng-pin-nu-ji-qu-wan-gao.png" },
@@ -566,7 +567,9 @@
             { name: "青花瓷韵", url: "https://i.postimg.cc/ncpjLDMs/sheng-qi-5-qing-hua-ci-da-bao-ban-shen-zeng-pin.png" },
             { name: "仙姿玉貌", url: "https://i.postimg.cc/QCrB1Bms/e-zeng-song-fu-li-ban-shen.png" },
             { name: "皎如明玉", url: "https://i.postimg.cc/wxhRHVqb/jiao-yu.png" },
-            { name: "雍容华贵", url: "https://i.postimg.cc/FsNdKL13/zheng-pin-yi.png" }
+            { name: "雍容华贵", url: "https://i.postimg.cc/FsNdKL13/zheng-pin-yi.png" },
+            { name: "惊鸿仙子", url: "https://i.postimg.cc/YSfLQWzH/6811c8d4cca74fbd5dee6e97B5FYZGKP06.png" },
+            { name: "婉约佳人", url: "https://i.postimg.cc/FRTfBXqh/6274a6af4efdc9b1edf2b7d8Ajp-E3l-Vu04.png" }
         ];
 
         const empPresets = [
@@ -579,11 +582,44 @@
         ];
 
         const portraitPools = {
-            level0_2: [ "https://i.postimg.cc/vDR50pcw/shen-gong-qu-xy-insvaas9-109.png", "https://i.postimg.cc/yWq0Lwkx/shen-gong-qu-xy-insvaas9-1148.png", "https://i.postimg.cc/YjcQdJhv/shen-gong-qu-xy-insvaas9-1569.png", "https://i.postimg.cc/Lhdjxrn6/shen-gong-qu-xy-insvaas9-174.png", "https://i.postimg.cc/QVLcfRHX/shen-gong-qu-xy-insvaas9-239.png", "https://i.postimg.cc/qgf219zp/shen-gong-qu-xy-insvaas9-240.png", "https://i.postimg.cc/z3mTx9VD/shen-gong-qu-xy-insvaas9-938.png" ],
+            level0_2: [ "https://i.postimg.cc/z3mTx9VD/shen-gong-qu-xy-insvaas9-938.png" ],
             level3_4: [ "https://i.postimg.cc/brZRCxg6/shen-gong-qu-xy-insvaas9-1030.png", "https://i.postimg.cc/MHnYP75D/shen-gong-qu-xy-insvaas9-1439.png", "https://i.postimg.cc/hvX0yLss/shen-gong-qu-xy-insvaas9-1449.png", "https://i.postimg.cc/BbjCYTpm/shen-gong-qu-xy-insvaas9-1612.png", "https://i.postimg.cc/tJszS3k8/shen-gong-qu-xy-insvaas9-2200.png", "https://i.postimg.cc/prmBGfkN/shen-gong-qu-xy-insvaas9-2268.png", "https://i.postimg.cc/BbRBdj7V/shen-gong-qu-xy-insvaas9-2921.png", "https://i.postimg.cc/85KHmKRb/shen-gong-qu-xy-insvaas9-700.png" ],
-            level5_6: [ "https://i.postimg.cc/MKh9LFhD/shen-gong-qu-xy-insvaas9-1445.png", "https://i.postimg.cc/CLWc2QWc/shen-gong-qu-xy-insvaas9-2729.png", "https://i.postimg.cc/PrBS7RBZ/shen-gong-qu-xy-insvaas9-342.png", "https://i.postimg.cc/dtz5fxzr/shen-gong-qu-xy-insvaas9-343.png", "https://i.postimg.cc/8PqZY0qj/shen-gong-qu-xy-insvaas9-50.png", "https://i.postimg.cc/Hsf6Nhf4/shen-gong-qu-xy-insvaas9-893.png" ],
-            level7_8: [ "https://i.postimg.cc/VN9ZnWZ5/shen-gong-qu-xy-insvaas9-1133.png", "https://i.postimg.cc/LskQL3Q5/shen-gong-qu-xy-insvaas9-2447.png", "https://i.postimg.cc/6QVbnfb3/shen-gong-qu-xy-insvaas9-2480.png", "https://i.postimg.cc/nLKSBGSG/shen-gong-qu-xy-insvaas9-2548.png", "https://i.postimg.cc/d0RNrjNW/shen-gong-qu-xy-insvaas9-2745.png", "https://i.postimg.cc/3wQbkc1Y/shen-gong-qu-xy-insvaas9-404.png", "https://i.postimg.cc/W4mYgwY4/shen-gong-qu-xy-insvaas9-414.png" ],
-            level9_10: [ "https://i.postimg.cc/RF59Vd6n/晏生_兰时.png", "https://i.postimg.cc/TwMGY0LD/限时加赠二_兰时.png", "https://i.postimg.cc/rF8VrfhW/青雀师妹_兰时.png" ]
+            level5_6: [ "https://i.postimg.cc/MKh9LFhD/shen-gong-qu-xy-insvaas9-1445.png", "https://i.postimg.cc/8PqZY0qj/shen-gong-qu-xy-insvaas9-50.png", "https://i.postimg.cc/Hsf6Nhf4/shen-gong-qu-xy-insvaas9-893.png" ],
+            level7_8: [ 
+                "https://i.postimg.cc/VN9ZnWZ5/shen-gong-qu-xy-insvaas9-1133.png", 
+                "https://i.postimg.cc/LskQL3Q5/shen-gong-qu-xy-insvaas9-2447.png", 
+                "https://i.postimg.cc/6QVbnfb3/shen-gong-qu-xy-insvaas9-2480.png", 
+                "https://i.postimg.cc/nLKSBGSG/shen-gong-qu-xy-insvaas9-2548.png", 
+                "https://i.postimg.cc/d0RNrjNW/shen-gong-qu-xy-insvaas9-2745.png", 
+                "https://i.postimg.cc/3wQbkc1Y/shen-gong-qu-xy-insvaas9-404.png", 
+                "https://i.postimg.cc/W4mYgwY4/shen-gong-qu-xy-insvaas9-414.png",
+                "https://i.postimg.cc/HsVMFjdB/65b655c814ff631a3a590082cj-FC1Duv05.png",
+                "https://i.postimg.cc/J4vX8mzf/6631d304b3470e36ce024966dja-SEOa-D05.png",
+                "https://i.postimg.cc/qMSKr07V/6631d308e8d1ccc1283d1c0fykv9FOHP05.png",
+                "https://i.postimg.cc/g2hZk5ws/6772910291f0afeefbd69f82Qmq-RM4r006.png",
+                "https://i.postimg.cc/Qxw7DsMx/6799e53725495880aaa74f78f-XRO40ON06.png",
+                "https://i.postimg.cc/3JVGh7wT/6799e676f14c6662057eff46sxd-Ar-Yaq06.png",
+                "https://i.postimg.cc/yYkR2W7C/67d98f743a52cfef2d0be743k-Cz-Qm02g06.png",
+                "https://i.postimg.cc/GhVDRrp4/6825c4f183007e85ad533560KCcl8W4906.png",
+                "https://i.postimg.cc/DyHGhFzW/6836eaeadad4ca444d457f61z-F0NPWo-Q06.png",
+                "https://i.postimg.cc/K8TMvVKv/6836ede752604829593434d3NNS8LBi-Y06.png",
+                "https://i.postimg.cc/4NqcGZxM/691e887f0be2d0693087e593lte88i-Ef07.png",
+                "https://i.postimg.cc/J4GXStRW/691fc3e1de7b578f116edc0eu-NPY1p4707.png",
+                "https://i.postimg.cc/4xc9NMKd/6960d9d76e3ea59c88f378f0Nhc-BP3pm07.png",
+                "https://i.postimg.cc/BnFKQy8c/69730a560b4d3bfa8f7e9618Qr-Wtih-CH07.png",
+                "https://i.postimg.cc/Z5NdKg9x/6978d482aec6ce4582ad6766d-AYbq-KCh07.png",
+                "https://i.postimg.cc/ncCmNMnx/697a21d3392c7644f8da3bf6lss5TNML07.png"
+            ],
+            level9_10: [ 
+                "https://i.postimg.cc/RF59Vd6n/晏生_兰时.png", 
+                "https://i.postimg.cc/TwMGY0LD/限时加赠二_兰时.png", 
+                "https://i.postimg.cc/rF8VrfhW/青雀师妹_兰时.png",
+                "https://i.postimg.cc/9MCTkpQ1/0sheng-qi-01zheng-pin-nu-shuang-mian-xiu-xiu-jin-jie-jie-wan-gao.png",
+                "https://i.postimg.cc/zDdWdTZp/0sheng-qi-03zheng-pin-nu-dan-wu-wan-gao.png",
+                "https://i.postimg.cc/NGNTNRq2/0sheng-qi-06zheng-pin-nu-dou-niang-wan-gao.png",
+                "https://i.postimg.cc/Wp9r90Ln/0sheng-qi-07zheng-pin-nu-ying-zun-wan-gao.png",
+                "https://i.postimg.cc/NGNTNRqr/0sheng-qi-08zheng-pin-nu-zhi-wei-wan-gao.png"
+            ]
         };
         const bgMap = {
             "皇帝正殿": "https://i.postimg.cc/nzRWw6wT/huang-di-hui-ke-ting.jpg", "女主卧室": "https://i.postimg.cc/Dzy0rGVr/gu-feng-chang-jing-wo-shi.jpg",
@@ -740,73 +776,133 @@
             // 抹除韩流名，全用深宫曲原版女名替换
             let cnNames = ["安然","锦瑟","月仪","瑾年","宓枕","解语","沅栎","婠婠","执宜","梦纾","蓁蓁","归晚","楚楚","云瑶","姒月","妍霏","絮锦","溪暮","玉倾","筠娘","双鲤","芷君","则淇","妤仪","灼华","韶光","腻云","沭华","重月","知意","奉吟","云栖","云翳","羡鱼","嬛嬛","墨染","寄雨","蔚纾","子莹","柒羽","慕情","招摇","芙鸳","无乐","月笙","兰泽","弄影","熹微","月来","安韶","安岁","清鸢","卿辞","寻寻","又双","叒叕","九歌","九韶","清湫","清浅","霓裳","辞柔","剪梅","玉棠","明麒","白芷","尧茜","弋弋","训英","青窈","解忧","玉致","攒玉","云昭","熙媛","沅儿","云裳","云倾","启楚","月牙","子卿","子衿","漱漱","疏疏","宴歌","琬琰","当归","琳琅","觅玉","云书","与荷","寻漪","清鸾","清知","月见","沅芷","追月","余欢","珲音","知颐","之贻","从仪","霜华","芸笙","聆歌","明笑","禾猗","惊瑜","相映","青照","兰因","犹知","云簪","时缨","如枝","凭澜","当当","罗敷","柳娇","蒙欢","梦沅","梦芙","云中","风莲","迟迟","晚晚","娇娇","芊芊","溶溶","莺莺","翩翩","翡翠","蝉语","归鹭","绯婴","弗楹","飞燕","合德","飞滟","宜主","遗光","思琅","琊姬","眉钗","诱霜","若拙","清一","韶苏","惊蛰","小满","谷雨","神爱","长愉","静水","琼章","瑶期","青羽","晓梦","寻鹭","棠梨","以沐","寂月","瑾瑜","鸢歌","鹿苹","栀里","霜思","晚秋","明歌","沉雾","馨予","令窈","宝糖","浮舟","御皖","云婉","珺瑶","枳念","落颜","姝惠","亦如","悠南","白浔","有木","沁雪","景安","菁浔","慕楠","星河","裘凤","栖迟","文茵","汐玉","千秋","婉琴","锦琴","婉兮","云翎","丹蘼","芷瑶","笙寒","竹苓","书意","皓萱","夙诺","秋溪","池乔","妤笙","倾月","霓君","宜玉","柔清","皖雾","烟桃","山奈","鹤轩","婉月","诗妍","迹悄","苏缇","真染","代亦","云霓","绍棠","祎湘","瑾檀","明月","桃夭","清漪","温惠","书棠","青云","槿韫","柔荑","愫音","昭愿","琼琚","皓凝","灵徽","清玥","尔玉","伊南","相思","温浓","昭君"];
             let korNames = cnNames; // 强制同源，抹除分支
-            const bgs = ["太傅嫡女", "总督庶女", "巡抚嫡女", "皇商世家", "江南富商", "武林世家", "知府庶女", "异国贡女", "没落侯府", "平民百姓"];
+            // 1. 建立庞大且带权重的真实官职/家世库（权重越低，暴率越低，彻底解决SSR泛滥）
+        const officialRanks = [
+            { rank: "正一品", titles: ["太师", "太傅", "太保", "大学士"], weight: 3 }, // 极品SSR，暴率极低
+            { rank: "从一品", titles: ["少师", "少傅", "少保", "协办大学士", "提督"], weight: 5 },
+            { rank: "正二品", titles: ["尚书", "总督", "都御史"], weight: 10 },
+            { rank: "从二品", titles: ["侍郎", "巡抚", "布政使"], weight: 12 },
+            { rank: "正三品", titles: ["大理寺卿", "按察使", "副都御史"], weight: 15 },
+            { rank: "从三品", titles: ["太仆寺卿", "太常寺卿", "盐运使", "参政"], weight: 18 },
+            { rank: "正四品", titles: ["通政使", "知府", "道员"], weight: 25 },
+            { rank: "五品", titles: ["知州", "同知", "郎中"], weight: 30 },
+            { rank: "六品及以下", titles: ["知县", "县丞", "主簿", "推官", "国子监祭酒"], weight: 40 },
+            { rank: "", titles: ["皇商世家", "江南富商", "武林世家", "清流书香门第", "没落侯府"], weight: 30 },
+            { rank: "", titles: ["平民百姓", "异国贡女", "孤女", "医女世家", "农户之女"], weight: 35 }
+        ];
 
-            let usedGivenNames = new Set(); 
-            let generatedFamilies = []; 
+        // 身份细分
+        const statusTypes = ["嫡长女", "嫡次女", "庶长女", "庶次女", "庶女", "独女"];
+
+        // 封装摇号函数（按权重）
+        function rollBgBase() {
+            let totalWeight = officialRanks.reduce((sum, item) => sum + item.weight, 0);
+            let randomNum = Math.random() * totalWeight;
+            for (let item of officialRanks) {
+                if (randomNum < item.weight) {
+                    let title = item.titles[Math.floor(Math.random() * item.titles.length)];
+                    return item.rank + title;
+                }
+                randomNum -= item.weight;
+            }
+            return "正四品知府"; // 保底
+        }
+
+        let usedGivenNames = new Set();
+        let generatedFamilies = [];
+        let usedBgBases = new Set(); // 核心修复：记录已生成的爹，防止跨家族撞车！
+        
+        let count = Math.floor(Math.random() * 3) + 3; 
+        let favoredCount = 0; let exclusiveCount = 0; 
+
+        for(let i=0; i<count+2; i++) { 
+            let isNew = i >= count;
+            let age = isNew ? Math.floor(Math.random()*2)+15 : Math.floor(Math.random()*8)+16;
+            let f = isNew ? 0 : Math.floor(Math.random() * 80);
+            if (f >= 70) { if (exclusiveCount < 1 && favoredCount < 3) { exclusiveCount++; favoredCount++; } else if (favoredCount < 3) { f = Math.floor(Math.random() * 29) + 40; favoredCount++; } else f = Math.floor(Math.random() * 40); } 
+            else if (f >= 40) { if (favoredCount < 3) favoredCount++; else f = Math.floor(Math.random() * 40); }
+
+            let cStats = {}; ['charm','intel','cunning','dance','needle','health','luck','charisma'].forEach(k => cStats[k] = Math.floor(Math.random()*10)+1);
             
-            let count = Math.floor(Math.random() * 3) + 3; 
-            let favoredCount = 0; let exclusiveCount = 0; 
+            let poolKey;
+            if(cStats.charm <= 2) poolKey = 'level0_2';
+            else if(cStats.charm <= 4) poolKey = 'level3_4';
+            else if(cStats.charm <= 6) poolKey = 'level5_6';
+            else if(cStats.charm <= 8) poolKey = 'level7_8';
+            else poolKey = 'level9_10';
+            
+            if(tempPools[poolKey].length === 0) {
+                for(let k in tempPools) { if(tempPools[k].length > 0) { poolKey = k; break; } }
+            }
+            
+            let assignedImg = "https://i.postimg.cc/placeholder-flower.jpg";
+            if(tempPools[poolKey] && tempPools[poolKey].length > 0) {
+                let randIdx = Math.floor(Math.random() * tempPools[poolKey].length);
+                assignedImg = tempPools[poolKey].splice(randIdx, 1)[0];
+            }
 
-            for(let i=0; i<count+2; i++) { 
-                let isNew = i >= count;
-                let age = isNew ? Math.floor(Math.random()*2)+15 : Math.floor(Math.random()*8)+16;
-                let f = isNew ? 0 : Math.floor(Math.random() * 80);
-                if (f >= 70) { if (exclusiveCount < 1 && favoredCount < 3) { exclusiveCount++; favoredCount++; } else if (favoredCount < 3) { f = Math.floor(Math.random() * 29) + 40; favoredCount++; } else f = Math.floor(Math.random() * 40); } 
-                else if (f >= 40) { if (favoredCount < 3) favoredCount++; else f = Math.floor(Math.random() * 40); }
-
-                let cStats = {}; ['charm','intel','cunning','dance','needle','health','luck','charisma'].forEach(k => cStats[k] = Math.floor(Math.random()*10)+1);
+            let hasTitle = Math.random() < 0.2;
+            let assignedTitle = hasTitle ? titles[Math.floor(Math.random()*titles.length)] : "";
+            let baseRank = isNew ? (i===count?'常在':'答应') : getInitRank(age);
+            
+            // ✨ 全新族亲与家世排重生成系统 ✨
+            let surname, givenName, fullName, finalBg;
+            let isRelative = (generatedFamilies.length > 0) && (Math.random() < 0.1); 
+            if (isRelative) {
+                // 如果是亲属，必须挂在同一个爹名下
+                let targetFamily = generatedFamilies[Math.floor(Math.random() * generatedFamilies.length)];
+                surname = targetFamily.surname; 
                 
-                let poolKey;
-                if(cStats.charm <= 2) poolKey = 'level0_2';
-                else if(cStats.charm <= 4) poolKey = 'level3_4';
-                else if(cStats.charm <= 6) poolKey = 'level5_6';
-                else if(cStats.charm <= 8) poolKey = 'level7_8';
-                else poolKey = 'level9_10';
+                let newStatus = statusTypes[Math.floor(Math.random() * statusTypes.length)];
                 
-                if(tempPools[poolKey].length === 0) {
-                    for(let k in tempPools) { if(tempPools[k].length > 0) { poolKey = k; break; } }
-                }
-                
-                let assignedImg = "https://i.postimg.cc/placeholder-flower.jpg";
-                if(tempPools[poolKey] && tempPools[poolKey].length > 0) {
-                    let randIdx = Math.floor(Math.random() * tempPools[poolKey].length);
-                    assignedImg = tempPools[poolKey].splice(randIdx, 1)[0];
-                }
-
-                let hasTitle = Math.random() < 0.2;
-                let assignedTitle = hasTitle ? titles[Math.floor(Math.random()*titles.length)] : "";
-                let baseRank = isNew ? (i===count?'常在':'答应') : getInitRank(age);
-                
-                // ✨ 全新族亲生成系统
-                let surname, givenName, fullName, finalBg;
-                let isRelative = (generatedFamilies.length > 0) && (Math.random() < 0.3); 
-
-                if (isRelative) {
-                    let targetFamily = generatedFamilies[Math.floor(Math.random() * generatedFamilies.length)];
-                    surname = targetFamily.surname; 
-                    if (targetFamily.bg.includes("嫡女")) { finalBg = targetFamily.bg.replace("嫡女", "庶女"); } 
-                    else if (targetFamily.bg.includes("庶女")) { finalBg = targetFamily.bg.replace("庶女", "嫡女"); } 
-                    else { finalBg = targetFamily.bg + "旁支"; }
-                    
-                    let pool = manchuSurnames.includes(surname) ? cnNames : korNames.concat(cnNames);
-                    do { givenName = pool[Math.floor(Math.random()*pool.length)]; } while(usedGivenNames.has(givenName));
+                if (targetFamily.base.includes("贡女") || targetFamily.base.includes("平民") || targetFamily.base.includes("孤女")) {
+                    finalBg = targetFamily.base; // 特殊身份无嫡庶
                 } else {
-                    let isKoreanName = Math.random() < 0.3;
-                    if(isKoreanName) {
-                        surname = hanKorSurnames[Math.floor(Math.random()*hanKorSurnames.length)];
-                        do { givenName = korNames[Math.floor(Math.random()*korNames.length)]; } while(usedGivenNames.has(givenName));
+                    // 姐妹入宫，给她们分配不同的嫡庶身份
+                    if (targetFamily.status.includes("长女")) {
+                        newStatus = ["嫡次女", "庶长女", "庶次女", "庶女"][Math.floor(Math.random()*4)];
                     } else {
-                        let allSurnames = manchuSurnames.concat(hanKorSurnames);
-                        surname = allSurnames[Math.floor(Math.random()*allSurnames.length)];
-                        do { givenName = cnNames[Math.floor(Math.random()*cnNames.length)]; } while(usedGivenNames.has(givenName));
+                        newStatus = ["庶女", "嫡长女", "庶长女"][Math.floor(Math.random()*3)];
                     }
-                    finalBg = bgs[Math.floor(Math.random()*bgs.length)];
-                    generatedFamilies.push({ surname: surname, bg: finalBg }); 
+                    finalBg = targetFamily.base + newStatus;
                 }
                 
-                fullName = surname + givenName;
-                usedGivenNames.add(givenName); 
+                let pool = manchuSurnames.includes(surname) ? cnNames : korNames.concat(cnNames);
+                do { givenName = pool[Math.floor(Math.random()*pool.length)]; } while(usedGivenNames.has(givenName));
+
+            } else {
+                // 生成全新的非亲属秀女
+                let isKoreanName = Math.random() < 0.3;
+                if(isKoreanName) {
+                    surname = hanKorSurnames[Math.floor(Math.random()*hanKorSurnames.length)];
+                    do { givenName = korNames[Math.floor(Math.random()*korNames.length)]; } while(usedGivenNames.has(givenName));
+                } else {
+                    let allSurnames = manchuSurnames.concat(hanKorSurnames);
+                    surname = allSurnames[Math.floor(Math.random()*allSurnames.length)];
+                    do { givenName = cnNames[Math.floor(Math.random()*cnNames.length)]; } while(usedGivenNames.has(givenName));
+                }
+                
+                let baseBg;
+                let attempts = 0;
+                // ⚠️ 核心排重：无限摇号，直到摇出没人占用过的官职/背景为止
+                do {
+                    baseBg = rollBgBase();
+                    attempts++;
+                } while (usedBgBases.has(baseBg) && attempts < 20); // 加上限制防止死循环
+                
+                usedBgBases.add(baseBg); // 把这个背景锁死，别人不能再抽
+
+                let status = "";
+                if (!["平民百姓", "异国贡女", "孤女"].includes(baseBg)) {
+                    status = statusTypes[Math.floor(Math.random() * statusTypes.length)];
+                }
+                
+                finalBg = baseBg + status;
+                // 将新建立的家族记录在册
+                generatedFamilies.push({ surname: surname, base: baseBg, status: status, bg: finalBg }); 
+            }
+            
+            fullName = surname + givenName;
 
                 // 🌟 核心修复1：位份和封号严格分离存入数据库
                 h.push({
