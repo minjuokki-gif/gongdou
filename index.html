@@ -66,18 +66,18 @@
         /* 透明大立绘：允许边缘裁切，放得极大 */
         .portrait-trans { 
             position: absolute; 
-            bottom: 50px; /* 被对话框遮住一点底部 */
+            bottom: 50px; 
             height: 85%; 
             max-height: 800px; 
-            max-width: 65%; /* 关键：各自最多占65%，不会完全重叠 */
+            max-width: 65%; 
             object-fit: contain; 
-            z-index: 5; /* 在对话框之后 */
+            z-index: 5; 
             pointer-events: none; 
             display: none; 
             filter: drop-shadow(0 0 15px rgba(0,0,0,0.3)); 
         }
-        .player-pos-trans { left: -10%; transform: scaleX(-1); } /* 左侧，裁掉一点左边缘 */
-        .npc-pos-trans { right: -10%; } /* 右侧，裁掉一点右边缘 */
+        .player-pos-trans { left: -10%; transform: scaleX(-1); } 
+        .npc-pos-trans { right: -10%; } 
 
         /* 拍立得相框：给皇帝或没抠图的照片用 */
         .portrait-framed { 
@@ -101,7 +101,7 @@
         .speaker-name { font-size: 16px; font-weight: bold; color: #b8860b; margin-bottom: 5px; text-shadow: 1px 1px 2px white;}
         .dialogue-content { color: #4682b4; font-size: 16px; font-weight: bold; line-height: 1.6; letter-spacing: 1px; flex-grow: 1; overflow-y: auto;}
         
-        /* 输入框 - 永远不消失！ */
+        /* 输入框 */
         .game-input-bar { position: absolute; bottom: 0; left: 0; width: 100%; height: 60px; background: rgba(255,255,255,0.85); backdrop-filter: blur(10px); padding: 10px 20px; box-sizing: border-box; display: flex; gap: 10px; z-index: 20; border-top: 1px solid var(--main-color);}
         .game-input-bar input { flex-grow: 1; padding: 5px 15px; border: 1px solid var(--main-color); border-radius: 20px; outline: none; font-family: inherit; font-size: 15px; background: rgba(255,255,255,0.9); color: var(--text-color);}
         .game-input-bar button { background: var(--dark-color); color: white; border: none; border-radius: 20px; padding: 0 20px; font-weight: bold; cursor: pointer; transition: 0.2s;}
@@ -343,7 +343,7 @@
                     <img id="cd-img" src="" alt="立绘">
                 </div>
             </div>
-            <button class="close-btn" style="background:#ff8c00; margin-top: 10px; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="editCurrentConcubine()">✏️ 神仙造化 (修改档案 / 一键换脸)</button>
+            <button class="close-btn" style="background:#ff8c00; margin-top: 10px; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="editCurrentConcubine()">✏️ 神仙造化 (修改此妃档案/换脸)</button>
             <button class="close-btn" style="background:#d02090;" onclick="document.getElementById('concubine-detail-modal').classList.remove('active')">返回花名册</button>
         </div>
     </div>
@@ -441,6 +441,7 @@
         ========================================================= */
         const periods = ['上旬', '中旬', '下旬'];
         let prevScreen = 'start-screen';
+        let lastRawInput = ""; // 核心修复：用于防吞字
         
         const defaultState = {
             playerAvatar: '', empAvatar: '', playerName: '', empName: '', empAge: 20,
@@ -716,7 +717,6 @@
         
         function generateHarem() {
             let h = [];
-            // 深拷贝立绘池，用于防重复抽卡
             let tempPools = JSON.parse(JSON.stringify(portraitPools));
             
             // 👇 强插固定VIP：皇后 朴敏珠
@@ -725,7 +725,6 @@
                 age: 22, favor: 15, 
                 personality: "温软避世(渴望自由，唯独对玩家深情)", affection: 100, 
                 stats: {charm:9, intel:8, cunning:3, dance:7, needle:8, health:4, luck:6, charisma:10}, 
-                // ✨✨✨ 娘娘请注意：把下面这个链接换成你刚修好的新链接！ ✨✨✨
                 image: "https://i.postimg.cc/4N0Wk7CG/gui-fei-min-zhu.png", 
                 isTransparent: true, pregnancy: 0, children: []
             });
@@ -740,7 +739,7 @@
             const bgs = ["太傅嫡女", "总督庶女", "巡抚嫡女", "皇商世家", "江南富商", "武林世家", "知府庶女", "异国贡女", "没落侯府", "平民百姓"];
 
             let usedGivenNames = new Set(); 
-            let generatedFamilies = []; // ✨ 记录已生成的家族，用于族亲判定
+            let generatedFamilies = []; 
             
             let count = Math.floor(Math.random() * 3) + 3; 
             let favoredCount = 0; let exclusiveCount = 0; 
@@ -774,32 +773,21 @@
                 let hasTitle = Math.random() < 0.2;
                 let assignedTitle = hasTitle ? titles[Math.floor(Math.random()*titles.length)] : "";
                 let baseRank = isNew ? (i===count?'常在':'答应') : getInitRank(age);
-                let finalRank = assignedTitle ? assignedTitle + baseRank : baseRank;
                 
-                // ✨✨✨ 全新族亲生成系统（30%概率触发） ✨✨✨
+                // ✨ 全新族亲生成系统
                 let surname, givenName, fullName, finalBg;
                 let isRelative = (generatedFamilies.length > 0) && (Math.random() < 0.3); 
 
                 if (isRelative) {
-                    // 1. 随机挑一个已经生成的家族
                     let targetFamily = generatedFamilies[Math.floor(Math.random() * generatedFamilies.length)];
-                    surname = targetFamily.surname; // 继承同姓
+                    surname = targetFamily.surname; 
+                    if (targetFamily.bg.includes("嫡女")) { finalBg = targetFamily.bg.replace("嫡女", "庶女"); } 
+                    else if (targetFamily.bg.includes("庶女")) { finalBg = targetFamily.bg.replace("庶女", "嫡女"); } 
+                    else { finalBg = targetFamily.bg + "旁支"; }
                     
-                    // 2. 嫡庶身份互补
-                    if (targetFamily.bg.includes("嫡女")) {
-                        finalBg = targetFamily.bg.replace("嫡女", "庶女");
-                    } else if (targetFamily.bg.includes("庶女")) {
-                        finalBg = targetFamily.bg.replace("庶女", "嫡女");
-                    } else {
-                        finalBg = targetFamily.bg + "旁支"; // 如果是富商/平民，则变为旁支
-                    }
-                    
-                    // 3. 摇一个不重复的名字
                     let pool = manchuSurnames.includes(surname) ? cnNames : korNames.concat(cnNames);
                     do { givenName = pool[Math.floor(Math.random()*pool.length)]; } while(usedGivenNames.has(givenName));
-                    
                 } else {
-                    // 不是族亲，正常摇全新的身世
                     let isKoreanName = Math.random() < 0.3;
                     if(isKoreanName) {
                         surname = hanKorSurnames[Math.floor(Math.random()*hanKorSurnames.length)];
@@ -810,17 +798,16 @@
                         do { givenName = cnNames[Math.floor(Math.random()*cnNames.length)]; } while(usedGivenNames.has(givenName));
                     }
                     finalBg = bgs[Math.floor(Math.random()*bgs.length)];
-                    
-                    // 把这个新家族记录进族谱，供后面的妃子概率触发
                     generatedFamilies.push({ surname: surname, bg: finalBg }); 
                 }
                 
                 fullName = surname + givenName;
                 usedGivenNames.add(givenName); 
 
+                // 🌟 核心修复1：位份和封号严格分离存入数据库
                 h.push({
-                    title: "", 
-                    rank: finalRank, 
+                    title: assignedTitle, 
+                    rank: baseRank, 
                     name: fullName,
                     bg: finalBg,
                     age: age, favor: f, personality: personalities[Math.floor(Math.random()*personalities.length)], affection: isNew?0:(Math.floor(Math.random()*101)-50),
@@ -835,21 +822,16 @@
             try {
                 gameState.playerName = document.getElementById('surname').value + document.getElementById('firstname').value;
                 gameState.empName = document.getElementById('emp-surname').value + document.getElementById('emp-firstname').value;
-                // ✨ 新增：把开局摇出来的皇上年龄，死死刻进存档里！
                 gameState.empAge = parseInt(document.getElementById('emp-age-val').innerText);
                 gameState.playerBg = document.getElementById('bg-val').innerText; gameState.playerStats = JSON.parse(JSON.stringify(statsConfig));
                 gameState.favor = 0; gameState.year = 1; gameState.month = 1; gameState.period = 0; gameState.rank = '待定'; gameState.pregnancy = 0; gameState.worldbook = '';
                 gameState.history = []; gameState.children = [];
                 generateHarem(); 
 
-                // ✨ 常驻左侧的女主立绘 ✨
                 if(gameState.playerAvatar) {
                     const pid = gameState.isPlayerTransparent ? 'player-trans-ingame' : 'player-framed-ingame';
                     const pImg = document.getElementById(pid);
-                    if(pImg) {
-                        pImg.src = gameState.playerAvatar;
-                        pImg.style.display = 'block';
-                    }
+                    if(pImg) { pImg.src = gameState.playerAvatar; pImg.style.display = 'block'; }
                 }
                 
                 updateTimeDisplay();
@@ -873,11 +855,10 @@
             document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["宫门"]}')`;
             document.getElementById('loc-display').innerText = "当前位置：宫门";
             document.getElementById('map-overlay').classList.add('active');
-            document.getElementById('out-map-overlay').classList.remove('active'); // 确保隐藏宫外面板
-            clearNpcAvatar(); // 回到地图清除右侧立绘
+            document.getElementById('out-map-overlay').classList.remove('active'); 
+            clearNpcAvatar(); 
         }
 
-        // 新增：打开出宫面板
         function showOutMap() {
             document.getElementById('map-overlay').classList.remove('active');
             document.getElementById('out-map-overlay').classList.add('active');
@@ -886,7 +867,6 @@
             clearNpcAvatar();
         }
 
-        // 新增：退回宫门面板
         function backToPalaceMap() {
             document.getElementById('out-map-overlay').classList.remove('active');
             showMap();
@@ -894,16 +874,15 @@
 
         async function enterLocation(locName) {
             document.getElementById('map-overlay').classList.remove('active');
-            document.getElementById('out-map-overlay').classList.remove('active'); // 无论是哪个面板，进了地点都关掉
+            document.getElementById('out-map-overlay').classList.remove('active'); 
             document.getElementById('loc-display').innerText = `当前位置：${locName}`;
             document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[locName]}')`;
-            clearNpcAvatar(); // 切换场景先清空右侧
+            clearNpcAvatar(); 
 
             gameState.history.push({role: "user", content: `系统提示：玩家来到了 ${locName}。安排偶遇事件。若在宫外，请描写热闹的市井或神秘的奇遇。`});
             await requestAI();
         }
 
-        // ✨ 直接进入后宫闲聊处，系统提问 ✨
         async function startVisit() {
             document.getElementById('map-overlay').classList.remove('active');
             document.getElementById('loc-display').innerText = `当前位置：后宫闲聊处`;
@@ -914,7 +893,7 @@
             await requestAI();
         }
 
-        // ✨✨✨ 记事簿系统 (必须独立，绝对不能被包在别人肚子里) ✨✨✨
+        // ✨ 记事簿系统 ✨
         function logToChronicle(msg) {
             if (!gameState.chronicles) gameState.chronicles = [];
             let periodStr = `入宫${gameState.year}年${gameState.month}月 ${periods[gameState.period]}`;
@@ -946,7 +925,7 @@
             showModal('chronicle-modal');
         }
 
-        // 👑👑👑 核心：时间流转与沙盒引擎 (独立出来，聊天和按钮都能调它！) 👑👑👑
+        // 👑 核心：时间流转与沙盒引擎 (完美同步修复版) 👑
         function advanceTimeAndRunSandbox() {
             gameState.period++; 
             if(gameState.period > 2) { 
@@ -955,12 +934,12 @@
                 
                 if(gameState.pregnancy > 0) {
                     gameState.pregnancy++;
-                    if(gameState.pregnancy >= 10) gameState.pregnancy = 10; // ✨ 锁定在10个月，绝不随机起名，死等AI接生！
+                    if(gameState.pregnancy >= 10) gameState.pregnancy = 10; 
                 }
                 gameState.harem.forEach(h => {
                     if(h.pregnancy > 0) {
                         h.pregnancy++;
-                        if(h.pregnancy >= 10) h.pregnancy = 10; // ✨ 锁定在10个月，死等AI接生！
+                        if(h.pregnancy >= 10) h.pregnancy = 10; 
                     }
                 });
             }
@@ -984,7 +963,7 @@
                     let actualAdd = activeNpc.favor - oldFav;
                     if(actualAdd > 0) applyZeroSumFavor(activeNpc.name, actualAdd);
                     
-                    logToChronicle(`【承宠】敬事房记档：皇上连翻了 ${activeNpc.rank} ${activeNpc.name} 的牌子 (圣宠 +${actualAdd})。`);
+                    logToChronicle(`【承宠】敬事房记档：皇上连翻了 ${activeNpc.title||""}${activeNpc.rank} ${activeNpc.name} 的牌子 (圣宠 +${actualAdd})。`);
 
                     if (Math.random() < 0.4 && livingHarem.length >= 2) {
                         let shuffled = [...livingHarem].sort(() => 0.5 - Math.random());
@@ -995,27 +974,28 @@
                             if (n1.stats.cunning > 7 && Math.random() < 0.4) {
                                 if (n2.pregnancy > 0) {
                                     n2.pregnancy = 0;
-                                    logToChronicle(`【滑胎惨案】后宫疯传 ${n1.rank} ${n1.name} 在安胎药中动手脚，致使 ${n2.rank} ${n2.name} 不幸小产！(圣宠暴跌)`);
+                                    logToChronicle(`【滑胎惨案】后宫疯传 ${n1.title||""}${n1.rank} ${n1.name} 在安胎药中动手脚，致使 ${n2.title||""}${n2.rank} ${n2.name} 不幸小产！(圣宠暴跌)`);
                                 } else {
-                                    logToChronicle(`【投毒陷害】${n1.rank} ${n1.name} 涉嫌用计谋害 ${n2.rank} ${n2.name}，致其被罚禁足。`);
+                                    logToChronicle(`【投毒陷害】${n1.title||""}${n1.rank} ${n1.name} 涉嫌用计谋害 ${n2.title||""}${n2.rank} ${n2.name}，致其被罚禁足。`);
                                 }
                             } else {
-                                logToChronicle(`【宫斗口角】${n1.rank} ${n1.name} 当众给 ${n2.rank} ${n2.name} 难堪，闹得风言风语。`);
+                                logToChronicle(`【宫斗口角】${n1.title||""}${n1.rank} ${n1.name} 当众给 ${n2.title||""}${n2.rank} ${n2.name} 难堪，闹得风言风语。`);
                             }
                         } else if (n1.stats.cunning < 5 && n2.stats.cunning < 5) {
                             n1.affection += 10; n2.affection += 10;
-                            logToChronicle(`【交好】${n1.rank} ${n1.name} 与 ${n2.rank} ${n2.name} 在御花园烹茶赏花，越发亲厚了。`);
+                            logToChronicle(`【交好】${n1.title||""}${n1.rank} ${n1.name} 与 ${n2.title||""}${n2.rank} ${n2.name} 在御花园烹茶赏花，越发亲厚了。`);
                         }
                     }
 
+                    // 🌟 核心修复2：沙盒晋级检查纯位份，百分百生效同步！
                     livingHarem.forEach(h => {
                         if(h.pregnancy === 0 && h.favor > 30 && Math.random() < 0.05) {
                             h.pregnancy = 1;
-                            logToChronicle(`【遇喜】太医院传出喜讯，${h.rank} ${h.name} 怀有身孕了！`);
+                            logToChronicle(`【遇喜】太医院传出喜讯，${h.title||""}${h.rank} ${h.name} 怀有身孕了！`);
                         }
                         if(h.favor > 60 && ["答应", "常在", "贵人"].includes(h.rank) && Math.random() < 0.2) {
                             let newRank = h.rank === "答应" ? "常在" : (h.rank === "常在" ? "贵人" : "嫔");
-                            h.rank = newRank;
+                            h.rank = newRank; 
                             logToChronicle(`【晋封】内务府传旨：${h.name} 尽心侍奉，晋为 ${newRank}。`);
                         }
                         if(h.favor === 0 && h.affection < -20 && Math.random() < 0.05) {
@@ -1057,7 +1037,7 @@
                 } else {
                     document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["女主卧室"]}')`; document.getElementById('loc-display').innerText = "当前位置：寝宫";
                     let luckyNpc = gameState.harem[Math.floor(Math.random() * gameState.harem.length)];
-                    nightEventText = `系统提示：皇上今夜翻了【${luckyNpc.rank} ${luckyNpc.name}】的牌子。玩家独寝过渡。`;
+                    nightEventText = `系统提示：皇上今夜翻了【${luckyNpc.title||""}${luckyNpc.rank} ${luckyNpc.name}】的牌子。玩家独寝过渡。`;
                 }
             }
 
@@ -1065,10 +1045,8 @@
             await requestAI();
         }
 
-
         /* ================= 🌟 AI 对话与双轨制显示 🌟 ================= */
        function buildSystemPrompt() {
-            // 👇 新加这一行，把所有地图名字串起来
             let bgList = Object.keys(bgMap).join("、");
             let statsText = ""; for(let k in statsConfig) statsText += `${statsConfig[k].name}:${statsConfig[k].v} `;
             const empP = document.getElementById('emp-personality-val').innerText;
@@ -1076,18 +1054,17 @@
             const wbText = gameState.worldbook ? `【世界书】\n${gameState.worldbook}\n` : "";
             
             let haremText = "【后宫名单】\n";
-            // ✨ 终极开天眼：家世、年龄、性格、容貌、心机、孕期、子嗣，全盘托出！
             gameState.harem.forEach(h => { 
                 let pregInfo = h.pregnancy > 0 ? `, 怀孕${h.pregnancy}月` : "";
                 let childInfo = h.children.length > 0 ? `, 子嗣:${h.children.join("、")}` : "";
-                haremText += `- ${h.rank} ${h.name} (家世:${h.bg}, ${h.age}岁, 性格:${h.personality}, 容貌:${h.stats.charm}, 心机:${h.stats.cunning}, 好感:${h.affection}, 宠:${h.favor}${pregInfo}${childInfo})\n`; 
+                let tStr = h.title ? h.title : "";
+                haremText += `- ${tStr}${h.rank} ${h.name} (家世:${h.bg}, ${h.age}岁, 性格:${h.personality}, 容貌:${h.stats.charm}, 心机:${h.stats.cunning}, 好感:${h.affection}, 宠:${h.favor}${pregInfo}${childInfo})\n`; 
             });
             let loversText = "【红尘暗缘(秘密情郎)】\n";
             let huli = gameState.lovers.find(l=>l.id==='huli');
             gameState.lovers.forEach(l => { if(l.isKnown) loversText += `- ${l.name} (${l.title}, 人设:${l.type}, 对你好感:${l.affection}, 皇帝疑心:${l.suspicion}%)\n`; });
             
             let encounterHints = "";
-            // ✨ 临盆警告：只要一到10个月，拿刀架在AI脖子上让它接生并起名！
             if(gameState.pregnancy >= 10) encounterHints += "【🚨临盆警告】玩家已怀胎十月，即将临盆！请务必在本次剧情中描写生产过程、让皇帝或父母亲自为孩子赐名，并在回复最末尾输出标签 [诞下: 性别·名字|玩家]！\n";
             gameState.harem.forEach(h => { if(h.pregnancy >= 10) encounterHints += `【🚨临盆警告】${h.name}已怀胎十月，即将临盆！请描写生产与赐名剧情，并输出标签 [诞下: 性别·名字|${h.name}]！\n`; });
             
@@ -1143,11 +1120,12 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             const text = input.value.trim();
             if(!text) return;
 
+            // 🌟 核心修复3：自动保留输入，绝不吞字
+            lastRawInput = text; 
             input.value = "";
             
             let contentText = text;
 
-            // ✨ 玩家上帝权限：强行接生双胞胎，不看AI脸色！
             if(text.includes('[诞下')) {
                 const bMatches = text.match(/\[诞下\s*[：:]\s*(.*?)\]/g);
                 if(bMatches) {
@@ -1159,41 +1137,52 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                         gameState.children.push(childName);
                         showToast(`🌸 上帝权限：【${childName}】已强行入玉牒！`);
                     });
-                    autoSave(); displayDialogue("系统", "龙凤胎已强行登记完毕！"); return; // 💥 拦截指令，不用发给AI废话！
+                    autoSave(); displayDialogue("系统", "龙凤胎已强行登记完毕！"); return; 
                 }
             }
             
-            // 1. 时间流转判定
             if(/翌日|次日|第二天|转眼|下一旬|十天后|半个月后|几天后/.test(text)) {
                 advanceTimeAndRunSandbox(); 
                 contentText = `[系统：时间流转，现为${periods[gameState.period]}] 玩家：` + text;
             } 
             
-            // 2. ✨ 强行逼迫 AI 切场景的“隐秘纸条”
             if(/去|前往|回|到|离开|移步/.test(text)) {
                 contentText += " 【系统强制指令：检测到玩家发生移动，请根据语境，务必在回复的最后单独一行加上对应的 [背景: 场景名] 标签！】";
             }
 
-
             displayDialogue(gameState.playerName, text);
             
+            // 🌟 核心修复3：如果上一次生成失败停留在 user，自动删去旧的替换成新的，保证 AI 不错乱
+            if (gameState.history.length > 0 && gameState.history[gameState.history.length - 1].role === 'user') {
+                gameState.history.pop();
+            }
+
             gameState.history.push({role: "user", content: contentText});
-            await requestAI();
+            await requestAI(false); // 正常发送
         }
 
         async function regenerateLastResponse() {
             if(gameState.isGenerating) return;
             if(gameState.history.length === 0) return showToast("暂无对话可回溯！");
             const lastMsg = gameState.history[gameState.history.length - 1];
+            
             if(lastMsg.role === "assistant" || lastMsg.role === "model") {
+                // 正常回溯
                 gameState.history.pop(); 
                 document.getElementById('speaker-name').innerText = "系统";
                 document.getElementById('dialogue-text').innerHTML = "<span style='color:#ccc'>正在时光倒流...</span>";
-                await requestAI();
-            } else { showToast("最后一句是你说的，不能回溯哦！"); }
+                await requestAI(true);
+            } else if (lastMsg.role === "user") {
+                // 🌟 核心修复3：如果上一条是 user，说明刚好是卡回车失败了，直接重新请求，绝对不吞掉！
+                document.getElementById('speaker-name').innerText = "系统";
+                document.getElementById('dialogue-text').innerHTML = "<span style='color:#ccc'>正在重新连接时空...</span>";
+                await requestAI(true);
+            } else { 
+                showToast("对话异常，无法回溯哦！"); 
+            }
         }
 
-        async function requestAI() {
+        async function requestAI(isRegen = false) {
             const apiData = JSON.parse(localStorage.getItem('palace_api_settings') || '{}');
             if(!apiData.url || !apiData.key) return displayDialogue("系统", "请先在左上角菜单配置API！", true);
             
@@ -1219,7 +1208,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 }
 
                 const res = await fetch(fetchUrl, { method: 'POST', headers, body: JSON.stringify(requestBody) });
-                if(!res.ok) throw new Error("API错误");
+                if(!res.ok) throw new Error("API连接失败");
                 const json = await res.json();
                 let reply = apiData.provider === 'gemini' ? json.candidates[0].content.parts[0].text : json.choices[0].message.content;
                 gameState.history.push({role: "assistant", content: reply});
@@ -1227,18 +1216,18 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 parseAndDisplayAI(reply);
 
             } catch(e) { 
-                displayDialogue("系统", "系统报错啦：" + e.message); 
+                displayDialogue("系统", "系统报错啦：" + e.message + "\n（不用重打！已为你保留刚刚的输入，请直接点发送重试）"); 
                 console.error(e); 
-                // ✨ 新增防卡死机制：如果发出去失败了，得把刚才压进去的那句话退回来，不然会永久卡死！
-                if(gameState.history.length > 0 && gameState.history[gameState.history.length-1].role === 'user') {
-                    gameState.history.pop();
+                // 🌟 核心修复3：彻底解决吞字！如果不是在点“回溯”，就把玩家打的字完璧归赵退回输入框！
+                if (!isRegen) {
+                    document.getElementById('game-input').value = lastRawInput;
                 }
             } 
             finally {
                 gameState.isGenerating = false;
                 sendBtn.innerText = "发 送"; sendBtn.disabled = false;
                 document.getElementById('game-input').focus();
-                autoSave(); // ✨ 每次AI回复完，偷偷存档！
+                autoSave(); 
             }
         }
 
@@ -1253,7 +1242,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
         function parseAndDisplayAI(text) {
             let cleanText = text;
-            // ✨ 霸道女主夺宠机制！限制在 0-100 之间，最高单次增减为 5
             const favorMatch = cleanText.match(/\[天宠\s*([+-]\d+)\]/);
             if(favorMatch) { 
                 let addFav = parseInt(favorMatch[1]);
@@ -1261,11 +1249,11 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 let proposed = Math.max(0, Math.min(100, gameState.favor + addFav));
                 
                 if (proposed >= 70) {
-                    gameState.harem.forEach(c => { if(c.favor >= 70) c.favor = 69; }); // 把其他专宠踹下来
+                    gameState.harem.forEach(c => { if(c.favor >= 70) c.favor = 69; }); 
                 }
                 if (proposed >= 40) {
                     let count40 = gameState.harem.filter(c => c.favor >= 40).length;
-                    if (count40 >= 4) { // 名额满了，把最低的那个挤到39
+                    if (count40 >= 4) { 
                         let sorted = gameState.harem.filter(c => c.favor >= 40).sort((a,b)=>a.favor-b.favor);
                         if(sorted.length > 0) sorted[0].favor = 39;
                     }
@@ -1280,23 +1268,18 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             const bgMatch = cleanText.match(/\[背景\s*[：:]\s*(.*?)\]/);
             if(bgMatch) { 
                 let targetBg = bgMatch[1].trim();
-                
-                // 1. 简单粗暴的匹配：AI点的菜，在不在咱们的地图菜单里？
                 let exactKey = Object.keys(bgMap).find(k => k === targetBg || targetBg.includes(k) || k.includes(targetBg));
                 
                 if (exactKey) {
-                    // 2. 菜单里有这道菜（比如 AI 选了"御花园夜晚"），完美切图！
                     gameState.currentLoc = exactKey; 
                     document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[exactKey]}')`;
-                    document.getElementById('loc-display').innerText = `当前位置：${exactKey.replace(/\d+/g, '')}`; // 顺手把"白天1"的数字去掉
+                    document.getElementById('loc-display').innerText = `当前位置：${exactKey.replace(/\d+/g, '')}`; 
                 } else {
-                    // 3. 菜单里没有（比如 AI 选了"屋顶"），只更新文字，保留代入感！
                     gameState.currentLoc = targetBg;
                     document.getElementById('loc-display').innerText = `当前位置：${targetBg}`; 
                 }
             }
 
-            // ✨ 疑心双向变动雷达
             const suspMatch = cleanText.match(/\[疑心\s*([+-]\d+)\]/);
             if (suspMatch && gameState.lovers) {
                 let sVal = parseInt(suspMatch[1]);
@@ -1304,7 +1287,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 if (targetLover) { targetLover.suspicion = Math.max(0, targetLover.suspicion + sVal); }
             }
 
-            // ✨ 怀孕与流产雷达
             const pregMatch = cleanText.match(/\[怀孕\s*[：:]\s*(.*?)\]/);
             if(pregMatch) {
                 let pName = pregMatch[1].trim();
@@ -1312,17 +1294,16 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 else { let t = gameState.harem.find(h=>h.name.includes(pName)); if(t && t.pregnancy === 0){ t.pregnancy = 1; showToast(`🌸 喜报：${t.name} 有喜了！`); } }
             }
 
-            // ✨ 皇家金牌接生婆：完全听从AI起的名字，直接上皇家户口！
             const birthMatch = cleanText.match(/\[诞下\s*[：:]\s*(.*?)\]/);
             if(birthMatch) {
                 let matchContent = birthMatch[1].trim(); 
-                let parts = matchContent.split(/[|,，]/); // 兼容 | 或 逗号
+                let parts = matchContent.split(/[|,，]/); 
                 let childName = parts[0].trim(); 
                 let motherName = parts.length > 1 ? parts[1].trim() : "玩家";
                 
                 if(motherName.includes('玩家') || motherName.includes(gameState.playerName)) { 
                     gameState.pregnancy = 0; 
-                    gameState.children.push(childName); // ✨ 直接用剧情里起的名字！
+                    gameState.children.push(childName); 
                     showToast(`🌸 喜报：顺利诞下【${childName}】！已载入玉牒！`); 
                     if (typeof logToChronicle === 'function') logToChronicle(`【皇家喜报】玩家顺利诞下${childName}！`);
                 } else { 
@@ -1330,12 +1311,11 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                     if(t){ 
                         t.pregnancy = 0; t.children.push(childName); 
                         showToast(`🌸 喜报：${t.name} 诞下【${childName}】！`); 
-                        if (typeof logToChronicle === 'function') logToChronicle(`【瓜熟蒂落】${t.rank} ${t.name} 顺利诞下${childName}。`);
+                        if (typeof logToChronicle === 'function') logToChronicle(`【瓜熟蒂落】${t.title||""}${t.rank} ${t.name} 顺利诞下${childName}。`);
                     } 
                 }
             }
 
-            // ✨ 更新后宫与情郎
             const upRegex = /\[更新[：:](.*?)\|(.*?)\|(.*?)\|(.*?)\]/g; let upMatch;
             while ((upMatch = upRegex.exec(cleanText)) !== null) {
                 let nName=upMatch[1].trim(), aff=parseInt(upMatch[2])||0, fav=parseInt(upMatch[3])||0, nRank=upMatch[4]?upMatch[4].trim():"";
@@ -1364,9 +1344,9 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                     
                     if(nRank) { 
                         nRank = nRank.replace(/位份[：:]?/g, '').replace(/降为/g, '').replace(/升为/g, '').trim();
-                        target.rank = nRank; 
+                        target.rank = nRank; // 🌟 核心修复1：晋升只改位份，绝不覆盖封号！
                         if(["官女子", "答应", "庶人", "冷宫", "废妃", "死亡", "赐死", "病逝"].includes(nRank)) target.title = ""; 
-                        if(["死亡", "赐死", "病逝", "殁"].includes(nRank)) { target.isDead = true; target.rank = "👻已故"; }
+                        if(["死亡", "赐死", "病逝", "殁"].includes(nRank)) { target.isDead = true; target.rank = "👻已故"; target.title = ""; }
                     }
                     if(actualAdd > 0) applyZeroSumFavor(target.name, actualAdd); 
                 } else {
@@ -1398,12 +1378,10 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 }
             }
 
-            // ✨ 情郎出场自动解锁
             if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
 
             gameState.harem.sort((a,b)=>b.favor-a.favor);
             cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').trim();
-            // 补回丢失的解析发言与显示代码
             const chunkRegex = /(?:\[|【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[|【)发言(?:\]|】))|$)/g;
             dialogueQueue = []; let cMatch;
             while ((cMatch = chunkRegex.exec(cleanText)) !== null) dialogueQueue.push({ speaker: cMatch[1].trim(), text: cMatch[2].trim() });
@@ -1412,7 +1390,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             showNextDialogue();
         }
 
-        // ✨ 完美接管双轨制立绘显示 ✨
         function showNextDialogue() {
             if(isTyping) { 
                 if(typeTimer) { clearInterval(typeTimer); isTyping = false; }
@@ -1422,7 +1399,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             if(dialogueQueue.length === 0) { document.getElementById('click-hint').style.display='none'; return; }
             let msg = dialogueQueue.shift();
             
-            // 每次对话先清空右侧立绘，玩家立绘永远不动
             clearNpcAvatar();
             
             if(msg.speaker.includes(gameState.empName) || msg.speaker.includes("皇帝") || msg.speaker.includes("皇上")) { 
@@ -1435,14 +1411,12 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             } else if(msg.speaker === gameState.playerName || msg.speaker === "我") {
                 // 女主说话，右侧保持空
             } else if(msg.speaker !== "系统") {
-                // 先找后宫妃子
                 let targetNpc = gameState.harem.find(h => msg.speaker.includes(h.name) || (h.title !== "" && msg.speaker.includes(h.title)));
                 let isTrans = targetNpc ? targetNpc.isTransparent : false;
                 
-                // 没找到妃子？那说明来的是地下情郎！
                 if(!targetNpc && gameState.lovers) {
                     targetNpc = gameState.lovers.find(l => msg.speaker.includes(l.name) || (l.title !== "" && msg.speaker.includes(l.title)));
-                    if(targetNpc) isTrans = true; // ✨ 情郎强制使用透明大立绘！
+                    if(targetNpc) isTrans = true; 
                 }
 
                 if(targetNpc && targetNpc.image) {
@@ -1467,7 +1441,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             } else b.innerText=t;
         }
 
-        /* --- ✨ 纯形容词、图文并茂的弹窗渲染 ✨ --- */
         function showPlayerStats() {
             document.getElementById('player-name-val').innerText = gameState.playerName;
             document.getElementById('player-rank-val').innerText = gameState.rank;
@@ -1489,11 +1462,10 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             showModal('stats-modal');
         }
 
-
         function showHaremList() {
             const container = document.getElementById('harem-list-container'); container.innerHTML = '';
             gameState.harem.forEach((h, idx) => {
-                let fn = h.rank + " " + h.name; // 清爽格式：位份 姓名
+                let fn = (h.title ? h.title : "") + h.rank + " " + h.name; // 🌟 核心修复1：封号显示归位
                 container.innerHTML += `
                     <div class="harem-card" style="${h.isDead ? 'filter: grayscale(100%); opacity: 0.7; background: #f0f0f0;' : ''}" onclick="showConcubineDetail(${idx})">
                         <div class="harem-title">${fn}</div>
@@ -1507,7 +1479,8 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
         function showConcubineDetail(idx) {
             currentEditNpcIndex = idx;
             const h = gameState.harem[idx];
-            document.getElementById('cd-title-name').innerText = `🌸 ${h.rank} ${h.name} 🌸`;
+            // 🌟 核心修复1：弹窗大标题上的封号也补回去了
+            document.getElementById('cd-title-name').innerText = `🌸 ${h.title ? h.title : ""}${h.rank} ${h.name} 🌸`;
             document.getElementById('cd-bg').innerText = h.bg || '未知';
             document.getElementById('cd-favor').innerText = h.favor;
             document.getElementById('cd-personality').innerText = h.personality;
@@ -1536,7 +1509,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             let newBg = prompt(`【当前家世】：${target.bg}\n请输入新家世：`, target.bg);
             if (newBg !== null && newBg.trim() !== "") target.bg = newBg.trim();
 
-            // 2. 一键随机换脸 (点确定就自动盲抽换头，点取消保留原貌)
+            // 2. 一键随机换脸
             if (confirm(`【换脸】是否要为 ${target.name} 随机更换一张新的立绘？\n(点击"确定"自动随机换脸，点击"取消"保留原貌)`)) {
                 let allAvailableImages = [];
                 for (let key in portraitPools) { allAvailableImages = allAvailableImages.concat(portraitPools[key]); }
@@ -1570,8 +1543,8 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             if (preg !== null && !isNaN(parseInt(preg))) { target.pregnancy = parseInt(preg); }
 
             showToast(`✨ 神仙造化成功！${target.name} 的命运已被改写！`);
-            autoSave(); // 修改完火速存档
-            showConcubineDetail(currentEditNpcIndex); // 重新刷新面板看效果
+            autoSave(); 
+            showConcubineDetail(currentEditNpcIndex); 
         }
 
         function saveWorldbook() { 
@@ -1634,11 +1607,9 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             let newText = document.getElementById(`hist-edit-${idx}`).value;
             gameState.history[idx].content = newText;
             
-            // ✨ 如果修改的是最后一条记录，立刻同步到外面的主屏幕！
             if (idx === gameState.history.length - 1) {
-                // 1. 同步文字内容（洗掉暗号标签，只显示人话）
                 let cleanText = newText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').trim();
-                const chunkRegex = /\[发言\]\s*([^：:]+)[：:]([\s\S]*?)(?=(?:\[发言\]|$))/g;
+                const chunkRegex = /[发言]\s*([^：:]+)[：:]([\s\S]*?)(?=(?:[发言]|$))/g;
                 let cMatch, lastSpeaker = gameState.history[idx].role === 'assistant' ? '系统' : gameState.playerName, lastText = cleanText;
                 while ((cMatch = chunkRegex.exec(cleanText)) !== null) {
                     lastSpeaker = cMatch[1].trim(); 
@@ -1646,7 +1617,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                 }
                 displayDialogue(lastSpeaker, lastText);
 
-                // 2. 同步背景切换（如果手动加了背景标签，直接切图）
                 const bgMatch = newText.match(/\[背景\s*[：:]\s*(.*?)\]/);
                 if(bgMatch) { 
                     let targetBg = bgMatch[1].trim();
@@ -1669,9 +1639,9 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
         function deleteHistory(idx) {
             if(confirm("⚠️ 娘娘确定要抹除这段记忆吗？删掉后无法恢复哦！")) {
-                gameState.history.splice(idx, 1); // 咔嚓一刀，从记忆库里删掉
-                autoSave(); // 删完立刻死死存档
-                renderHistoryList(); // 刷新卷宗画面
+                gameState.history.splice(idx, 1); 
+                autoSave(); 
+                renderHistoryList(); 
                 showToast("🗑️ 痕迹已抹除干净！");
             }
         }
@@ -1762,7 +1732,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             } finally {
                 btn.innerText = "放飞青鸟"; btn.disabled = false;
                 display.scrollTop = display.scrollHeight;
-                autoSave(); // ✨ 每次传完情书，偷偷存档！
+                autoSave(); 
             }
         }
 
@@ -1793,7 +1763,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
         loadApiSettings();
         /* ================= 💾 自动无缝存读档系统 ================= */
         function autoSave() {
-            if(gameState.playerName) { // ✨ 只要有了名字，立刻无条件自动存档！
+            if(gameState.playerName) { 
                 localStorage.setItem('palace_auto_save', JSON.stringify(gameState));
             }
         }
@@ -1805,13 +1775,12 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                     let loadedState = JSON.parse(saved);
                     gameState = Object.assign({}, defaultState, loadedState);
                     
-                    if(gameState.playerName) { // ✨ 只要有名字就读取，绝不遗漏进度！
+                    if(gameState.playerName) { 
                     if(gameState.playerStats) Object.assign(statsConfig, gameState.playerStats); if(gameState.playerBg) document.getElementById('bg-val').innerText = gameState.playerBg;
                         updateTimeDisplay();
                         document.getElementById('loc-display').innerText = `当前位置：${gameState.currentLoc || '皇帝正殿'}`;
                         document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap[gameState.currentLoc] || bgMap["皇帝正殿"]}')`;
                         
-                        // 恢复常驻立绘
                         if(gameState.playerAvatar) {
                             const pid = gameState.isPlayerTransparent ? 'player-trans-ingame' : 'player-framed-ingame';
                             const pImg = document.getElementById(pid);
@@ -1820,7 +1789,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                         
                         switchScreen('gameplay-screen');
                         
-                        // 恢复屏幕上的最后一句对话
                         if(gameState.history.length > 0) {
                             const lastMsg = gameState.history[gameState.history.length - 1];
                             displayDialogue(lastMsg.role === 'assistant' ? '系统/角色' : gameState.playerName, lastMsg.content);
@@ -1838,7 +1806,6 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             }
         }
         
-        // 游戏网页一打开，立刻尝试自动读档！
         window.addEventListener('DOMContentLoaded', autoLoad);
     </script>
 </body>
