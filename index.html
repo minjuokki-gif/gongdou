@@ -444,7 +444,7 @@
         let lastRawInput = ""; // 核心修复：用于防吞字
         
         const defaultState = {
-            playerAvatar: '', empAvatar: '', playerName: '', empName: '', empAge: 20,
+            playerAvatar: '', empAvatar: '', playerName: '', empName: '', empAge: 20, empPersonality: '风流',
             favor: 0, year: 1, month: 1, period: 0, rank: '待定', 
             pregnancy: 0, children: [], 
             worldbook: '', harem: [], history: [], isGenerating: false, currentLoc: '皇帝正殿',
@@ -504,6 +504,7 @@
 
         /* ================= 永久兼容的存读档 ================= */
         function exportSave() {
+            gameState.playerStats = JSON.parse(JSON.stringify(statsConfig)); // 铁桶防御：导出时强行抓取最新属性写入存档
             const dataStr = JSON.stringify(gameState);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
@@ -937,6 +938,7 @@
                 gameState.playerName = document.getElementById('surname').value + document.getElementById('firstname').value;
                 gameState.empName = document.getElementById('emp-surname').value + document.getElementById('emp-firstname').value;
                 gameState.empAge = parseInt(document.getElementById('emp-age-val').innerText);
+                gameState.empPersonality = document.getElementById('emp-personality-val').innerText;
                 gameState.playerBg = document.getElementById('bg-val').innerText; gameState.playerStats = JSON.parse(JSON.stringify(statsConfig));
                 gameState.favor = 0; gameState.year = 1; gameState.month = 1; gameState.period = 0; gameState.rank = '待定'; gameState.pregnancy = 0; gameState.worldbook = '';
                 gameState.history = []; gameState.children = [];
@@ -1203,7 +1205,7 @@
        function buildSystemPrompt() {
             let bgList = Object.keys(bgMap).join("、");
             let statsText = ""; for(let k in statsConfig) statsText += `${statsConfig[k].name}:${statsConfig[k].v} `;
-            const empP = document.getElementById('emp-personality-val').innerText;
+            const empP = gameState.empPersonality || document.getElementById('emp-personality-val').innerText;
             const pregText = gameState.pregnancy === 0 ? "无" : `怀孕${gameState.pregnancy}个月`;
             const wbText = gameState.worldbook ? `【世界书】\n${gameState.worldbook}\n` : "";
             
@@ -1240,10 +1242,14 @@
             return `你是《水云间》文字游戏引擎，必须严格遵守响应规则！
 玩家：${gameState.playerName}，位份：${gameState.rank}，孕期：${pregText}。
 属性：${statsText}。
-皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：【${empP}】。
+皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：【${empP}】（⚠️极其重要：皇帝所有台词、动作必须100%贴合该性格！刚正绝不偏私，风流极易撩拨，冷漠字字如冰，天真喜怒无常，温柔如沐春风。严禁全部写成千篇一律的温和霸道总裁！）。
 ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 
-【⚠️ 帝王性格与天宠（圣宠）判定法则】
+【剧情与排版铁律】
+1. 所有剧情描述、场景过渡、动作描写，必须统统使用 [发言] 标签！把“旁白”或“系统”当成一个人名。
+2. 绝对不允许出现 [旁白] 标签或直接输出纯文本！格式必须严格是：[发言] 旁白：(内容)
+
+【⚠️ 帝王性格与天宠（圣宠）判定法则】;
 你输出 [天宠+X] 或 [天宠-X] 时必须严格遵守以下对应性格，绝不可凭空给分：
 1. 若为【刚正】：喜好规矩体统，极难涨分（+1）；厌恶轻浮算计，抓到越礼作恶必重罚（-15）。
 2. 若为【风流】：极度看脸与才艺，易被取悦（+3~+5）；但喜新厌旧。
@@ -1269,6 +1275,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 8. 妃嫔日常与大事件：[更新: 姓名|好感变动|圣宠变动|新位份]。日常争宠波动在+/-5以内；若发生怀孕、流产、被陷害、打入冷宫等大事件，圣宠必须大幅变动(+20或-50等)！
 
 【完美输出示例】
+[发言] 旁白：夜幕降临，殿内的烛火摇曳不定，气氛显得格外压抑。
 [发言] 皇帝：（大怒）她竟敢如此放肆！传旨，降林旻恩为官女子，褫夺封号，禁足一月！
 [发言] 苏培盛：（躬身）奴才遵旨。
 [天宠+2] [背景: 皇帝正殿] [更新: 林旻恩|0|-50|官女子]
@@ -1531,7 +1538,18 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
                     else if (nRank && !["死亡", "赐死", "病逝", "殁", "冷宫", "废妃", ""].includes(nRank.replace(/位份[：:]?/g, '').trim())) {
                         let cStats = {}; ['charm','intel','cunning','dance','needle','health','luck','charisma'].forEach(k => cStats[k] = Math.floor(Math.random()*10)+1);
                         let personalities = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
-                        let nBg = cleanText.includes("进贡") ? "异国贡女" : (cleanText.includes("族亲") ? "世家旁支" : (cleanText.includes("宫女") || cleanText.includes("奴婢") ? "宫女上位" : "特殊入宫"));
+                        let nBg = "";
+                        if (cleanText.includes("进贡") || cleanText.includes("西域")) nBg = "异国贡女";
+                        else if (cleanText.includes("族亲")) nBg = "世家旁支";
+                        else if (cleanText.includes("宫女") || cleanText.includes("奴婢")) nBg = "宫女上位";
+                        else {
+                            const oRanks = [{r:"正一品",t:["太师","太傅","太保","大学士"],w:3},{r:"从一品",t:["少师","少傅","少保","协办大学士","提督"],w:5},{r:"正二品",t:["尚书","总督","都御史"],w:10},{r:"从二品",t:["侍郎","巡抚","布政使"],w:12},{r:"正三品",t:["大理寺卿","按察使","副都御史"],w:15},{r:"从三品",t:["太仆寺卿","太常寺卿","盐运使","参政"],w:18},{r:"正四品",t:["通政使","知府","道员"],w:25},{r:"五品",t:["知州","同知","郎中"],w:30},{r:"六品及以下",t:["知县","县丞","主簿","推官","国子监祭酒"],w:40},{r:"",t:["皇商世家","江南富商","武林世家","清流书香门第","没落侯府"],w:30},{r:"",t:["平民百姓","孤女","医女世家","农户之女"],w:35}];
+                            let tw = oRanks.reduce((s, i) => s + i.w, 0);
+                            let rn = Math.random() * tw; let base = "正四品知府";
+                            for (let i of oRanks) { if (rn < i.w) { base = i.r + i.t[Math.floor(Math.random() * i.t.length)]; break; } rn -= i.w; }
+                            const sTypes = ["嫡长女", "嫡次女", "庶长女", "庶次女", "庶女", "独女"];
+                            nBg = base + (["平民百姓","孤女","医女世家","农户之女"].includes(base) ? "" : sTypes[Math.floor(Math.random() * sTypes.length)]);
+                        }
                         let cleanRank = nRank.replace(/位份[：:]?/g, '').trim();
                         
                         let allAvailableImages = [];
@@ -1938,6 +1956,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
         /* ================= 💾 自动无缝存读档系统 ================= */
         function autoSave() {
             if(gameState.playerName) { 
+                gameState.playerStats = JSON.parse(JSON.stringify(statsConfig)); // 铁桶防御：自动存档时强行抓取最新属性写入存档
                 localStorage.setItem('palace_auto_save', JSON.stringify(gameState));
             }
         }
