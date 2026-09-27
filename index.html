@@ -1492,12 +1492,30 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             gameState.harem.sort((a,b)=>b.favor-a.favor);
             cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').trim();
             
-            // 🌟气泡切割彻底修复（绝对安全版）
-            const chunkRegex = /[[【]发言[]】]\s*([^：:]+)[：:]([\s\S]*?)(?=(?:[[【]发言[]】]|$))/g;
+            // 🌟 终极防弹文本切割器（100%手机电脑全兼容）
+            dialogueQueue = []; 
+            let normalizedText = cleanText.replace(/[发言]/g, '|$\vert{}').replace(/【发言】/g, '\vert{}$|');
             
-            dialogueQueue = []; let cMatch;
-            while ((cMatch = chunkRegex.exec(cleanText)) !== null) dialogueQueue.push({ speaker: cMatch[1].trim(), text: cMatch[2].trim() });
-            if(dialogueQueue.length === 0 && cleanText) dialogueQueue.push({ speaker: '系统', text: cleanText });
+            if (normalizedText.includes('|$|')) {
+                let segments = normalizedText.split('|$|');
+                for (let seg of segments) {
+                    seg = seg.trim();
+                    if (!seg) continue;
+                    
+                    let colonIdx = seg.indexOf('：');
+                    if (colonIdx === -1) colonIdx = seg.indexOf(':');
+                    
+                    if (colonIdx !== -1 && colonIdx < 30) { 
+                        let speaker = seg.substring(0, colonIdx).trim();
+                        let textContent = seg.substring(colonIdx + 1).trim();
+                        dialogueQueue.push({ speaker: speaker, text: textContent });
+                    } else {
+                        dialogueQueue.push({ speaker: '系统', text: seg });
+                    }
+                }
+            } else {
+                dialogueQueue.push({ speaker: '系统', text: cleanText });
+            }
             showNextDialogue();
         }
 
