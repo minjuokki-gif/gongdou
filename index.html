@@ -1225,8 +1225,8 @@
             if(gameState.currentLoc === "观星台") encounterHints += "【命运触发】玩家来到了观星台，请安排阴湿病娇国师【司星沉】出场并与玩家互动。\n";
             if(gameState.currentLoc === "普陀山" && !huli.isKnown) encounterHints += "【命运触发】请安排天真纯欲粉尾狐妖【晏洵】迷路初遇玩家。\n";
             else if(huli.isKnown && ["京城街道","京城酒楼","布坊","珠宝店","香料铺","京城学堂"].includes(gameState.currentLoc)) encounterHints += "【命运触发】宫外极大概率偶遇黏人粉尾狐妖【晏洵】。\n";
-            if((gameState.month === 6 || gameState.month === 12) && ["御花园白天1","御书房","太医院","宫门"].includes(gameState.currentLoc)) encounterHints += "【命运触发】述职月，极大概率偶遇阳光修狗将军【萧铎】。\n";
-            encounterHints += "【寻常偶遇】若在宫内，请从【后宫名单】挑妃嫔与玩家偶遇或宫斗，不要每次都遇皇帝！\n";
+            if((gameState.month === 6 || gameState.month === 12) && ["御花园白天1","御花园白天2","御书房","太医院","宫门"].includes(gameState.currentLoc)) encounterHints += "【命运触发】述职月，极大概率偶遇阳光修狗将军【萧铎】。\n";
+            encounterHints += "【寻常偶遇】若在宫内走动，请务必从【后宫名单】挑妃嫔与玩家偶遇或宫斗，不要每次都遇皇帝！\n";
 
             let extraRules = "【红牌警告】国师双腿残疾，严禁走动描写！皇后朴敏珠是女同，唯独对玩家温柔，不参与宫斗。严禁强迫侍寝！严禁滥用极刑！\n";
             if(statsConfig['cunning'].v <= 4) extraRules += "【隐藏】玩家心机极低，极易被暗算。\n";
@@ -1237,6 +1237,19 @@
 属性：${statsText}。
 皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：【${empP}】。
 ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
+
+【剧情与对话规则】
+1. 严禁代答！只准用“你”称呼玩家。
+2. 每次回复分2-5个 [发言] 块。格式：[发言] 姓名：（动作）内容。
+3. 必须通过不同的 [发言] 块来区分不同角色的对话，每个角色的发言独立分块。
+
+【⚠️ 帝王性格与天宠（圣宠）判定法则】
+你输出 [天宠+X] 或 [天宠-X] 时必须严格遵守以下对应性格，绝不可凭空给分：
+1. 若为【刚正】：喜好规矩体统，极难涨分（+1）；厌恶轻浮算计，抓到越礼作恶必重罚（-15）。
+2. 若为【风流】：极度看脸与才艺，易被取悦（+3~+5）；但喜新厌旧。
+3. 若为【冷漠】：极度戒备寡言，日常几乎不涨分（+0或+1）；发现算计立刻打入冷宫（-50）。
+4. 若为【温柔】：雨露均沾，易得小恩小惠（+1~+2），不忍重罚，极难给专宠。
+5. 若为【天真】：喜爱活泼烂漫与宫外新奇。情绪化极强，好感随心情大起大落（可能暴涨+8，也可能因无聊掉-5）。
 
 【天宠增减量化刻度】
 - 【微波】+1 ~ +2：规矩得体。
@@ -1249,13 +1262,14 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 1. 换场景必加：[背景: 场景名]（从地图库选：${bgList}）。
 2. 皇帝对玩家好感变动：[天宠+X] 或 [天宠-X]！
 3. 玩家位份变化：[位份: 新位份]！
-4. 妃嫔犯错被贬或死：[更新: 姓名|好感变动|圣宠变动|新位份(或冷宫/死亡)]！
+4. 妃嫔犯错被贬或死：[更新: 姓名|好感变动|圣宠变动|新位份(或冷宫/死亡)]！若是赐死/病逝位份填“死亡”。
 5. 情郎好感与疑心变动：[更新: 情郎姓名|好感变动|疑心变动|]。
 6. 怀孕与流产：[怀孕: 姓名] 或 [流产: 姓名]。
 7. 结算标签：[天宠+X] [更新: 姓名|好感|圣宠|位份] [背景: 场景名]。
 
 【示例】
 [发言] 皇帝：（大怒）传旨，降林氏为官女子，禁足一月！
+[发言] 苏培盛：（躬身）奴才遵旨。
 [天宠+2] [背景: 皇帝正殿] [更新: 林旻恩|0|-50|官女子]`;
         }
 
@@ -1492,7 +1506,7 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
             gameState.harem.sort((a,b)=>b.favor-a.favor);
             cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').trim();
             
-            // 🌟 完全还原你第一版的原生防弹正则，彻底解决气泡挤在一起的问题
+            // 🌟 这里是完全还原你原来第一版完美兼容的正则！
             const chunkRegex = /(?:\[\vert{}【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[\vert{}【)发言(?:\]|】))|$)/g;
             dialogueQueue = []; let cMatch;
             while ((cMatch = chunkRegex.exec(cleanText)) !== null) dialogueQueue.push({ speaker: cMatch[1].trim(), text: cMatch[2].trim() });
