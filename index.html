@@ -1082,7 +1082,7 @@
                     let activeNpc = livingHarem[Math.floor(Math.random() * livingHarem.length)];
                     let randFav = Math.floor(Math.random() * 5) + 2; 
                     activeNpc.favor = Math.min(100, activeNpc.favor + randFav);
-                    logToChronicle(`【承宠】敬事房通报，皇上翻了 ${activeNpc.title\vert{}\vert{}""}${activeNpc.rank} ${activeNpc.name} 的牌子 (宠爱+${randFav})。`);
+                    logToChronicle(`【承宠】敬事房通报，皇上翻了 ${activeNpc.title || ""}${activeNpc.rank} ${activeNpc.name} 的牌子 (宠爱+${randFav})。`);
 
                     if (Math.random() < 0.05 && livingHarem.length > 0) {
                         let sponsor = livingHarem[Math.floor(Math.random() * livingHarem.length)];
