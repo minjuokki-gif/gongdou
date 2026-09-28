@@ -1083,79 +1083,156 @@
                     activeNpc.favor = Math.min(100, activeNpc.favor + randFav);
                     logToChronicle(`【承宠】敬事房通报，皇上翻了 ${activeNpc.title||""}${activeNpc.rank} ${activeNpc.name} 的牌子 (宠爱+${randFav})。`);
 
-                    if (Math.random() < 0.5 && livingHarem.length >= 2) {
+                    // 【5% 几率触发：家族送族亲入宫】
+                    if (Math.random() < 0.05 && livingHarem.length > 0) {
+                        let sponsor = livingHarem[Math.floor(Math.random() * livingHarem.length)];
+                        // 判断是否是有官职背景的世家（排除平民、孤女、医女、商人、贡女、宫女等）
+                        let nonOfficialBg = ["平民", "孤女", "医女", "农户", "商", "贡女", "宫女", "特殊"];
+                        let isOfficial = !nonOfficialBg.some(b => sponsor.bg.includes(b));
+                        
+                        if (isOfficial && sponsor.favor > 10) {
+                            let cnNames = ["清秋", "知微", "宛筠", "南乔", "星河", "语冰", "揽月", "长乐", "允真", "如懿", "容音", "眉庄", "陵容", "若曦", "如烟", "玉娆", "世兰", "紫嫣", "雨晴", "芷若", "婉清", "书瑶", "初夏", "映雪", "安然", "锦瑟", "月仪", "瑾年"];
+                            let givenName = cnNames[Math.floor(Math.random() * cnNames.length)];
+                            
+                            // 提取娘娘的姓氏（简单兼容满汉复姓）
+                            let manchuSurnames = ["公孙", "长孙", "独孤", "夏侯", "纳兰", "慕容", "容成", "欧阳", "上官", "司马", "司徒", "拓跋", "乌拉那拉", "富察", "佟佳", "瓜尔佳", "钮祜禄", "叶赫那拉", "辉发那拉", "索绰罗", "博尔济吉特"];
+                            let sName = sponsor.name[0];
+                            for(let ms of manchuSurnames) { if(sponsor.name.startsWith(ms)) { sName = ms; break; } }
+                            
+                            let newName = sName + givenName;
+                            let cStats = {}; ['charm','intel','cunning','dance','needle','health','luck','charisma'].forEach(k => cStats[k] = Math.floor(Math.random()*10)+1);
+                            let personalities = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
+                            
+                            let allAvailableImages = []; for (let key in portraitPools) { allAvailableImages = allAvailableImages.concat(portraitPools[key]); }
+                            let randomFace = allAvailableImages.length > 0 ? allAvailableImages[Math.floor(Math.random() * allAvailableImages.length)] : "https://i.postimg.cc/placeholder-flower.jpg";
+
+                            gameState.harem.push({
+                                title: "", rank: "答应", name: newName, bg: sponsor.bg.replace(/嫡女|庶女|独女|嫡长女|庶长女/, "旁支"), age: Math.floor(Math.random()*4)+15, favor: 10, 
+                                personality: personalities[Math.floor(Math.random()*personalities.length)], affection: 0, stats: cStats, 
+                                image: randomFace, isTransparent: true, pregnancy: 0, children: []
+                            });
+                            logToChronicle(`【族亲入宫】${sponsor.name} 的母家为了巩固家族恩宠，将族亲 ${newName} 送入宫中，初封答应。`);
+                        }
+                    }
+
+                    // 【后宫双人交互事件（65% 触发率）】
+                    if (Math.random() < 0.65 && livingHarem.length >= 2) { 
                         let shuffled = [...livingHarem].sort(() => 0.5 - Math.random());
                         let n1 = shuffled[0]; let n2 = shuffled[1];
-                        
-                        let rankW = {"皇贵妃":1,"贵妃":2,"妃":3,"嫔":4,"贵人":5,"常在":6,"答应":7,"官女子":8};
-                        let r1 = rankW[n1.rank] || 9; let r2 = rankW[n2.rank] || 9;
-
+                        let rankW = {"皇后":1,"皇贵妃":2,"贵妃":3,"妃":4,"嫔":5,"贵人":6,"常在":7,"答应":8,"官女子":9};
+                        let r1 = rankW[n1.rank] || 10; let r2 = rankW[n2.rank] || 10;
                         let diff = n1.stats.cunning - n2.stats.cunning;
-                        let successRate = 0.5 + (diff * 0.05);
-                        let isSuccess = Math.random() < successRate;
-                        let isDiscovered = Math.random() > (n1.stats.cunning * 0.08);
+                        let isDiscovered = Math.random() > (n1.stats.cunning * 0.1); 
 
                         let rand = Math.random();
-                        if (rand < 0.25 && n1.stats.cunning > 5 && n2.favor > 10) {
-                            let poisonTypes = ["鹤顶红", "妒芳容"];
-                            if (n2.pregnancy > 0) poisonTypes.push("红花汤");
-                            let pType = poisonTypes[Math.floor(Math.random() * poisonTypes.length)];
-                            
-                            if (isSuccess) {
-                                if (pType === "鹤顶红") {
-                                    n2.stats.health = 0; n2.isDead = true; n2.rank = "👻毒发"; n2.title = "";
-                                    logToChronicle(`【恶毒命案】${n2.name} 饮汤后暴毙，太医验尸惊觉所中之毒乃“鹤顶红”！`);
-                                } else if (pType === "妒芳容") {
-                                    n2.stats.charm = Math.max(0, n2.stats.charm - 4);
-                                    logToChronicle(`【容颜毁损】${n2.name} 误用掺了“妒芳容”的胭脂，满脸红疹，容颜大跌（容貌-4）！`);
-                                } else if (pType === "红花汤") {
-                                    n2.pregnancy = 0; n2.infertile = true; n2.stats.health -= 3;
-                                    logToChronicle(`【滑胎绝育】${n2.name} 误食“红花汤”凄惨小产，太医断言其伤了根本，日后【珠胎难结】！`);
+                        if (rand < 0.08) { 
+                            let extremeEvents = ["扎小人", "推落水", "假孕"];
+                            let exType = extremeEvents[Math.floor(Math.random() * extremeEvents.length)];
+                            if (exType === "假孕") {
+                                if (isDiscovered || n1.stats.cunning < 6) {
+                                    n1.rank = "冷宫"; n1.title = ""; n1.favor = 0; n1.pregnancy = 0;
+                                    logToChronicle(`【假孕争宠】${n1.name} 胆大包天假装遇喜，被太医院当众拆穿！欺君之罪，立刻褫夺封号打入冷宫！`);
+                                } else {
+                                    n1.favor = Math.min(100, n1.favor + 20); n1.pregnancy = 1; 
+                                    logToChronicle(`【假孕蒙混】${n1.name} 买通太医谎称有孕，皇上大喜，赏赐流水般送入宫中 (圣宠大涨)！`);
                                 }
-                                
+                            } else if (exType === "推落水") {
+                                let success = n1.stats.cunning >= n2.stats.cunning || Math.random() < 0.4;
+                                if (success) {
+                                    n2.stats.health = Math.max(1, n2.stats.health - 4);
+                                    logToChronicle(`【推人落水】太液池边突发意外，${n2.name} 被人暗中推下水，受惊高烧不退（体质-4）。`);
+                                    if (isDiscovered) {
+                                        n1.rank = "答应"; n1.favor = Math.max(0, n1.favor - 30);
+                                        logToChronicle(`【真相大白】有扫地太监作证是 ${n1.name} 伸的手！皇上震怒，将其降位禁足。`);
+                                    }
+                                } else {
+                                    logToChronicle(`【落水未遂】${n1.name} 试图在太液池边推 ${n2.name}，被对方敏捷躲过，险些自己掉进池子里。`);
+                                }
+                            } else if (exType === "扎小人") {
                                 if (isDiscovered) {
                                     n1.rank = "冷宫"; n1.title = ""; n1.favor = 0;
-                                    logToChronicle(`【真相大白】慎刑司顺藤摸瓜揪出投毒真凶 ${n1.name}！皇上震怒，将其打入冷宫！`);
+                                    logToChronicle(`【巫蛊之祸】内务府在 ${n1.name} 宫中搜出写着 ${n2.name} 生辰八字的厌胜木偶！此乃宫闱大忌，直接打入冷宫！`);
                                 } else {
-                                    logToChronicle(`【深宫悬案】投毒案扑朔迷离，真凶扫尾干净，抓了几个替罪太监后不了了之。`);
-                                }
-                            } else {
-                                logToChronicle(`【毒计败露】${n1.name} 意图对 ${n2.name} 下毒（${pType}），所幸被对方察觉未能得逞！`);
-                                if (isDiscovered) {
-                                    n1.favor = Math.max(0, n1.favor - 40); if(r1 < 8) n1.rank = "答应";
-                                    logToChronicle(`【雷霆之怒】慎刑司查出主使乃 ${n1.name}，皇上大怒，将其褫夺封号降为答应！`);
+                                    n2.stats.luck = Math.max(0, n2.stats.luck - 3); n2.stats.health = Math.max(1, n2.stats.health - 2);
+                                    logToChronicle(`【巫蛊咒魇】${n1.name} 深夜在寝宫扎小人咒骂 ${n2.name}。这几日 ${n2.name} 果然噩梦连连，精神恍惚（福源、体质下降）。`);
                                 }
                             }
-                        } else if (rand < 0.45 && n1.stats.cunning > 3) {
-                            if (isSuccess) {
-                                n2.favor = Math.max(0, n2.favor - 15);
-                                logToChronicle(`【暗生流言】宫中疯传 ${n2.name} 的不雅轶事，圣上闻之生厌。`);
-                                if (isDiscovered) {
-                                    n1.favor = Math.max(0, n1.favor - 20);
-                                    logToChronicle(`【流言反噬】内务府查明造谣源头竟是 ${n1.name}。皇上斥其“心思恶毒”。`);
+                        } else if (rand < 0.20) { 
+                            let poisonTypes = ["鹤顶红", "妒芳容"];
+                            if (n2.pregnancy > 0) poisonTypes.push("红花汤"); 
+                            let pType = poisonTypes[Math.floor(Math.random() * poisonTypes.length)];
+                            let isSuccess = (n1.stats.cunning >= n2.stats.cunning) || (Math.random() < 0.3); 
+                            
+                            if (isSuccess) { 
+                                if (pType === "鹤顶红") {
+                                    if (Math.random() < 0.4 || n2.stats.health >= 8) { 
+                                        n2.stats.health = Math.max(1, n2.stats.health - 5);
+                                        logToChronicle(`【惊险生还】${n2.name} 误食含“鹤顶红”的饮食，所幸太医抢救及时捡回一命，但气血大损！`);
+                                    } else {
+                                        n2.stats.health = 0; n2.isDead = true; n2.rank = "👻毒发"; n2.title = "";
+                                        logToChronicle(`【恶毒命案】${n2.name} 饮汤后七窍流血暴毙，太医验尸惊觉所中之毒乃“鹤顶红”！`);
+                                    }
+                                } else if (pType === "妒芳容") {
+                                    n2.stats.charm = Math.max(0, n2.stats.charm - 4);
+                                    logToChronicle(`【容颜毁损】${n2.name} 误用掺了“妒芳容”的脂粉，满脸红疹，容颜大跌（容貌-4）。`);
+                                } else if (pType === "红花汤") {
+                                    n2.pregnancy = 0; n2.infertile = true; n2.stats.health -= 3;
+                                    logToChronicle(`【滑胎绝育】${n2.name} 误食“红花汤”凄惨小产，伤了根本，日后【珠胎难结】！`);
                                 }
                             } else {
-                                logToChronicle(`【造谣未遂】${n1.name} 试图编排 ${n2.name} 的是非，被巧言化解。`);
+                                logToChronicle(`【毒计落空】${n1.name} 意图对 ${n2.name} 狠下毒手（${pType}），奈何被对方提前察觉，未能得逞。`);
                             }
-                        } else if (rand < 0.65 && r1 < r2) {
+                            if (isDiscovered) {
+                                n1.rank = "冷宫"; n1.title = ""; n1.favor = 0;
+                                logToChronicle(`【真相大白】慎刑司彻查毒药案，揪出幕后主使竟是 ${n1.name}！皇上震怒，将其褫夺封号打入冷宫！`);
+                            } else {
+                                logToChronicle(`【深宫悬案】此次毒药事件扑朔迷离，真凶扫尾干净，慎刑司查了几个替罪太监后不了了之。`);
+                            }
+                        } else if (rand < 0.35) { 
+                            if (diff > -2 || Math.random() < 0.3) {
+                                n2.favor = Math.max(0, n2.favor - 10);
+                                logToChronicle(`【暗生流言】宫中疯传 ${n2.name} 的不雅轶事，圣上闻之不悦 (圣宠下降)。`);
+                                if (isDiscovered) {
+                                    n1.favor = Math.max(0, n1.favor - 15);
+                                    logToChronicle(`【流言反噬】内务府查明造谣源头是 ${n1.name}。皇上斥其“长舌生事”。`);
+                                }
+                            } else {
+                                logToChronicle(`【造谣未遂】${n1.name} 试图编排 ${n2.name} 的是非，被对方巧言化解，未能掀起波澜。`);
+                            }
+                        } else if (rand < 0.50 && r1 < r2) { 
                             let pType = Math.random();
-                            if (pType < 0.3) {
-                                n2.favor = Math.max(0, n2.favor - 5);
-                                logToChronicle(`【禁足】${n1.name} 以“以下犯上”为由，罚 ${n2.name} 禁足半月。`);
-                            } else if (pType < 0.6) {
+                            if (pType < 0.4) {
+                                logToChronicle(`【禁足】${n1.name} 以“不懂规矩”为由，罚 ${n2.name} 禁足半月抄写佛经。`);
+                            } else if (pType < 0.7) {
                                 n2.stats.health -= 1;
-                                logToChronicle(`【罚跪】${n1.name} 罚 ${n2.name} 在御花园长跪（体质-1）。`);
+                                logToChronicle(`【罚跪】${n1.name} 借故刁难，罚 ${n2.name} 在御花园青石板上长跪（体质-1）。`);
                             } else {
                                 n2.stats.health -= 2;
-                                logToChronicle(`【杖责】${n1.name} 下令廷杖 ${n2.name} 十大板！鲜血淋漓（体质-2）。`);
+                                logToChronicle(`【掌嘴】${n1.name} 怒斥 ${n2.name} 冲撞，命宫女狠狠掌嘴，打得脸颊红肿（体质-2）。`);
                             }
-                        } else {
-                            if (diff > -2 && diff < 2) {
-                                n1.affection += 10; n2.affection += 10;
-                                logToChronicle(`【结交】${n1.name} 与 ${n2.name} 互诉心事，引为知己。`);
+                        } else { 
+                            let interactionsGood = [
+                                `在御花园凉亭里品茗赏花，相谈甚欢`,
+                                `互相探讨绣花刺绣的心得，交换了丝线`,
+                                `一起去太后宫里请安，路上有说有笑`,
+                                `分享了江南新贡来的时兴胭脂`,
+                                `结伴去戏楼听了一出《牡丹亭》，越发亲厚`
+                            ];
+                            let interactionsBad = [
+                                `因为一件蜀锦衣裳的颜色撞了，互翻白眼`,
+                                `在给皇后请安时互相内涵对方的妆容，夹枪带棒`,
+                                `为了争夺内务府刚送来的几盆极品墨菊，闹得不欢而散`,
+                                `在路上遇见时连招呼都不打，形同陌路`,
+                                `互相嘲讽对方近期没能侍寝，梁子结得更深了`
+                            ];
+                            if (diff > -2 && diff < 2 || Math.random() < 0.6) {
+                                n1.affection += 5; n2.affection += 5;
+                                let text = interactionsGood[Math.floor(Math.random() * interactionsGood.length)];
+                                logToChronicle(`【日常闲逛】${n1.name} 与 ${n2.name}${text}。`);
                             } else {
-                                n1.affection -= 10; n2.affection -= 10;
-                                logToChronicle(`【交恶】${n1.name} 与 ${n2.name} 因小事起龃龉，梁子结下了。`);
+                                n1.affection -= 5; n2.affection -= 5;
+                                let text = interactionsBad[Math.floor(Math.random() * interactionsBad.length)];
+                                logToChronicle(`【口角风波】${n1.name} 与 ${n2.name}${text}。`);
                             }
                         }
                     }
@@ -1267,22 +1344,20 @@ ${haremText}${loversText}${encounterHints}${wbText}${extraRules}
 【！！！强制系统指令（必须在回复的最末尾单独一行输出）！！！】
 1. 换场景必加：[背景: 场景名]（你必须且只能从地图库中选：${bgList}。若无合适选自编）。
 2. 皇帝对玩家好感变动：[天宠+X] 或 [天宠-X]！
-3. 玩家位份变化：[位份: 新位份]！
-4. 妃嫔犯错被贬或死：[更新: 姓名|好感变动|圣宠变动|新位份(或冷宫/死亡)]！若是赐死/病逝位份填“死亡”。
-5. 情郎好感与疑心变动：[更新: 情郎姓名|好感变动|疑心变动|]。或单发 [疑心+X] / [疑心-X]。【铁律】皇上无千里眼，若非抓奸在床或证据确凿，严禁在宫外私密场合凭空起疑心！
-6. 怀孕与流产：若太医诊出有喜或遇害流产，必须加 [怀孕: 姓名] 或 [流产: 姓名]（玩家自己则填“玩家”）。
-7. 结算标签：[天宠+X] [更新: 姓名|好感|圣宠|位份] [背景: 场景名]。
-8. 妃嫔日常与大事件：[更新: 姓名|好感变动|圣宠变动|新位份]。日常争宠波动在+/-5以内；若发生怀孕、流产、被陷害、打入冷宫等大事件，圣宠必须大幅变动(+20或-50等)！
+3. 玩家位份变化：[位份: 新位份]（【红牌警告】未获明确旨意晋升或降位，绝对禁止输出此标签！千万别瞎填！）
+4. 妃嫔日常与大事件：[更新: 姓名|好感变动|圣宠变动|新位份]（日常波动+/-5以内）。【红牌警告】若妃嫔没犯大错、没有被明确旨意降位或晋升，"新位份"这一栏必须严格留空！例如日常只写：[更新: 姓名|+5|+2|]！只有打入冷宫、或明确贬黜时才填入！赐死/病逝填“死亡”。
+5. 情郎私会雷达：只要玩家与情郎互动，必须输出 [更新: 情郎姓名|好感变动|疑心变动|]。皇上不在场或无证据时疑心不变或微增。
+6. 怀孕与流产：太医诊出有喜或遇害流产，必须加 [怀孕: 姓名] 或 [流产: 姓名]。
 
-【完美输出示例】
+【完美输出示例 1：发生重大惩罚（位分填入）】
 [发言] 旁白：夜幕降临，殿内的烛火摇曳不定，气氛显得格外压抑。
 [发言] 皇帝：（大怒）她竟敢如此放肆！传旨，降林旻恩为官女子，褫夺封号，禁足一月！
 [发言] 苏培盛：（躬身）奴才遵旨。
 [天宠+2] [背景: 皇帝正殿] [更新: 林旻恩|0|-50|官女子]
 
-【完美输出示例 2：情郎私会】
-[发言] 萧铎：（耳根微红，将你抵在墙角）娘娘这般看着臣，臣会把持不住的……
-[背景: 御花园夜晚] [更新: 萧铎|+10|+2|]`;
+【完美输出示例 2：日常闲聊（位分必须留空）】
+[发言] 晏洵：（摇晃着粉色狐尾，眼巴巴望着你）姐姐今天带了什么好吃的？
+[背景: 普陀山] [更新: 晏洵|+10|+0|]`;
         }
 
 
