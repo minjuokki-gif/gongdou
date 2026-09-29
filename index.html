@@ -588,7 +588,13 @@
             { name: "皎如明玉", url: "https://i.postimg.cc/wxhRHVqb/jiao-yu.png" },
             { name: "雍容华贵", url: "https://i.postimg.cc/FsNdKL13/zheng-pin-yi.png" },
             { name: "惊鸿仙子", url: "https://i.postimg.cc/mr2VzB7J/6811c8d4cca74fbd5dee6e97B5FYZGKP06.png" },
-            { name: "婉约佳人", url: "https://i.postimg.cc/Ls6vY2j0/6274a6af4efdc9b1edf2b7d8Ajp-E3l-Vu04.png" }
+            { name: "婉约佳人", url: "https://i.postimg.cc/Ls6vY2j0/6274a6af4efdc9b1edf2b7d8Ajp-E3l-Vu04.png" },
+            { name: "明眸善睐", url: "https://i.postimg.cc/pLLB4gK1/li-hui-10842.png" },
+            { name: "千娇百媚", url: "https://i.postimg.cc/pLcBHqBw/li-hui-11311.png" },
+            { name: "清冷若雪", url: "https://i.postimg.cc/Bn7C0MCd/li-hui-11423.png" },
+            { name: "楚楚可怜", url: "https://i.postimg.cc/HkvtgBtF/li-hui-11442.png" },
+            { name: "倾国之姿", url: "https://i.postimg.cc/Bn7C0MgW/li-hui-11741.png" },
+            { name: "秋水伊人", url: "https://i.postimg.cc/W1Y7vXn2/li-hui-11742.png" }
         ];
 
         const empPresets = [
@@ -597,7 +603,9 @@
             { name: "绿衣银发", url: "https://i.postimg.cc/YqDrwGFw/lu-yi-yin-fa.png" },
             { name: "幽蓝深邃", url: "https://i.postimg.cc/6qY9qT1f/lan-hei-yi-hei-fa.png" },
             { name: "黑发血眸", url: "https://i.postimg.cc/90JW0zNy/hei-fa-xue-mou.png" },
-            { name: "黑衣玄魅", url: "https://i.postimg.cc/x8t08qFz/hei-yi-hei-fa.png" }
+            { name: "黑衣玄魅", url: "https://i.postimg.cc/x8t08qFz/hei-yi-hei-fa.png" },
+            { name: "金翎尊主", url: "https://i.postimg.cc/G2GPvr1t/li-hui-11071.png" },
+            { name: "清冷孤帝", url: "https://i.postimg.cc/vTyrzjQ8/li-hui-11276.png" }
         ];
 
         const portraitPools = {
@@ -1713,15 +1721,26 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                     p.src = gameState.empAvatar; 
                     p.style.display = 'block';
                 }
-            } else if(msg.speaker === gameState.playerName || msg.speaker === "我") {
-                // 女主说话，右侧保持空
+            } else if(msg.speaker.includes("太后")) {
+                // ✨ 新英雄太后专属登场判定：只要说话人带“太后”二字，直接上特有立绘！
+                const p = document.getElementById('npc-trans-ingame');
+                p.src = "https://i.postimg.cc/G2FYHQkT/tai-hou.png"; 
+                p.style.display = 'block';
+                document.getElementById('npc-framed-ingame').style.display = 'none';
+            } else if(msg.speaker === gameState.playerName || msg.speaker === "我" || msg.speaker.includes(gameState.playerName)) {
+                msg.speaker = `【${gameState.rank}】${gameState.playerName}`;
+    
             } else if(msg.speaker !== "系统") {
-                let targetNpc = gameState.harem.find(h => msg.speaker.includes(h.name) || (h.title !== "" && msg.speaker.includes(h.title)));
+                let targetNpc = gameState.harem.find(h => msg.speaker.includes(h.name) || (h.title !== "" && msg.speaker.includes(h.title)) || (h.rank === "皇后" && msg.speaker.includes("皇后")));
                 let isTrans = targetNpc ? targetNpc.isTransparent : false;
                 
                 if(!targetNpc && gameState.lovers) {
                     targetNpc = gameState.lovers.find(l => msg.speaker.includes(l.name) || (l.title !== "" && msg.speaker.includes(l.title)));
                     if(targetNpc) isTrans = true; 
+                }
+
+                if (targetNpc && targetNpc.rank) {
+                    msg.speaker = `【${targetNpc.title || ""}${targetNpc.rank}】${targetNpc.name}`;
                 }
 
                 if(targetNpc && targetNpc.image) {
