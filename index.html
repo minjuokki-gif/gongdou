@@ -276,6 +276,9 @@
                 <button class="map-btn" onclick="enterLocation('珠宝店')">珠宝店</button>
                 <button class="map-btn" onclick="enterLocation('香料铺')">香料铺</button>
                 <button class="map-btn" onclick="enterLocation('京城学堂')">京城学堂</button>
+                <button class="map-btn" onclick="enterLocation('宅院')">私密宅院</button>
+                <button class="map-btn" onclick="enterLocation('灯会')">繁华灯会</button>
+                <button class="map-btn" onclick="enterLocation('荒山野岭')">荒山野岭</button>
             </div>
             <button class="next-month-btn" style="background:#4682b4;" onclick="backToPalaceMap()">‹ 验看腰牌，返回宫门</button>
         </div>
@@ -655,7 +658,10 @@
             "珠宝店": "https://i.postimg.cc/J0K5D0PY/zhu-bao-dian.jpg",
             "香料铺": "https://i.postimg.cc/D05PJ0BY/xiang-liao-pu.jpg",
             "京城学堂": "https://i.postimg.cc/GprtNKLn/xue-tang.jpg",
-            "冷宫": "https://i.postimg.cc/g0dj5sYt/leng-gong.jpg"
+            "冷宫": "https://i.postimg.cc/g0dj5sYt/leng-gong.jpg",
+            "宅院": "https://i.postimg.cc/LX1BXJf1/zhai-yuan.png",
+            "灯会": "https://i.postimg.cc/C1qH1RDB/deng-hui.png",
+            "荒山野岭": "https://i.postimg.cc/1tqct86w/huang-shan-ye-ling.png"
         };
 
         function openPresetModal() {
@@ -2016,9 +2022,15 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             const btn = document.getElementById('send-letter-btn');
             btn.innerText = "传书中..."; btn.disabled = true;
 
+            // ✨ 核心修复：提取最近的5条主线剧情作为前情提要，让情郎知道你刚才发生了什么
+            let recentPlot = gameState.history.slice(-5).map(m => m.content).join("\n");
+
             const prompt = `你是《水云间》中的${l.title}【${l.name}】。人设：${l.type}。${l.intro}。
-后宫里的妃嫔（玩家，你的秘密情人）给你偷偷传了一封信：“${text}”
-请以你的口吻回信。要求：符合人设，带有一点动作神态描写，充满禁忌拉扯感，字数100字左右。只输出回信，不带多余格式。`;
+【当前主线剧情前情提要（供你参考）】
+${recentPlot}
+-----------------
+后宫里的妃嫔（玩家，也就是你的秘密情人）刚刚给你偷偷传了一封信：“${text}”
+请结合上述前情提要（如果信件内容有关联的话），以你的口吻回信。要求：符合人设，带有一点动作神态描写，充满禁忌拉扯感，字数100字左右。只输出回信，不带多余格式。`;
 
             try {
                 let fetchUrl, headers, requestBody;
@@ -2039,7 +2051,12 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 display.innerHTML += `<div><b style="color:#c71585;">${l.name}：</b><br>${reply}</div>`;
                 
                 l.affection += 5; l.suspicion += Math.floor(Math.random() * 3);
-                gameState.history.push({role: "user", content: `系统提示：玩家通过青鸟传书与情郎${l.name}私通，感情升温。皇帝疑心微增至${l.suspicion}%。`});
+                
+                // ✨ 核心修复：把你们俩的信件来往直接写入主线历史，这样主界面的皇帝和AI也会记住你们聊了什么！
+                gameState.history.push({
+                    role: "user", 
+                    content: `[私密传书记录] 玩家给情郎${l.name}写信：“${text}”。\n${l.name}回信：“${reply}”。皇帝疑心微增至${l.suspicion}%。`
+                });
 
             } catch(e) { 
                 document.getElementById('lover-reply-loading').innerText = "青鸟被大内侍卫射落了（系统报错：" + e.message + "）。"; 
