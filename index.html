@@ -1363,7 +1363,7 @@
             else if(statsConfig['cunning'].v >= 8) extraRules += "【隐藏】玩家城府极深，手段狠辣。任何人试图算计玩家，都会被立刻反杀！\n";
 
             return `你是《水云间》文字游戏引擎，必须严格遵守响应规则！
-玩家：${gameState.playerName}，位份：${gameState.rank}，孕期：${pregText}。
+玩家：${gameState.playerName}，家世：${gameState.playerBg}，位份：${gameState.rank}，孕期：${pregText}。
 属性：${statsText}。
 皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：【${empP}】（⚠️极其重要：皇帝所有台词、动作必须100%贴合该性格！刚正绝不偏私，风流极易撩拨，冷漠字字如冰，天真喜怒无常，温柔如沐春风。严禁全部写成千篇一律的温和霸道总裁！）。
 ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
@@ -1840,14 +1840,22 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             document.getElementById('concubine-detail-modal').classList.add('active');
         }
 
-        // 神仙造化：强行修改妃子数据（一键换脸 + 全属性修改版）
+        // 神仙造化：强行修改妃子数据（一键换脸 + 全属性修改版 + 姓名性格）
         function editCurrentConcubine() {
             if (currentEditNpcIndex === -1) return;
             let target = gameState.harem[currentEditNpcIndex];
 
+            // 0. 改名字
+            let newName = prompt(`【当前名字】：${target.name}\n请输入新名字（若不改请直接点确定）：`, target.name);
+            if (newName !== null && newName.trim() !== "") target.name = newName.trim();
+
             // 1. 改家世
             let newBg = prompt(`【当前家世】：${target.bg}\n请输入新家世：`, target.bg);
             if (newBg !== null && newBg.trim() !== "") target.bg = newBg.trim();
+
+            // 1.5 改性格
+            let newPersonality = prompt(`【当前性格】：${target.personality}\n请输入新性格（如：嚣张跋扈、白切黑、绿茶等）：`, target.personality);
+            if (newPersonality !== null && newPersonality.trim() !== "") target.personality = newPersonality.trim();
 
             // 2. 一键随机换脸
             if (confirm(`【换脸】是否要为 ${target.name} 随机更换一张新的立绘？\n(点击"确定"自动随机换脸，点击"取消"保留原貌)`)) {
@@ -1885,6 +1893,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             showToast(`✨ 神仙造化成功！${target.name} 的命运已被改写！`);
             autoSave(); 
             showConcubineDetail(currentEditNpcIndex); 
+            showHaremList(); // 刷新花名册让名字变更立刻显示
         }
 
         function saveWorldbook() { 
