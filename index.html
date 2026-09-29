@@ -260,6 +260,8 @@
                 <button class="map-btn" onclick="enterLocation('御花园白天1')">御花园</button>
                 <button class="map-btn" onclick="enterLocation('太医院')">太医院</button>
                 <button class="map-btn" onclick="enterLocation('观星台')">观星台</button>
+                <button class="map-btn" onclick="enterLocation('太后寝宫')">太后寝宫</button>
+                <button class="map-btn" onclick="enterLocation('掖庭')">掖庭</button>
                 <button class="map-btn" onclick="startVisit()">拜访妃嫔</button>
                 <button class="map-btn" onclick="enterLocation('女主卧室')">回自己寝宫</button>
                 <button class="map-btn" onclick="showOutMap()" style="background:#ffd700; color:#b8860b; font-weight:bold;">令牌出宫</button>
@@ -648,6 +650,19 @@
                 "https://i.postimg.cc/NGNTNRqr/0sheng-qi-08zheng-pin-nu-zhi-wei-wan-gao.png"
             ]
         };
+        const allMaidPortraits = [
+            "https://i.postimg.cc/wjF62bpw/li-hui-0814.png",
+            "https://i.postimg.cc/8C5T0Bpm/li-hui-1079.png",
+            "https://i.postimg.cc/g0JGTqzV/li-hui-1209.png",
+            "https://i.postimg.cc/tgT9Mtqz/li-hui-1274.png",
+            "https://i.postimg.cc/6Q3BmLW0/li-hui-1398.png",
+            "https://i.postimg.cc/k547pFJs/li-hui-1736.png",
+            "https://i.postimg.cc/7L6qWMHB/li-hui-2220.png",
+            "https://i.postimg.cc/rpmqPCV3/li-hui-2336.png",
+            "https://i.postimg.cc/jj5RFQqV/li-hui-2343.png",
+            "https://i.postimg.cc/LsXmbB4M/li-hui-3496.png"
+        ];
+
         const bgMap = {
             "皇帝正殿": "https://i.postimg.cc/nzRWw6wT/huang-di-hui-ke-ting.jpg", "女主卧室": "https://i.postimg.cc/Dzy0rGVr/gu-feng-chang-jing-wo-shi.jpg",
             "皇帝寝宫": "https://i.postimg.cc/yNb10rXt/huang-di-qin-gong-bai-tian-ban-ben.jpg", "后宫闲聊处": "https://i.postimg.cc/6p4Y98bZ/后宫闲聊处.jpg",
@@ -657,7 +672,6 @@
             "御花园白天2": "https://i.postimg.cc/JzHP1sYc/庭院.jpg", "御书房": "https://i.postimg.cc/XYBQVr1X/御书房.jpg",
             "御膳房": "https://i.postimg.cc/Z5vVTWs9/御膳房.jpg", "浴池": "https://i.postimg.cc/zGH0Jy2y/浴池.jpg", "皇后内殿3": "https://i.postimg.cc/NfMdzJ1Z/皇后内殿3.jpg",
             "宫宴": "https://i.postimg.cc/MG12dyNq/gong-yan.jpg",
-            // 👇 下面是全新加入的地图
             "观星台": "https://i.postimg.cc/Xv3qhLjW/观星阁.jpg",
             "京城街道": "https://i.postimg.cc/2yT7by2c/侧面街道商铺.jpg",
             "京城酒楼": "https://i.postimg.cc/sxK4QxTy/gu-dai-jiu-lou.jpg",
@@ -669,7 +683,9 @@
             "冷宫": "https://i.postimg.cc/g0dj5sYt/leng-gong.jpg",
             "宅院": "https://i.postimg.cc/LX1BXJf1/zhai-yuan.png",
             "灯会": "https://i.postimg.cc/C1qH1RDB/deng-hui.png",
-            "荒山野岭": "https://i.postimg.cc/1tqct86w/huang-shan-ye-ling.png"
+            "荒山野岭": "https://i.postimg.cc/1tqct86w/huang-shan-ye-ling.png",
+            "太后寝宫": "https://i.postimg.cc/bNxYDwVg/tai-hou-qin-gong.png",
+            "掖庭": "https://i.postimg.cc/wTXxyjbK/ye-ting.png"
         };
 
         function openPresetModal() {
@@ -1288,7 +1304,9 @@
                 document.getElementById('loc-display').innerText = "当前位置：宫宴";
                 nightEventText = `系统提示：今日是${gameState.month}月宫宴。玩家【心机:${statsConfig['cunning'].v}】。生成宫宴事件！[背景: 宫宴]`;
             } else {
-                let userChance = Math.min(30, 5 + Math.floor(gameState.favor / 4)); 
+                // ✨ 雨露均沾算法：保底10%概率（不会见不到皇帝），上限锁定35%（防独占）
+                let userChance = 10 + Math.floor((gameState.favor || 0) / 4); 
+                if (userChance > 35) userChance = 45; 
                 let roll = Math.random() * 100;
                 if (roll < userChance) {
                     document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["浴池"]}')`; document.getElementById('loc-display').innerText = "当前位置：浴池";
@@ -1309,6 +1327,14 @@
 
         /* ================= 🌟 AI 对话与双轨制显示 🌟 ================= */
         function buildSystemPrompt() {
+            // ✨ 自动给玩家分配两个不重复的绝美大宫女（画屏、画扇）
+            if (!gameState.playerMaids) {
+                let shuffledMaids = [...allMaidPortraits].sort(() => 0.5 - Math.random());
+                gameState.playerMaids = [
+                    { name: "画屏", image: shuffledMaids[0] },
+                    { name: "画扇", image: shuffledMaids[1] }
+                ];
+            }
             let bgList = Object.keys(bgMap).join("、");
             let statsText = ""; for(let k in statsConfig) statsText += `${statsConfig[k].name}:${statsConfig[k].v} `;
             const empP = gameState.empPersonality || document.getElementById('emp-personality-val').innerText;
@@ -1354,6 +1380,7 @@
             if((gameState.month === 6 || gameState.month === 12) && ["御花园白天1","御花园白天2","御书房","太医院","宫门"].includes(gameState.currentLoc)) encounterHints += "【命运触发】现在是回京述职的月份，玩家在宫内极大概率偶遇阳光修狗将军【萧铎】。\n";encounterHints += "【寻常偶遇】若未触发上述命运事件且在宫内走动，请务必从【后宫名单】中挑一位或多位妃嫔与玩家偶遇、宫斗或闲聊，绝对不要每次都遇到皇帝！\n";
 
             let extraRules = "";
+            extraRules += `【核心设定】玩家有两名忠心耿耿的贴身大宫女，名叫【${gameState.playerMaids[0].name}】和【${gameState.playerMaids[1].name}】，涉及宫女剧情时必须使用她们的名字互动。\n`;
             extraRules += "【红牌警告】国师【司星沉】双腿残疾，永远只能坐轮椅！严禁对他使用站立、走动、迈步等腿部动作描写！\n";
             extraRules += "【核心设定】皇后朴敏珠是太后族亲，潜邸时便是福晋，但与皇帝毫无感情、相敬如宾。她性子温软、不参与宫斗、极度渴望宫墙外的自由。最重要的是，她是女同，唯独对玩家充满极致的温柔与爱意。\n";
             extraRules += "【红牌警告：严禁霸王硬上弓】无论NPC对玩家好感多高，严禁主动描写任何直接的性行为或强迫侍寝！必须发乎情止乎礼。只有在玩家主动勾引或同意后才可顺水推舟。\n";
@@ -1731,21 +1758,54 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 msg.speaker = `【${gameState.rank}】${gameState.playerName}`;
     
             } else if(msg.speaker !== "系统") {
-                let targetNpc = gameState.harem.find(h => msg.speaker.includes(h.name) || (h.title !== "" && msg.speaker.includes(h.title)) || (h.rank === "皇后" && msg.speaker.includes("皇后")));
-                let isTrans = targetNpc ? targetNpc.isTransparent : false;
+                let isMaid = false;
+                let maidImg = "";
                 
-                if(!targetNpc && gameState.lovers) {
-                    targetNpc = gameState.lovers.find(l => msg.speaker.includes(l.name) || (l.title !== "" && msg.speaker.includes(l.title)));
-                    if(targetNpc) isTrans = true; 
+                // 1. 判定是不是玩家的两个贴身宫女
+                if (gameState.playerMaids && (msg.speaker.includes(gameState.playerMaids[0].name) || msg.speaker.includes(gameState.playerMaids[1].name))) {
+                    isMaid = true;
+                    let pm = msg.speaker.includes(gameState.playerMaids[0].name) ? gameState.playerMaids[0] : gameState.playerMaids[1];
+                    maidImg = pm.image;
+                    finalSpeakerName = `【贴身宫女】${pm.name}`;
+                } 
+                // 2. 判定是不是别的杂役、宫女或嬷嬷
+                else if (msg.speaker.includes("宫女") || msg.speaker.includes("侍女") || msg.speaker.includes("丫鬟") || msg.speaker.includes("嬷嬷") || msg.speaker.includes("姑姑")) {
+                    isMaid = true;
+                    finalSpeakerName = msg.speaker.includes("【") ? msg.speaker : `【宫女】${msg.speaker.replace(/宫女|侍女|丫鬟|嬷嬷|姑姑/, '').trim()}`;
+                    
+                    // ✨ 核心避让逻辑：从池子里滤掉玩家的两个宫女，剩下的随机抽
+                    let otherMaids = allMaidPortraits.filter(img => !gameState.playerMaids.some(pm => pm.image === img));
+                    maidImg = otherMaids[Math.floor(Math.random() * otherMaids.length)];
                 }
 
-                if (targetNpc && targetNpc.rank) {
-                    msg.speaker = `【${targetNpc.title || ""}${targetNpc.rank}】${targetNpc.name}`;
-                }
+                // 如果是宫女，直接弹图
+                if (isMaid) {
+                    const p = document.getElementById('npc-trans-ingame');
+                    p.src = maidImg; 
+                    p.style.display = 'block';
+                    document.getElementById('npc-framed-ingame').style.display = 'none';
+                } else {
+                    // 如果不是宫女，走原本的找妃子/情郎逻辑
+                    let targetNpc = gameState.harem.find(h => msg.speaker.includes(h.name) || (h.title !== "" && msg.speaker.includes(h.title)) || (h.rank === "皇后" && msg.speaker.includes("皇后")));
+                    let isTrans = targetNpc ? targetNpc.isTransparent : false;
+                    
+                    if(!targetNpc && gameState.lovers) {
+                        targetNpc = gameState.lovers.find(l => msg.speaker.includes(l.name) || (l.title !== "" && msg.speaker.includes(l.title)));
+                        if(targetNpc) isTrans = true; 
+                    }
 
-                if(targetNpc && targetNpc.image) {
-                    const id = isTrans ? 'npc-trans-ingame' : 'npc-framed-ingame';
-                    const p = document.getElementById(id); p.src = targetNpc.image; p.style.display = 'block';
+                    if(targetNpc) {
+                        if (targetNpc.rank) {
+                            finalSpeakerName = `【${targetNpc.title || ""}${targetNpc.rank}】${targetNpc.name}`;
+                        } else if (targetNpc.type) { 
+                            finalSpeakerName = `【${targetNpc.title || ""}】${targetNpc.name}`;
+                        }
+                        
+                        if(targetNpc.image) {
+                            const id = isTrans ? 'npc-trans-ingame' : 'npc-framed-ingame';
+                            const p = document.getElementById(id); p.src = targetNpc.image; p.style.display = 'block';
+                        }
+                    }
                 }
             }
 
