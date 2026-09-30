@@ -327,7 +327,10 @@
             <h3 style="text-align:center; color: #d02090; margin-top:0;">🪷 后宫花名册 🪷</h3>
             <p style="font-size:12px; color:#666; text-align:center;">点击名牌查看详细档案</p>
             <div id="harem-list-container"></div>
-            <button class="close-btn" style="margin-top:15px; background: #d02090;" onclick="document.getElementById('harem-modal').classList.remove('active')">合上名册</button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="close-btn" style="background: #ff8c00; flex: 1;" onclick="createNewConcubine()">➕ 特招入宫</button>
+                <button class="close-btn" style="background: #d02090; flex: 1;" onclick="document.getElementById('harem-modal').classList.remove('active')">合上名册</button>
+            </div>
         </div>
     </div>
 
@@ -1112,13 +1115,13 @@
                 let livingHarem = gameState.harem.filter(h => !h.isDead && h.rank !== "冷宫" && h.rank !== "皇后");
                 
                 livingHarem.forEach(h => {
-                    if (h.stats.health <= 0) {
+                    // ✨ 核心修复：0 是病危预告，负数才是真死，1和2绝对不报！
+                    if (h.stats.health < 0) {
                         h.isDead = true; h.rank = "👻病逝"; h.title = "";
-                        logToChronicle(`【香消玉殒】${h.name} 久病不愈（或遭暗害折磨），于寝宫内咽下了最后一口气。`);
+                        logToChronicle(`【香消玉殒】${h.title||""}${h.rank}${h.name} 气血枯竭，药石无医，于寝宫内咽下了最后一口气。`);
                         return;
-                    }
-                    if (h.stats.health <= 2) {
-                        logToChronicle(`【病入膏肓】${h.title||""}${h.rank}${h.name} 气血枯竭，太医称恐怕时日无多...`);
+                    } else if (h.stats.health === 0) {
+                        logToChronicle(`【病入膏肓】${h.title||""}${h.rank}${h.name} 气血耗尽，太医连连摇头，称恐怕随时会去了...`);
                     } else if (h.stats.health < 10 && Math.random() < 0.3) {
                         h.stats.health++; 
                     }
@@ -1288,9 +1291,10 @@
                                     logToChronicle(`【口角风波】${n1.name} 与 ${n2.name} 互相嘲讽夹枪带棒，闹得极其难看。`);
                                 }
                                 
-                                if (n2.stats.health <= 0 && !n2.isDead) {
+                                // ✨ 必须被打成负数才会当场暴毙
+                                if (n2.stats.health < 0 && !n2.isDead) {
                                     n2.isDead = true; n2.rank = "👻折磨致死"; n2.title = "";
-                                    logToChronicle(`【折磨致死】可怜 ${n2.name} 本就体质孱弱，竟生生熬不过这番折磨，咽了气！`);
+                                    logToChronicle(`【当场殒命】可怜 ${n2.name} 本就体质孱弱，竟生生熬不过这番折磨，当场咽了气！`);
                                 }
 
                             } else { 
@@ -2031,6 +2035,41 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 
             showToast(`✨ 神仙造化成功！${target.name} 的命运已被改写！`);
             autoSave(); showConcubineDetail(currentEditNpcIndex); showHaremList();
+        }
+
+        // ✨ 上帝模式：无视AI，强行空降妃嫔
+        function createNewConcubine() {
+            let name = prompt("【特招入宫】\n请输入新妃嫔的姓名（例如：沈眉庄）：");
+            if (!name || name.trim() === "") return;
+            
+            let rank = prompt(`请输入【${name}】的初封位份（例如：贵人）：`, "答应");
+            if (!rank || rank.trim() === "") rank = "答应";
+            
+            let bg = prompt(`请输入【${name}】的家世背景（例如：太医之女）：`, "平民之女");
+            
+            // 随机生成属性
+            let cStats = {}; 
+            ['charm','intel','cunning','dance','needle','luck','charisma'].forEach(k => cStats[k] = Math.floor(Math.random()*10)+1);
+            cStats.health = Math.floor(Math.random()*4) + 6; // 刚入宫初始健康 6-9
+            
+            let perList = ["嚣张跋扈", "温婉可人", "心思深沉", "天真烂漫", "胆小懦弱", "娇纵做作", "清高孤傲", "笑面虎"];
+            let allImages = []; 
+            for (let key in portraitPools) { allImages = allImages.concat(portraitPools[key]); }
+            let img = allImages.length > 0 ? allImages[Math.floor(Math.random() * allImages.length)] : "https://i.postimg.cc/placeholder-flower.jpg";
+            
+            // 强行塞进花名册
+            gameState.harem.push({
+                title: "", rank: rank.trim(), name: name.trim(), bg: bg.trim() || "平民",
+                age: Math.floor(Math.random()*4)+15, favor: 5,
+                personality: perList[Math.floor(Math.random()*perList.length)],
+                affection: 0, stats: cStats, image: img, isTransparent: true, pregnancy: 0, children: [], relations: {}
+            });
+            
+            showToast(`✨ 皇上圣旨到：特招【${name}】入宫，封为【${rank}】！`);
+            if (typeof logToChronicle === 'function') logToChronicle(`【特招入宫】皇上破例下旨，特招 ${bg} ${name} 入宫，初封为 ${rank}。`);
+            
+            autoSave();
+            showHaremList(); // 刷新花名册
         }
 
         function saveWorldbook() { 
