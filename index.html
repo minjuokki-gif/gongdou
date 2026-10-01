@@ -348,11 +348,15 @@
                     <p style="margin:5px 0;"><b>对你好感：</b><span id="cd-affection"></span></p>
                     <div class="al-grid" id="cd-stats-grid" style="background: rgba(255,255,255,0.7);"></div>
                 </div>
-                <div class="al-right">
+                <div class="al-right" style="display:flex; flex-direction:column; align-items:center;">
                     <img id="cd-img" src="" alt="立绘">
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button class="btn-sm" style="background:#ff69b4; color:white; font-weight:bold; padding:5px 10px; border-radius:15px; cursor:pointer;" onclick="cyclePortrait(-1)">◀ 上一张</button>
+                        <button class="btn-sm" style="background:#ff69b4; color:white; font-weight:bold; padding:5px 10px; border-radius:15px; cursor:pointer;" onclick="cyclePortrait(1)">下一张 ▶</button>
+                    </div>
                 </div>
             </div>
-            <button class="close-btn" style="background:#ff8c00; margin-top: 10px; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="editCurrentConcubine()">✏️ 神仙造化 (修改此妃档案/换脸)</button>
+            <button class="close-btn" style="background:#ff8c00; margin-top: 10px; margin-bottom: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" onclick="editCurrentConcubine()">✏️ 神仙造化 (修改此妃档案)</button>
             <button class="close-btn" style="background:#d02090;" onclick="document.getElementById('concubine-detail-modal').classList.remove('active')">返回花名册</button>
         </div>
     </div>
@@ -630,7 +634,12 @@
         ];
 
         const portraitPools = {
-            level0_2: [ "https://i.postimg.cc/z3mTx9VD/shen-gong-qu-xy-insvaas9-938.png" ],
+            level0_2: [ "https://i.postimg.cc/z3mTx9VD/shen-gong-qu-xy-insvaas9-938.png",
+                        "https://i.postimg.cc/VkwPD86B/image-13318.png",
+                        "https://i.postimg.cc/28hfQ6zT/image-9078.png",
+                        "https://i.postimg.cc/qvrHjTRG/image-9292.png",
+                        "https://i.postimg.cc/rwT2QkmN/image-9715.png"
+             ],
             level3_4: [ 
                 "https://i.postimg.cc/MHnYP75D/shen-gong-qu-xy-insvaas9-1439.png",
                 "https://i.postimg.cc/vTN477pq/li-hui-10674.png",
@@ -1605,6 +1614,10 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 if(!res.ok) throw new Error("API连接失败");
                 const json = await res.json();
                 let reply = apiData.provider === 'gemini' ? json.candidates[0].content.parts[0].text : json.choices[0].message.content;
+                
+                // ✨ 终极口癖过滤器：强行删掉所有的“极其”，绝不让它污染剧情历史！
+                reply = reply.replace(/极其/g, "");
+
                 gameState.history.push({role: "assistant", content: reply});
                 
                 parseAndDisplayAI(reply);
@@ -1974,6 +1987,33 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             document.getElementById('concubine-detail-modal').classList.add('active');
         }
 
+        // ✨ 手动切换妃嫔立绘 (左右箭头)
+        function cyclePortrait(dir) {
+            if (currentEditNpcIndex === -1) return;
+            let target = gameState.harem[currentEditNpcIndex];
+            
+            // 把所有图库里的立绘合并成一个大相册
+            let allImages = [];
+            for (let key in portraitPools) { allImages = allImages.concat(portraitPools[key]); }
+            if (allImages.length === 0) return;
+
+            // 找到当前这张图在相册里的位置
+            let currentIndex = allImages.indexOf(target.image);
+            if (currentIndex === -1) currentIndex = 0; // 如果是特殊图找不到，就从第一张开始
+            
+            // 计算下一张/上一张的位置（使用取余数实现无限循环）
+            let nextIndex = (currentIndex + dir + allImages.length) % allImages.length;
+            let newImg = allImages[nextIndex];
+            
+            // 应用新立绘并立刻刷新画面
+            target.image = newImg;
+            target.isTransparent = true; 
+            document.getElementById('cd-img').src = newImg;
+            document.getElementById('cd-img').className = 'al-img-trans';
+            
+            autoSave(); // 自动保存
+        }
+
         // 神仙造化：强行修改妃子数据（一键换脸 + 全属性 + 名字性格 + 强制改位份/生死）
         function editCurrentConcubine() {
             if (currentEditNpcIndex === -1) return;
@@ -2004,15 +2044,6 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             // ✨ 防冷宫诈尸专属：手动改位份
             let newRank = prompt(`【当前位份】：${target.rank}\n强制修改位份（打入冷宫请直接填“冷宫”或“庶人”）：`, target.rank);
             if (newRank !== null && newRank.trim() !== "") target.rank = newRank.trim();
-
-            if (confirm(`【换脸】是否要为 ${target.name} 随机更换一张新立绘？`)) {
-                let allAvailableImages = [];
-                for (let key in portraitPools) { allAvailableImages = allAvailableImages.concat(portraitPools[key]); }
-                if(allAvailableImages.length > 0) {
-                    target.image = allAvailableImages[Math.floor(Math.random() * allAvailableImages.length)];
-                    target.isTransparent = true;
-                }
-            }
 
             let statsStr = `${target.stats.charm},${target.stats.intel},${target.stats.cunning},${target.stats.dance},${target.stats.needle},${target.stats.health},${target.stats.luck},${target.stats.charisma}`;
             let newStatsStr = prompt(`【修改属性】(0-10)\n顺序：容貌,才智,心机,歌舞,女红,体质,福源,魅力\n请用逗号隔开：`, statsStr);
