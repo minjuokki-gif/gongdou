@@ -1338,6 +1338,21 @@
                 }
             }
             gameState.harem.sort((a,b)=>b.favor-a.favor);
+
+            // ✨ 确保所有被暗害/折磨/下药的妃嫔属性严格锁在0~10之间并实时固化
+            gameState.harem.forEach(h => {
+                if(h.stats) {
+                    for(let k in h.stats) {
+                        if (k === 'health') {
+                            // 体质允许负数（负数用于触发病逝），但上限不能超10
+                            h.stats[k] = Math.min(10, h.stats[k]);
+                        } else {
+                            h.stats[k] = Math.max(0, Math.min(10, h.stats[k]));
+                        }
+                    }
+                }
+            });
+            autoSave(); // 强制写入本地存储，防止花名册数据脱节
         
 
         // ✨ 按钮触发的结束本旬 ✨
@@ -1504,6 +1519,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 4. 妃嫔日常与大事件：[更新: 姓名|好感变动|圣宠变动|新位份]（日常波动+/-5以内）。【红牌警告】若妃嫔没犯大错、没有被明确旨意降位或晋升，"新位份"这一栏必须严格留空！例如日常只写：[更新: 姓名|+5|+2|]！只有打入冷宫、或明确贬黜时才填入！赐死/病逝填“死亡”。
 5. 情郎私会雷达：只要玩家与情郎互动，必须输出 [更新: 情郎姓名|好感变动|疑心变动|]。皇上不在场或无证据时疑心不变或微增。
 6. 怀孕与流产：太医诊出有喜或遇害流产，必须加 [怀孕: 姓名] 或 [流产: 姓名]。
+7. 玩家属性变动：若玩家在剧情中调养容颜、练习才艺、刺绣制衣或身患恶疾，必须输出对应标签，例如：[容貌+1]、[体质-1]、[心机+1]、[女红+1]（仅限八维：容貌/才智/心机/歌舞/女红/体质/福源/魅力，单次变动+/-1至2）。
 
 【完美输出示例 1：发生重大惩罚（位分填入）】
 [发言] 旁白：夜幕降临，殿内的烛火摇曳不定，气氛显得格外压抑。
@@ -1662,6 +1678,21 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 document.getElementById('favor-val').innerText = gameState.favor; 
             }
             
+            // ✨ 玩家动态属性解析（逆袭专属：支持 [容貌+1]、[体质-2]、[心机+1] 等）
+            const attrMap = { '容貌': 'charm', '才智': 'intel', '心机': 'cunning', '歌舞': 'dance', '女红': 'needle', '体质': 'health', '福源': 'luck', '魅力': 'charisma' };
+            const statMatchRegex = /\[(容貌\vert{}才智\vert{}心机\vert{}歌舞\vert{}女红\vert{}体质\vert{}福源\vert{}魅力)\s*([+-]\d+)\]/g;
+            let sm;
+            while ((sm = statMatchRegex.exec(cleanText)) !== null) {
+                let attrName = sm[1];
+                let changeVal = parseInt(sm[2]);
+                let statKey = attrMap[attrName];
+                if (statKey && statsConfig[statKey]) {
+                    statsConfig[statKey].v = Math.max(0, Math.min(10, statsConfig[statKey].v + changeVal));
+                    showToast(`✨ 属性变动：${attrName} ${changeVal > 0 ? '+' : ''}${changeVal} (当前: ${statsConfig[statKey].v})`);
+                }
+            }
+            cleanText = cleanText.replace(/\[(容貌\vert{}才智\vert{}心机\vert{}歌舞\vert{}女红\vert{}体质\vert{}福源\vert{}魅力)\s*[+-]\d+\]/g, '');
+
             const rankMatch = cleanText.match(/\[位份\s*[：:]\s*(.*?)\]/);
             if(rankMatch) { 
                 gameState.rank = rankMatch[1].trim(); 
