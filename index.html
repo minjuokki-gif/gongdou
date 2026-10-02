@@ -1679,7 +1679,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             }
             
            // ✨ 玩家动态属性解析（放在最前面，对标天宠逻辑）
-            const attrRegex = /\[(容貌\vert{}才智\vert{}心机\vert{}歌舞\vert{}女红\vert{}体质\vert{}福源\vert{}魅力)\s*([+-]\d+)\]/g;
+            const attrRegex = /\[(容貌|才智|心机|歌舞|女红|体质|福源|魅力)\s*([+-]\d+)\]/g;
             let attrMatch;
             while ((attrMatch = attrRegex.exec(cleanText)) !== null) {
                 let attrName = attrMatch[1];
@@ -1836,7 +1836,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
 
             gameState.harem.sort((a,b)=>b.favor-a.favor);
-            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').trim();
+            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').replace(/\[(容貌|才智|心机|歌舞|女红|体质|福源|魅力)\s*[+-]\d+\]/g, '').trim();
             
             // 🌟 这是你原本没有任何问题的完美正则，绝对不会切乱！
             const chunkRegex = /(?:\[|【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[|【)发言(?:\]|】))|$)/g;
