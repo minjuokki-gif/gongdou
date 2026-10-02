@@ -619,7 +619,11 @@
             { name: "宛转蛾眉", url: "https://i.postimg.cc/FKdD0G8S/li-hui-11743.png" },
             { name: "韶颜稚齿", url: "https://i.postimg.cc/YSGbQ8ZQ/li-hui-11744.png" },
             { name: "步步生莲", url: "https://i.postimg.cc/YSGbQ8ZD/li-hui-8528.png" },
-            { name: "空谷幽兰", url: "https://i.postimg.cc/wBy0DFZ2/li-hui-8531.png" }
+            { name: "空谷幽兰", url: "https://i.postimg.cc/wBy0DFZ2/li-hui-8531.png" },
+            { name: "浅黛微颦", url: "https://i.postimg.cc/QCqxmN3Z/li-hui-10839.png" },
+            { name: "顾盼生辉", url: "https://i.postimg.cc/fW7LDC9n/li-hui-11688.png" },
+            { name: "弱柳扶风", url: "https://i.postimg.cc/wx5vg2mK/li-hui-11689.png" },
+            { name: "暗香疏影", url: "https://i.postimg.cc/Y2N9MRm5/li-hui-11690.png" }
         ];
 
         const empPresets = [
@@ -820,7 +824,7 @@
 
         /* ================= 皇帝系统 ================= */
         function rollEmpAge() { document.getElementById('emp-age-val').innerText = Math.floor(Math.random()*9)+18; } 
-        function rollEmpPersonality() { document.getElementById('emp-personality-val').innerText = ['风流', '刚正', '温柔', '冷漠', '天真'][Math.floor(Math.random()*5)]; }
+function rollEmpPersonality() { document.getElementById('emp-personality-val').innerText = ['风流', '刚正', '温柔', '冷漠', '天真', '傲娇', '腹黑'][Math.floor(Math.random()*7)]; }
         function rollDowagerPersonality() { document.getElementById('dowager-personality-val').innerText = ['精敏', '避世', '擅权', '亲和'][Math.floor(Math.random()*4)]; }
         function rollEmpStats() { document.getElementById('emp-charm-val').innerText=Math.floor(Math.random()*6)+5; document.getElementById('emp-influence-val').innerText=Math.floor(Math.random()*6)+5; document.getElementById('emp-power-val').innerText=Math.floor(Math.random()*6)+5; }
 
@@ -1273,8 +1277,17 @@
                                     }
                                     
                                     if (isDiscovered) {
-                                        n1.rank = "冷宫"; n1.title = ""; n1.favor = 0;
-                                        logToChronicle(`【真相大白】慎刑司彻查毒药案，揪出幕后主使竟是 ${n1.name}！皇上震怒，打入冷宫！`);
+                                        if (pType === "妒芳容") {
+                                            let rankOrder = ["皇后", "皇贵妃", "贵妃", "妃", "嫔", "贵人", "常在", "答应", "官女子"];
+                                            let idx = rankOrder.indexOf(n1.rank);
+                                            if (idx >= 0 && idx < rankOrder.length - 1) n1.rank = rankOrder[idx + 1];
+                                            else if (idx === -1) n1.rank = "答应";
+                                            n1.favor = Math.max(0, n1.favor - 20);
+                                            logToChronicle(`【真相大白】查出在脂粉里下“妒芳容”的主使是 ${n1.name}。皇上斥其拈酸吃醋，降位为 ${n1.rank}！`);
+                                        } else {
+                                            n1.rank = "冷宫"; n1.title = ""; n1.favor = 0; n1.pregnancy = 0;
+                                            logToChronicle(`【真相大白】慎刑司彻查毒药案，揪出幕后主使竟是 ${n1.name}！皇上震怒，打入冷宫！`);
+                                        }
                                     } else {
                                         logToChronicle(`【深宫悬案】此次毒药事件扑朔迷离，慎刑司查了几个替罪太监后不了了之。`);
                                     }
@@ -1490,7 +1503,7 @@
             return `你是《水云间》文字游戏引擎，必须严格遵守响应规则！
 玩家：${gameState.playerName}，家世：${gameState.playerBg}，位份：${gameState.rank}，孕期：${pregText}。
 属性：${statsText}。
-皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：【${empP}】（⚠️极其重要：皇帝所有台词、动作必须100%贴合该性格！刚正绝不偏私，风流极易撩拨，冷漠字字如冰，天真喜怒无常，温柔如沐春风。严禁全部写成千篇一律的温和霸道总裁！）。
+皇帝：${gameState.empName}，年龄：${gameState.empAge}岁，性格：【${empP}】（⚠️极其重要：皇帝所有台词、动作必须100%贴合该性格！刚正绝不偏私，风流极易撩拨，冷漠字字如冰，天真喜怒无常，温柔如沐春风，傲娇口是心非，腹黑笑里藏刀。严禁全部写成千篇一律的温和霸道总裁！）。
 ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 
 【剧情与排版铁律】
@@ -1504,6 +1517,8 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 3. 若为【冷漠】：极度戒备寡言，日常几乎不涨分（+0或+1）；发现算计立刻打入冷宫（-50）。
 4. 若为【温柔】：雨露均沾，易得小恩小惠（+1~+2），不忍重罚，极难给专宠。
 5. 若为【天真】：喜爱活泼烂漫与宫外新奇。情绪化极强，好感随心情大起大落（可能暴涨+8，也可能因无聊掉-5）。
+6. 若为【傲娇】：极好面子，口是心非。明明心里喜欢却爱出言挖苦或故作不屑。涨分通常伴随嘴硬的贬损（+2~+4）；若玩家顺毛捋或给台阶，暗地里狂喜。
+7. 若为【腹黑】：城府极深，笑里藏刀，表面温和实则手段狠辣。喜欢看别人算计落空，也欣赏聪明但受控制的猎物。涨分往往伴随危险的试探（+1~+3）；一旦察觉玩家背叛或超出掌控，绝不留情（-30）。
 
 【天宠增减量化刻度表】
 - 【微波】+1 ~ +2：规矩请安、平淡对话得体。
@@ -1518,7 +1533,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 3. 玩家位份变化：[位份: 新位份]（【红牌警告】未获明确旨意晋升或降位，绝对禁止输出此标签！千万别瞎填！）
 4. 妃嫔日常与大事件：[更新: 姓名|好感变动|圣宠变动|新位份]（日常波动+/-5以内）。【红牌警告】若妃嫔没犯大错、没有被明确旨意降位或晋升，"新位份"这一栏必须严格留空！例如日常只写：[更新: 姓名|+5|+2|]！只有打入冷宫、或明确贬黜时才填入！赐死/病逝填“死亡”。
 5. 情郎私会雷达：只要玩家与情郎互动，必须输出 [更新: 情郎姓名|好感变动|疑心变动|]。皇上不在场或无证据时疑心不变或微增。
-6. 怀孕与流产：太医诊出有喜或遇害流产，必须加 [怀孕: 姓名] 或 [流产: 姓名]。
+6. 怀孕与流产：太医诊出有喜，必须加 [怀孕: 姓名]；遇害流产，必须加 [流产: 姓名]。【特殊情况】若玩家主动在剧情中声称自己提前生下孩子（如神仙点化、仙丹催生等）或已经小产，请立刻顺从玩家的设定，无视实际怀孕月份，直接在结尾输出对应的 [诞下: 性别·名字|玩家] 或 [流产: 玩家]，孕期自会清零！
 7. 玩家属性变动：若玩家在剧情中调养容颜、练习才艺、刺绣制衣或身患恶疾，必须输出对应标签，例如：[容貌+1]、[体质-1]、[心机+1]、[女红+1]（仅限八维：容貌/才智/心机/歌舞/女红/体质/福源/魅力，单次变动+/-1至2）。
 
 【完美输出示例 1：发生重大惩罚（位分填入）】
@@ -1688,7 +1703,11 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 
                 if (statKey && statsConfig[statKey]) {
                     statsConfig[statKey].v = Math.max(0, Math.min(10, statsConfig[statKey].v + val));
-                    showToast(`✨ 洗髓伐骨：${attrName} ${val > 0 ? '+' : ''}${val} (当前值: ${statsConfig[statKey].v})`);
+                    // 🌟 核心修复：必须同时写进 gameState 这个真正拿来保存和读档的变量里！
+                    if (!gameState.playerStats) gameState.playerStats = {};
+                    gameState.playerStats[statKey] = { v: statsConfig[statKey].v };
+                    
+                    showToast(`✨ 洗髓伐骨：${attrName} ${val > 0 ? '+' : ''}${val}`);
                 }
             }
 
@@ -1732,6 +1751,24 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                         if(t.infertile) { showToast(`❌ 太医误诊：${t.name} 已珠胎难结，无法受孕！`); }
                         else { t.pregnancy = 1; showToast(`🌸 喜报：${t.name} 有喜了！`); }
                     } 
+                }
+            }
+
+            // ✨ 修复：补充原本漏掉的流产解析逻辑！
+            const miscarriageMatch = cleanText.match(/\[流产\s*[：:]\s*(.*?)\]/);
+            if (miscarriageMatch) {
+                let pName = miscarriageMatch[1].trim();
+                if (pName === '玩家' || pName.includes(gameState.playerName)) {
+                    gameState.pregnancy = 0; // 孕期清零
+                    showToast("🥀 悲报：娘娘不幸小产，痛失龙裔...");
+                    if (typeof logToChronicle === 'function') logToChronicle(`【不幸小产】玩家未能保住龙脉，不幸小产。`);
+                } else {
+                    let t = gameState.harem.find(h => h.name.includes(pName));
+                    if (t) {
+                        t.pregnancy = 0; // 妃嫔孕期清零
+                        showToast(`🥀 悲报：${t.name} 不幸小产...`);
+                        if (typeof logToChronicle === 'function') logToChronicle(`【不幸小产】${t.title||""}${t.rank} ${t.name} 未能保住龙脉，不幸小产。`);
+                    }
                 }
             }
 
@@ -1949,9 +1986,12 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             document.getElementById('player-preg-val').innerText = gameState.pregnancy > 0 ? `怀孕${gameState.pregnancy}月` : "无";
             document.getElementById('player-child-val').innerText = gameState.children.length > 0 ? gameState.children.join("、") : "无";
             
+            // 🌟 核心修复：每次打开档案，强行把 gameState 里的最新属性扒出来渲染！
             const grid = document.getElementById('modal-stats-grid'); grid.innerHTML = '';
             for(let k in statsConfig) {
-                grid.innerHTML += `<div>${getAncientAttr(k, statsConfig[k].v)}</div>`;
+                // 如果存档里有新值，就用新值；没有就用 statsConfig 的值
+                let currentVal = (gameState.playerStats && gameState.playerStats[k]) ? gameState.playerStats[k].v : statsConfig[k].v;
+                grid.innerHTML += `<div>${getAncientAttr(k, currentVal)}</div>`;
             }
             
             document.getElementById('favor-val').innerText = gameState.favor; 
