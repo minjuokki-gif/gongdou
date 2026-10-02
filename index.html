@@ -1678,20 +1678,19 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 document.getElementById('favor-val').innerText = gameState.favor; 
             }
             
-            // ✨ 玩家动态属性解析（逆袭专属：支持 [容貌+1]、[体质-2]、[心机+1] 等）
-            const attrMap = { '容貌': 'charm', '才智': 'intel', '心机': 'cunning', '歌舞': 'dance', '女红': 'needle', '体质': 'health', '福源': 'luck', '魅力': 'charisma' };
-            const statMatchRegex = /\[(容貌\vert{}才智\vert{}心机\vert{}歌舞\vert{}女红\vert{}体质\vert{}福源\vert{}魅力)\s*([+-]\d+)\]/g;
-            let sm;
-            while ((sm = statMatchRegex.exec(cleanText)) !== null) {
-                let attrName = sm[1];
-                let changeVal = parseInt(sm[2]);
-                let statKey = attrMap[attrName];
+           // ✨ 玩家动态属性解析（放在最前面，对标天宠逻辑）
+            const attrRegex = /\[(容貌\vert{}才智\vert{}心机\vert{}歌舞\vert{}女红\vert{}体质\vert{}福源\vert{}魅力)\s*([+-]\d+)\]/g;
+            let attrMatch;
+            while ((attrMatch = attrRegex.exec(cleanText)) !== null) {
+                let attrName = attrMatch[1];
+                let val = parseInt(attrMatch[2]);
+                let statKey = { '容貌':'charm', '才智':'intel', '心机':'cunning', '歌舞':'dance', '女红':'needle', '体质':'health', '福源':'luck', '魅力':'charisma' }[attrName];
+                
                 if (statKey && statsConfig[statKey]) {
-                    statsConfig[statKey].v = Math.max(0, Math.min(10, statsConfig[statKey].v + changeVal));
-                    showToast(`✨ 属性变动：${attrName} ${changeVal > 0 ? '+' : ''}${changeVal} (当前: ${statsConfig[statKey].v})`);
+                    statsConfig[statKey].v = Math.max(0, Math.min(10, statsConfig[statKey].v + val));
+                    showToast(`✨ 洗髓伐骨：${attrName} ${val > 0 ? '+' : ''}${val} (当前值: ${statsConfig[statKey].v})`);
                 }
             }
-            cleanText = cleanText.replace(/\[(容貌\vert{}才智\vert{}心机\vert{}歌舞\vert{}女红\vert{}体质\vert{}福源\vert{}魅力)\s*[+-]\d+\]/g, '');
 
             const rankMatch = cleanText.match(/\[位份\s*[：:]\s*(.*?)\]/);
             if(rankMatch) { 
