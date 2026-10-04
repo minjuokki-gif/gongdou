@@ -59,6 +59,7 @@
         #gameplay-screen { padding: 0; background-size: cover; background-position: center; position: relative; transition: background-image 1s ease-in-out; overflow: hidden; } 
         
         .game-time-display { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); color: white; padding: 6px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 2px solid #ffd700; box-shadow: 0 0 10px rgba(255,215,0,0.5); z-index: 50;}
+        .game-money-display { position: absolute; top: 60px; right: 20px; background: rgba(0,0,0,0.6); color: #98fb98; padding: 6px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; border: 2px solid #3cb371; box-shadow: 0 0 10px rgba(60,179,113,0.5); z-index: 50;}
         .loc-display { position: absolute; top: 115px; left: 20px; color: white; text-shadow: 1px 1px 3px black; font-weight: bold; font-size: 15px; z-index: 50; background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 15px; }
 
         /* 📸 ✨ 双人同屏：最大化立绘防遮挡排版 ✨ 📸 */
@@ -245,6 +246,7 @@
         <button class="back-btn" id="leave-scene-btn" style="position:absolute; top:75px; left:20px; z-index:50;" onclick="showMap()">‹ 离开当前场景</button>
         <div class="loc-display" id="loc-display">当前位置：皇帝正殿</div>
         <div class="game-time-display" id="game-time">入宫1年1月 上旬</div>
+        <div class="game-money-display" id="game-money">银两：0</div>
         
         <img id="player-trans-ingame" class="portrait-trans player-pos-trans" src="">
         <img id="player-framed-ingame" class="portrait-framed player-pos-framed" src="">
@@ -620,10 +622,12 @@
             { name: "韶颜稚齿", url: "https://i.postimg.cc/YSGbQ8ZQ/li-hui-11744.png" },
             { name: "步步生莲", url: "https://i.postimg.cc/YSGbQ8ZD/li-hui-8528.png" },
             { name: "空谷幽兰", url: "https://i.postimg.cc/wBy0DFZ2/li-hui-8531.png" },
-            { name: "浅黛微颦", url: "https://i.postimg.cc/QCqxmN3Z/li-hui-10839.png" },
-            { name: "顾盼生辉", url: "https://i.postimg.cc/fW7LDC9n/li-hui-11688.png" },
-            { name: "弱柳扶风", url: "https://i.postimg.cc/wx5vg2mK/li-hui-11689.png" },
-            { name: "暗香疏影", url: "https://i.postimg.cc/Y2N9MRm5/li-hui-11690.png" }
+            { name: "幽境孤芳", url: "https://i.postimg.cc/Gpcb2PF1/0-sheng-qi-2026feng-yue-shu-jian-xian-shi-di-er-ge-bu-chang-gu-nu-li-hui.png" },
+            { name: "绯梦幽思", url: "https://i.postimg.cc/J4krdz7M/0-sheng-qi-2026feng-yue-shu-jian-xian-shi-bu-chang-li-hui-er.png" },
+            { name: "幽蓝若梦", url: "https://i.postimg.cc/bw0zpVt8/0-sheng-qi-2026feng-yue-shu-jian-xian-shi-bu-chang-li-hui-er-lan.png" },
+            { name: "清幽蒙纱", url: "https://i.postimg.cc/W1cNRctr/04zheng-pin-nu-qing-you-bi-yu.png" },
+            { name: "碧玉无暇", url: "https://i.postimg.cc/GmnL0n9G/04zheng-pin-nu-qing-you-bi-yu-wu-mian-sha.png" },
+            { name: "芭比风华", url: "https://i.postimg.cc/0yG8PXJL/barbie-bu-chang.png" }
         ];
 
         const empPresets = [
@@ -1015,6 +1019,15 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                     if(pImg) { pImg.src = gameState.playerAvatar; pImg.style.display = 'block'; }
                 }
                 
+            // ✨ 银两系统：根据家世决定初始资金（商贾最有钱，平民最穷）
+                if(gameState.playerBg.includes("商")) gameState.money = 2000;
+                else if(gameState.playerBg.match(/太师|太傅|太保|总督|巡抚|尚书/)) gameState.money = 1000;
+                else if(gameState.playerBg.match(/知府|大理寺/)) gameState.money = 500;
+                else if(gameState.playerBg.match(/平民|贡女|孤女|农户/)) gameState.money = 50;
+                else gameState.money = 200;
+                document.getElementById('game-money').innerText = `银两：${gameState.money}`;
+                
+
                 updateTimeDisplay();
                 document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["皇帝正殿"]}')`;
                 switchScreen('gameplay-screen');
@@ -1114,7 +1127,16 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                 if(gameState.month > 12) { gameState.year++; gameState.month = 1; }
                 if(gameState.pregnancy > 0) { gameState.pregnancy++; if(gameState.pregnancy >= 10) gameState.pregnancy = 10; }
                 gameState.harem.forEach(h => { if(h.pregnancy > 0) { h.pregnancy++; if(h.pregnancy >= 10) h.pregnancy = 10; } });
+                
+                // ✨ 银两系统：月底内务府按位份发工资
+                let salaryMap = {"皇后": 500, "皇贵妃": 400, "贵妃": 300, "妃": 200, "嫔": 100, "贵人": 50, "常在": 30, "答应": 20, "官女子": 10};
+                let salary = salaryMap[gameState.rank] || 20;
+                if(gameState.money === undefined) gameState.money = 0;
+                gameState.money += salary;
+                logToChronicle(`【内务府发薪】本月内务府按例发放月俸，娘娘领到 ${salary} 两银子。`);
+                if(document.getElementById('game-money')) document.getElementById('game-money').innerText = `银两：${gameState.money}`;
             }
+            
             updateTimeDisplay();
 
             if (!gameState.chronicles) gameState.chronicles = [];
@@ -1426,7 +1448,7 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                 ];
             }
             let bgList = Object.keys(bgMap).join("、");
-            let statsText = ""; for(let k in statsConfig) statsText += `${statsConfig[k].name}:${statsConfig[k].v} `;
+            let statsText = `银两:${gameState.money}两 `; for(let k in statsConfig) statsText += `${statsConfig[k].name}:${statsConfig[k].v} `;
             const empP = gameState.empPersonality || document.getElementById('emp-personality-val').innerText;
             const pregText = gameState.pregnancy === 0 ? "无" : `怀孕${gameState.pregnancy}个月`;
             const wbText = gameState.worldbook ? `【世界书】\n${gameState.worldbook}\n` : "";
@@ -1535,6 +1557,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 5. 情郎私会雷达：只要玩家与情郎互动，必须输出 [更新: 情郎姓名|好感变动|疑心变动|]。皇上不在场或无证据时疑心不变或微增。
 6. 怀孕与流产：太医诊出有喜，必须加 [怀孕: 姓名]；遇害流产，必须加 [流产: 姓名]。【特殊情况】若玩家主动在剧情中声称自己提前生下孩子（如神仙点化、仙丹催生等）或已经小产，请立刻顺从玩家的设定，无视实际怀孕月份，直接在结尾输出对应的 [诞下: 性别·名字|玩家] 或 [流产: 玩家]，孕期自会清零！
 7. 玩家属性变动：若玩家在剧情中调养容颜、练习才艺、刺绣制衣或身患恶疾，必须输出对应标签，例如：[容貌+1]、[体质-1]、[心机+1]、[女红+1]（仅限八维：容貌/才智/心机/歌舞/女红/体质/福源/魅力，单次变动+/-1至2）。
+8. 金钱变动：若玩家在剧情中买卖物品、打赏宫人、贿赂太监、或受皇上赏银等，必须在结尾输出 [银两+X] 或 [银两-X] 标签。当前银两：${gameState.money} 两。绝不能把银两扣成负数！
 
 【完美输出示例 1：发生重大惩罚（位分填入）】
 [发言] 旁白：夜幕降临，殿内的烛火摇曳不定，气氛显得格外压抑。
@@ -1710,6 +1733,17 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                     showToast(`✨ 洗髓伐骨：${attrName} ${val > 0 ? '+' : ''}${val}`);
                 }
             }
+ 
+            // ✨ 解析银两变动
+            const moneyRegex = /\[银两\s*([+-]\d+)\]/g;
+            let moneyMatch;
+            while ((moneyMatch = moneyRegex.exec(cleanText)) !== null) {
+                let val = parseInt(moneyMatch[1]);
+                if(gameState.money === undefined) gameState.money = 0;
+                gameState.money = Math.max(0, gameState.money + val);
+                showToast(`💰 钱财变动：银两 ${val > 0 ? '+' : ''}${val} (当前剩余：${gameState.money}两)`);
+                if(document.getElementById('game-money')) document.getElementById('game-money').innerText = `银两：${gameState.money}`;
+            }
 
             const rankMatch = cleanText.match(/\[位份\s*[：:]\s*(.*?)\]/);
             if(rankMatch) { 
@@ -1873,7 +1907,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
 
             gameState.harem.sort((a,b)=>b.favor-a.favor);
-            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').replace(/\[(容貌|才智|心机|歌舞|女红|体质|福源|魅力)\s*[+-]\d+\]/g, '').trim();
+            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').replace(/\[(容貌|才智|心机|歌舞|女红|体质|福源|魅力)\s*[+-]\d+\]/g, '').trim().replace(/\[银两\s*[+-]\d+\]/g, '');
             
             // 🌟 这是你原本没有任何问题的完美正则，绝对不会切乱！
             const chunkRegex = /(?:\[|【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[|【)发言(?:\]|】))|$)/g;
