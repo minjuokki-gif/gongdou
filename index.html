@@ -1600,10 +1600,42 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 }
             }
             
-            if(/翌日|次日|第二天|转眼|下一旬|十天后|半个月后|几天后/.test(text)) {
+            // --- 👇 全新：支持大规模时间跨度跳跃引擎 👇 ---
+            let skipMonths = 0;
+            // 智能识别：X年后、半年后、X个月后
+            let mYear = text.match(/([一二三四五六七八九十两几\d]+)年(?:之)?后/);
+            let mHalfYear = text.match(/半年(?:之)?后/);
+            let mMonth = text.match(/([一二三四五六七八九十两几\d]+)个?月(?:之)?后/);
+
+            if (mYear || mHalfYear || mMonth) {
+                const cnNums = {'一':1, '二':2, '两':2, '三':3, '四':4, '五':5, '六':6, '七':7, '八':8, '九':9, '十':10, '几':3};
+                if(mYear) {
+                    let y = parseInt(mYear[1]); if(isNaN(y)) y = cnNums[mYear[1]] || 1;
+                    skipMonths += y * 12;
+                }
+                if(mHalfYear) skipMonths += 6;
+                if(mMonth) {
+                    let m = parseInt(mMonth[1]); if(isNaN(m)) m = cnNums[mMonth[1]] || 1;
+                    skipMonths += m;
+                }
+                
+                if (skipMonths > 0) {
+                    if (skipMonths > 36) skipMonths = 36; // 限制单次最多跳跃 3 年（防浏览器卡死）
+                    let loops = skipMonths * 3; // 每个月 3 旬
+                    
+                    // 让沙盒引擎在后台狂奔
+                    for(let i = 0; i < loops; i++) {
+                        advanceTimeAndRunSandbox();
+                    }
+                    
+                    contentText = `[系统强制指令：光阴似箭，已直接跳过 ${skipMonths} 个月。现为入宫${gameState.year}年${gameState.month}月。请在开头用一两句话简要带过这几个月里的岁月流逝（如季节更替、或安稳度日），然后顺接玩家现在的动作！] 玩家：` + text;
+                    showToast(`⏳ 光阴似箭，系统在后台为您飞速演算了 ${skipMonths} 个月...`);
+                }
+            } else if(/翌日|次日|第二天|转眼|下一旬|十天后|半个月后|几天后/.test(text)) {
                 advanceTimeAndRunSandbox(); 
                 contentText = `[系统：时间流转，现为${periods[gameState.period]}] 玩家：` + text;
             } 
+            // --- 👆 全新：支持大规模时间跨度跳跃引擎 👆 --- 
             
             if(/去|前往|回|到|离开|移步/.test(text)) {
                 contentText += " 【系统强制指令：检测到玩家发生移动，请根据语境，务必在回复的最后单独一行加上对应的 [背景: 场景名] 标签！】";
