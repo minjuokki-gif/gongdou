@@ -1696,6 +1696,18 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 
         function parseAndDisplayAI(text) {
             let cleanText = text;
+            
+            // ✨ 修复 1：强制褫夺封号判定
+            if(gameState.harem) {
+                gameState.harem.forEach(h => {
+                    if (h.title && (cleanText.includes("褫夺") || cleanText.includes("废除封号") || cleanText.includes("撤去封号"))) {
+                        // 确认 AI 骂的是不是这个人
+                        if (cleanText.includes(h.name) || cleanText.includes(h.title)) {
+                            h.title = ""; 
+                        }
+                    }
+                });
+            }
             const favorMatch = cleanText.match(/\[天宠\s*([+-]\d+)\]/);
             if(favorMatch) { 
                 let addFav = parseInt(favorMatch[1]);
