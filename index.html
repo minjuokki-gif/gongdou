@@ -629,7 +629,9 @@
             { name: "碧玉无暇", url: "https://i.postimg.cc/GmnL0n9G/04zheng-pin-nu-qing-you-bi-yu-wu-mian-sha.png" },
             { name: "芭比风华", url: "https://i.postimg.cc/0yG8PXJL/barbie-bu-chang.png" },
             { name: "玉容凝睇", url: "https://i.postimg.cc/0yxS5mvK/ban-shen-bai-fa-hei-jin-ku-ku-qing-you-zhong-hui-gu-nu-li-hui.png" },
-            { name: "敛眸幽思", url: "https://i.postimg.cc/N0xSmz4s/zheng-pin-san-diao-se-huan-lian-bi-yan.png" }
+            { name: "敛眸幽思", url: "https://i.postimg.cc/N0xSmz4s/zheng-pin-san-diao-se-huan-lian-bi-yan.png" },
+            { name: "清雅幽韵", url: "https://i.postimg.cc/cHGQTM0Z/image-1584.png" },
+            { name: "明媚娇妍", url: "https://i.postimg.cc/zBYnpS8J/image-1592.png" }
         ];
 
         const empPresets = [
@@ -687,7 +689,11 @@
                 "https://i.postimg.cc/zDdWdTZp/0sheng-qi-03zheng-pin-nu-dan-wu-wan-gao.png",
                 "https://i.postimg.cc/NGNTNRq2/0sheng-qi-06zheng-pin-nu-dou-niang-wan-gao.png",
                 "https://i.postimg.cc/Wp9r90Ln/0sheng-qi-07zheng-pin-nu-ying-zun-wan-gao.png",
-                "https://i.postimg.cc/NGNTNRqr/0sheng-qi-08zheng-pin-nu-zhi-wei-wan-gao.png"
+                "https://i.postimg.cc/NGNTNRqr/0sheng-qi-08zheng-pin-nu-zhi-wei-wan-gao.png",
+                "https://i.postimg.cc/GhwZY6ZM/image-0895.png",
+                "https://i.postimg.cc/fTc1vBNB/image-0977.png",
+                "https://i.postimg.cc/rF179Qkf/image-0985.png",
+                "https://i.postimg.cc/65rFhYXH/image-1319.png"
             ]
         };
         const allMaidPortraits = [
@@ -841,13 +847,20 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
             let h = [];
             let tempPools = JSON.parse(JSON.stringify(portraitPools));
             
-            // 👇 强插固定VIP：皇后 朴敏珠
+            // 👇 强插固定VIP：皇后 朴敏珠 (四套绝美高定随机换装)
+            const minjuOutfits = [
+                "https://i.postimg.cc/xdKH4J64/huang-hou-min-zhu-zi-yi.png", // 紫衣
+                "https://i.postimg.cc/XJbKjcZn/huang-hou-min-zhu-hong-yi.png", // 红衣
+                "https://i.postimg.cc/D0fqsvPV/huang-hou-min-zhu-hei-bai.png", // 黑白
+                "https://i.postimg.cc/YSgfByCG/huang-hou-min-zhu-hei-jin.png"  // 黑金
+            ];
+            
             h.push({
                 title: "", rank: "皇后", name: "朴敏珠", bg: "太后本家嫡女",
                 age: 22, favor: 15, 
                 personality: "温软避世(渴望自由，唯独对玩家深情)", affection: 100, 
                 stats: {charm:9, intel:8, cunning:3, dance:7, needle:8, health:4, luck:6, charisma:10}, 
-                image: "https://i.postimg.cc/4N0Wk7CG/gui-fei-min-zhu.png", 
+                image: minjuOutfits[Math.floor(Math.random() * minjuOutfits.length)], 
                 isTransparent: true, pregnancy: 0, children: []
             });
             
@@ -1517,7 +1530,7 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
             let extraRules = "";
             extraRules += `【核心设定】玩家有两名忠心耿耿的贴身大宫女，名叫【${gameState.playerMaids[0].name}】和【${gameState.playerMaids[1].name}】，涉及宫女剧情时必须使用她们的名字互动。\n`;
             extraRules += "【红牌警告】国师【司星沉】双腿残疾，永远只能坐轮椅！严禁对他使用站立、走动、迈步等腿部动作描写！\n";
-            extraRules += "【核心设定】皇后朴敏珠是太后族亲，潜邸时便是福晋，但与皇帝毫无感情、相敬如宾。她性子温软、不参与宫斗、极度渴望宫墙外的自由。最重要的是，她是女同，唯独对玩家充满极致的温柔与爱意。\n";
+            extraRules += `【核心设定】皇后朴敏珠是太后族亲，潜邸时便是福晋，但与皇帝毫无感情、相敬如宾。她性子温软、不参与宫斗、极度渴望宫墙外的自由。最重要的是，她是女同，唯独对玩家充满极致的温柔与爱意。重点：她有四套绝美常服：【紫衣】、【红衣】、【黑白华服】、【黑金锦袍】。只要本次剧情她有出场，请你（AI）自行随机挑选一套，并在剧情描写中自然点明她身上穿的颜色！\n`;
             extraRules += "【红牌警告：严禁霸王硬上弓】无论NPC对玩家好感多高，严禁主动描写任何直接的性行为或强迫侍寝！必须发乎情止乎礼。只有在玩家主动勾引或同意后才可顺水推舟。\n";
             extraRules += "【红牌警告：情绪稳定与合理宫斗】皇上和高位妃嫔必须保持上位者的体面与情绪稳定！严禁动辄暴怒让人“滚”或滥用极刑(如拔舌、杖毙)。惩罚必须与错误匹配，保留妃嫔人权！\n";
             
@@ -1731,6 +1744,17 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
         function parseAndDisplayAI(text) {
             let cleanText = text;
             
+            // ✨ 动态捕捉皇后穿搭：AI 写了啥颜色，UI 就立刻换啥图！
+            if (cleanText.includes("朴敏珠") || cleanText.includes("皇后")) {
+                let minju = gameState.harem.find(h => h.name === "朴敏珠");
+                if (minju) {
+                    if (cleanText.includes("紫衣") || cleanText.includes("紫")) minju.image = "https://i.postimg.cc/xdKH4J64/huang-hou-min-zhu-zi-yi.png";
+                    else if (cleanText.includes("红衣") || cleanText.includes("红")) minju.image = "https://i.postimg.cc/XJbKjcZn/huang-hou-min-zhu-hong-yi.png";
+                    else if (cleanText.includes("黑白")) minju.image = "https://i.postimg.cc/D0fqsvPV/huang-hou-min-zhu-hei-bai.png";
+                    else if (cleanText.includes("黑金") || cleanText.includes("金")) minju.image = "https://i.postimg.cc/YSgfByCG/huang-hou-min-zhu-hei-jin.png";
+                }
+            }
+
             // ✨ 修复 1：强制褫夺封号判定
             if(gameState.harem) {
                 gameState.harem.forEach(h => {
