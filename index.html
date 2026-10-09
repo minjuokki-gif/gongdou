@@ -151,6 +151,7 @@
     </div>
     <div class="menu-dropdown" id="menu-dropdown">
         <div class="menu-item" onclick="clearSaveAndRestart()" style="color: #ff4500; font-weight:bold;">☠️ 重启入宫 (删档重来)</div>
+        <div class="menu-item" onclick="forceRestoreSave()" style="color: #00bcd4; font-weight:bold;">🚑 修复/回到上次进度</div>
         <div class="menu-item" id="menu-stats-btn" style="display:none;" onclick="showPlayerStats()">查看我的档案</div>
         <div class="menu-item" id="menu-harem-btn" style="display:none; color: #d02090;" onclick="showHaremList()">后宫花名册</div>
         <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="openWorldbook()">世界书设定</div>
@@ -1393,7 +1394,10 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                             n1.relations[n2.name] = relScore;
                             n2.relations[n1.name] = relScore;
                         }
-                        
+                    }
+                }
+            }
+
             gameState.harem.sort((a,b)=>b.favor-a.favor);
 
             // ✨ 确保所有被暗害/折磨/下药的妃嫔属性严格锁在0~10之间并实时固化
@@ -1410,7 +1414,25 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                 }
             });
             autoSave(); // 强制写入本地存储，防止花名册数据脱节
-        
+        }
+
+        // 🚑 救命按钮：手动强行恢复上次游玩进度与对话
+        function forceRestoreSave() {
+            const saved = localStorage.getItem('palace_auto_save');
+            if (!saved) {
+                alert("⚠️ 手机浏览器本地未检测到存档！若之前导出过文件，请点菜单中的【📂 导入存档】。");
+                return;
+            }
+            try {
+                autoLoad();
+                switchScreen('gameplay-screen');
+                const dropdown = document.getElementById('menu-dropdown');
+                if (dropdown) dropdown.classList.remove('active');
+                showToast("🚑 修复成功！已回到上次游玩进度！");
+            } catch(err) {
+                alert("读取存档出错：" + err.message);
+            }
+        }
 
         // ✨ 按钮触发的结束本旬 ✨
         async function endDay() {
