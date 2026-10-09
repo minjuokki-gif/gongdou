@@ -1242,151 +1242,158 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                             if (!n1.relations) n1.relations = {}; if (!n2.relations) n2.relations = {};
                             let relScore = n1.relations[n2.name] || 0;
                             
+                            // 动态初始化倾向
+                            if(n1.tendency === undefined) n1.tendency = { "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[n1.personality] || 25;
+                            if(n1.rank === "皇后") n1.tendency = 0;
+                            
                             let rankW = {"皇后":1,"皇贵妃":2,"贵妃":3,"妃":4,"嫔":5,"贵人":6,"常在":7,"答应":8,"官女子":9};
                             let r1 = rankW[n1.rank] || 10; let r2 = rankW[n2.rank] || 10;
-                            let diff = n1.stats.cunning - n2.stats.cunning;
                             let isDiscovered = Math.random() > (n1.stats.cunning * 0.1); 
 
-                            let isHostile = (relScore <= -10) || (Math.random() < 0.30); // 稍微降点火气
+                            // ✨ 核心修复：取消无差别攻击！好感>=10是真朋友，绝不互害。
+                            let isHostile = (relScore <= -5); // 负数才是真仇人
+                            let isMinorFriction = (relScore > -5 && relScore < 10) && (Math.random() < 0.15); // 路人只有15%概率起小摩擦
                             
-                            if (isHostile) {
-                                let rand = Math.random();
-                                relScore -= 15; 
+                            // 只有交恶，或者路人起摩擦，才进入冲突判定
+                            if (isHostile || isMinorFriction) {
+                                // ✨ 倾向骰子判定：必须是真仇人(isHostile)，且骰子点数小于她的倾向值，才会下死手！
+                                let willHarm = isHostile && ((Math.random() * 100) < n1.tendency);
                                 
-                                if (rand < 0.05) {  // 降低扎小人、推落水的概率
-                                    let extremeEvents = ["扎小人", "推落水", "假孕"];
-                                    let exType = extremeEvents[Math.floor(Math.random() * extremeEvents.length)];
+                                if (willHarm) {
+                                    let rand = Math.random();
+                                    relScore -= 15; 
                                     
-                                    if (exType === "假孕") {
-                                        if (isDiscovered || n1.stats.cunning < 6) {
-                                            n1.rank = "冷宫"; n1.title = ""; n1.favor = 0; n1.pregnancy = 0;
-                                            logToChronicle(`【假孕争宠】${n1.name} 胆大包天假装遇喜，被太医院拆穿！此乃欺君，立刻褫夺封号打入冷宫！`);
-                                        } else {
-                                            n1.favor = Math.min(100, n1.favor + 20); n1.pregnancy = 1; 
-                                            logToChronicle(`【假孕蒙混】${n1.name} 买通太医谎称有孕，皇上大喜，赏赐流水般送入宫中！`);
-                                        }
-                                    } else if (exType === "推落水") {
-                                        let success = n1.stats.cunning >= n2.stats.cunning || Math.random() < 0.4;
-                                        if (success) {
-                                            n2.stats.health -= 4;
-                                            logToChronicle(`【推人落水】太液池边突发意外，${n2.name} 被人暗中推下水，受惊高烧不退（体质-4）。`);
-                                            if (isDiscovered) {
-                                                n1.rank = "答应"; n1.favor = Math.max(0, n1.favor - 30);
-                                                logToChronicle(`【真相大白】有扫地太监作证是 ${n1.name} 伸的手！皇上震怒，将其降为答应。`);
-                                            }
-                                        } else {
-                                            logToChronicle(`【落水未遂】${n1.name} 试图推 ${n2.name} 下太液池，被对方敏捷躲过。`);
-                                        }
-                                    } else if (exType === "扎小人") {
-                                        if (isDiscovered) {
-                                            n1.rank = "冷宫"; n1.title = ""; n1.favor = 0;
-                                            logToChronicle(`【巫蛊之祸】内务府在 ${n1.name} 宫中搜出写着 ${n2.name} 生辰八字的木偶！直接打入冷宫！`);
-                                        } else {
-                                            n2.stats.luck = Math.max(0, n2.stats.luck - 3); n2.stats.health -= 2;
-                                            logToChronicle(`【巫蛊咒魇】${n1.name} 深夜扎小人咒骂 ${n2.name}。这几日 ${n2.name} 噩梦连连（福源、体质下降）。`);
-                                        }
-                                    }
-                                } else if (rand < 0.12) { // 大幅降低下毒的触发频率，别天天死人
-                                    let poisonTypes = ["鹤顶红", "妒芳容"];
-                                    if (n2.pregnancy > 0) poisonTypes.push("红花汤"); 
-                                    let pType = poisonTypes[Math.floor(Math.random() * poisonTypes.length)];
-                                    
-                                    let isSuccess = (n1.stats.cunning >= n2.stats.cunning) || (Math.random() < 0.3); 
-                                    
-                                    if (isSuccess) { 
-                                        if (pType === "鹤顶红") {
-                                            if (Math.random() < 0.5 || n2.stats.health >= 7) { 
-                                                n2.stats.health -= 4; // 鹤顶红没死，猛掉体质
-                                                logToChronicle(`【惊险生还】${n2.name} 误食“鹤顶红”，所幸太医抢救及时捡回一命，但气血大损 (体质-4)！`);
+                                    if (rand < 0.05) {  
+                                        let extremeEvents = ["扎小人", "推落水", "假孕"];
+                                        let exType = extremeEvents[Math.floor(Math.random() * extremeEvents.length)];
+                                        
+                                        if (exType === "假孕") {
+                                            if (isDiscovered || n1.stats.cunning < 6) {
+                                                n1.rank = "庶人"; n1.title = ""; n1.favor = 0; n1.pregnancy = 0;
+                                                logToChronicle(`【假孕争宠】${n1.name} 胆大包天假装遇喜，被太医院拆穿！此乃欺君，立刻褫夺封号废为庶人！`);
                                             } else {
-                                                n2.stats.health = 0; n2.isDead = true; n2.rank = "👻毒发"; n2.title = "";
-                                                logToChronicle(`【恶毒命案】${n2.name} 饮汤后七窍流血暴毙，太医验尸惊觉所中之毒乃“鹤顶红”！`);
+                                                n1.favor = Math.min(100, n1.favor + 20); n1.pregnancy = 1; 
+                                                logToChronicle(`【假孕蒙混】${n1.name} 买通太医谎称有孕，皇上大喜，赏赐流水般送入宫中！`);
                                             }
-                                        } else if (pType === "妒芳容") {
-                                            n2.stats.charm = Math.max(0, n2.stats.charm - 1); // ✨ 修复：毁容只减1点
-                                            logToChronicle(`【容颜受损】${n2.name} 误用掺了“妒芳容”的脂粉，容颜微损（容貌-1）。`);
-                                        } else if (pType === "红花汤") {
-                                            n2.pregnancy = 0; n2.infertile = true; n2.stats.health -= 3;
-                                            logToChronicle(`【滑胎绝育】${n2.name} 误食“红花汤”凄惨小产，伤了根本，日后【珠胎难结】！`);
+                                        } else if (exType === "推落水") {
+                                            let success = n1.stats.cunning >= n2.stats.cunning || Math.random() < 0.4;
+                                            if (success) {
+                                                n2.stats.health -= 4;
+                                                logToChronicle(`【推人落水】太液池边突发意外，${n2.name} 被人暗中推下水，受惊高烧不退（体质-4）。`);
+                                                if (isDiscovered) {
+                                                    n1.rank = "答应"; n1.favor = Math.max(0, n1.favor - 30);
+                                                    logToChronicle(`【真相大白】有扫地太监作证是 ${n1.name} 伸的手！皇上震怒，将其降为答应。`);
+                                                }
+                                            } else {
+                                                logToChronicle(`【落水未遂】${n1.name} 试图推 ${n2.name} 下太液池，被对方敏捷躲过。`);
+                                            }
+                                        } else if (exType === "扎小人") {
+                                            if (isDiscovered) {
+                                                n1.rank = "庶人"; n1.title = ""; n1.favor = 0;
+                                                logToChronicle(`【巫蛊之祸】内务府在 ${n1.name} 宫中搜出写着 ${n2.name} 生辰八字的木偶！直接废为庶人打入冷宫！`);
+                                            } else {
+                                                n2.stats.luck = Math.max(0, n2.stats.luck - 3); n2.stats.health -= 2;
+                                                logToChronicle(`【巫蛊咒魇】${n1.name} 深夜扎小人咒骂 ${n2.name}。这几日 ${n2.name} 噩梦连连（福源、体质下降）。`);
+                                            }
+                                        }
+                                    } else if (rand < 0.12) { 
+                                        let poisonTypes = ["鹤顶红", "妒芳容"];
+                                        if (n2.pregnancy > 0) poisonTypes.push("红花汤"); 
+                                        let pType = poisonTypes[Math.floor(Math.random() * poisonTypes.length)];
+                                        
+                                        let isSuccess = (n1.stats.cunning >= n2.stats.cunning) || (Math.random() < 0.3); 
+                                        
+                                        if (isSuccess) { 
+                                            if (pType === "鹤顶红") {
+                                                if (Math.random() < 0.5 || n2.stats.health >= 7) { 
+                                                    n2.stats.health -= 4; 
+                                                    logToChronicle(`【惊险生还】${n2.name} 误食“鹤顶红”，所幸太医抢救及时捡回一命，但气血大损 (体质-4)！`);
+                                                } else {
+                                                    n2.stats.health = 0; n2.isDead = true; n2.rank = "👻毒发"; n2.title = "";
+                                                    logToChronicle(`【恶毒命案】${n2.name} 饮汤后七窍流血暴毙，太医验尸惊觉所中之毒乃“鹤顶红”！`);
+                                                }
+                                            } else if (pType === "妒芳容") {
+                                                n2.stats.charm = Math.max(0, n2.stats.charm - 1); 
+                                                logToChronicle(`【容颜受损】${n2.name} 误用掺了“妒芳容”的脂粉，容颜微损（容貌-1）。`);
+                                            } else if (pType === "红花汤") {
+                                                n2.pregnancy = 0; n2.infertile = true; n2.stats.health -= 3;
+                                                logToChronicle(`【滑胎绝育】${n2.name} 误食“红花汤”凄惨小产，伤了根本，日后【珠胎难结】！`);
+                                            }
+                                        } else {
+                                            logToChronicle(`【毒计落空】${n1.name} 意图对 ${n2.name} 狠下毒手（${pType}），被对方察觉未能得逞。`);
+                                        }
+                                        
+                                        if (isDiscovered) {
+                                            if (pType === "妒芳容") {
+                                                let rankOrder = ["皇后", "皇贵妃", "贵妃", "妃", "嫔", "贵人", "常在", "答应", "官女子"];
+                                                let idx = rankOrder.indexOf(n1.rank);
+                                                if (idx >= 0 && idx < rankOrder.length - 1) n1.rank = rankOrder[idx + 1];
+                                                else if (idx === -1) n1.rank = "答应";
+                                                n1.favor = Math.max(0, n1.favor - 20);
+                                                logToChronicle(`【真相大白】查出在脂粉里下“妒芳容”的主使是 ${n1.name}。皇上斥其拈酸吃醋，降位为 ${n1.rank}！`);
+                                            } else {
+                                                n1.rank = "庶人"; n1.title = ""; n1.favor = 0; n1.pregnancy = 0;
+                                                logToChronicle(`【真相大白】慎刑司彻查毒药案，揪出幕后主使竟是 ${n1.name}！皇上震怒，褫夺封号废为庶人！`);
+                                            }
+                                        } else {
+                                            logToChronicle(`【深宫悬案】此次毒药事件扑朔迷离，慎刑司查了几个替罪太监后不了了之。`);
+                                        }
+                                    } else if (rand < 0.50) { 
+                                        n2.favor = Math.max(0, n2.favor - 10);
+                                        logToChronicle(`【暗生流言】宫中疯传 ${n2.name} 的不雅轶事，圣上闻之不悦 (圣宠下降)。`);
+                                        if (isDiscovered) {
+                                            n1.favor = Math.max(0, n1.favor - 15);
+                                            logToChronicle(`【流言反噬】内务府查明造谣源头是 ${n1.name}。皇上斥其“长舌生事”。`);
+                                        }
+                                    } else if (r1 < r2) { 
+                                        let pType = Math.random();
+                                        if (pType < 0.4) {
+                                            logToChronicle(`【禁足】${n1.name} 以“不懂规矩”为由，罚 ${n2.name} 禁足半月抄写佛经。`);
+                                        } else if (pType < 0.7) {
+                                            n2.stats.health -= 1;
+                                            logToChronicle(`【罚跪】${n1.name} 借故刁难，罚 ${n2.name} 在御花园长跪（体质-1）。`);
+                                        } else {
+                                            n2.stats.health -= 2;
+                                            logToChronicle(`【掌嘴】${n1.name} 怒斥 ${n2.name} 冲撞，命宫女狠狠掌嘴（体质-2）。`);
                                         }
                                     } else {
-                                        logToChronicle(`【毒计落空】${n1.name} 意图对 ${n2.name} 狠下毒手（${pType}），被对方察觉未能得逞。`);
+                                        logToChronicle(`【口角风波】${n1.name} 与 ${n2.name} 互相嘲讽夹枪带棒，闹得极其难看。`);
                                     }
                                     
-                                    if (isDiscovered) {
-                                        if (pType === "妒芳容") {
-                                            let rankOrder = ["皇后", "皇贵妃", "贵妃", "妃", "嫔", "贵人", "常在", "答应", "官女子"];
-                                            let idx = rankOrder.indexOf(n1.rank);
-                                            if (idx >= 0 && idx < rankOrder.length - 1) n1.rank = rankOrder[idx + 1];
-                                            else if (idx === -1) n1.rank = "答应";
-                                            n1.favor = Math.max(0, n1.favor - 20);
-                                            logToChronicle(`【真相大白】查出在脂粉里下“妒芳容”的主使是 ${n1.name}。皇上斥其拈酸吃醋，降位为 ${n1.rank}！`);
-                                        } else {
-                                            n1.rank = "冷宫"; n1.title = ""; n1.favor = 0; n1.pregnancy = 0;
-                                            logToChronicle(`【真相大白】慎刑司彻查毒药案，揪出幕后主使竟是 ${n1.name}！皇上震怒，打入冷宫！`);
-                                        }
-                                    } else {
-                                        logToChronicle(`【深宫悬案】此次毒药事件扑朔迷离，慎刑司查了几个替罪太监后不了了之。`);
+                                    if (n2.stats.health < 0 && !n2.isDead) {
+                                        n2.isDead = true; n2.rank = "👻折磨致死"; n2.title = "";
+                                        logToChronicle(`【当场殒命】可怜 ${n2.name} 本就体质孱弱，竟生生熬不过这番折磨，当场咽了气！`);
                                     }
-                                } else if (rand < 0.50) { 
-                                    n2.favor = Math.max(0, n2.favor - 10);
-                                    logToChronicle(`【暗生流言】宫中疯传 ${n2.name} 的不雅轶事，圣上闻之不悦 (圣宠下降)。`);
-                                    if (isDiscovered) {
-                                        n1.favor = Math.max(0, n1.favor - 15);
-                                        logToChronicle(`【流言反噬】内务府查明造谣源头是 ${n1.name}。皇上斥其“长舌生事”。`);
-                                    }
-                                } else if (r1 < r2) { 
-                                    let pType = Math.random();
-                                    if (pType < 0.4) {
-                                        logToChronicle(`【禁足】${n1.name} 以“不懂规矩”为由，罚 ${n2.name} 禁足半月抄写佛经。`);
-                                    } else if (pType < 0.7) {
-                                        n2.stats.health -= 1;
-                                        logToChronicle(`【罚跪】${n1.name} 借故刁难，罚 ${n2.name} 在御花园长跪（体质-1）。`);
-                                    } else {
-                                        n2.stats.health -= 2;
-                                        logToChronicle(`【掌嘴】${n1.name} 怒斥 ${n2.name} 冲撞，命宫女狠狠掌嘴（体质-2）。`);
-                                    }
+
                                 } else {
-                                    logToChronicle(`【口角风波】${n1.name} 与 ${n2.name} 互相嘲讽夹枪带棒，闹得极其难看。`);
-                                }
-                                
-                                // ✨ 必须被打成负数才会当场暴毙
-                                if (n2.stats.health < 0 && !n2.isDead) {
-                                    n2.isDead = true; n2.rank = "👻折磨致死"; n2.title = "";
-                                    logToChronicle(`【当场殒命】可怜 ${n2.name} 本就体质孱弱，竟生生熬不过这番折磨，当场咽了气！`);
+                                    // ✨ 核心修复：因为倾向不足（不敢害人），或者只是陌生人摩擦，仅止于口角！
+                                    relScore -= 5;
+                                    let interactionsBad = [
+                                        `因为一件蜀锦衣裳的颜色撞了，互翻白眼`,
+                                        `为了争夺内务府刚送来的极品墨菊，闹得不欢而散`,
+                                        `在路上遇见时连招呼都不打，形同陌路`
+                                    ];
+                                    let text = interactionsBad[Math.floor(Math.random() * interactionsBad.length)];
+                                    logToChronicle(`【摩擦龃龉】${n1.name} 与 ${n2.name}${text}。`);
                                 }
 
                             } else { 
+                                // 平和相处
+                                relScore += 10;
                                 let interactionsGood = [
                                     `在御花园凉亭里品茗赏花，相谈甚欢`,
                                     `互相探讨绣花刺绣的心得，交换了丝线`,
                                     `一起去太后宫里请安，路上有说有笑`,
                                     `分享了江南新贡来的时兴胭脂`
                                 ];
-                                let interactionsBad = [
-                                    `因为一件蜀锦衣裳的颜色撞了，互翻白眼`,
-                                    `为了争夺内务府刚送来的极品墨菊，闹得不欢而散`,
-                                    `在路上遇见时连招呼都不打，形同陌路`
-                                ];
-                                
-                                if (diff > -2 && diff < 2 || Math.random() < 0.6) {
-                                    relScore += 10;
-                                    let text = interactionsGood[Math.floor(Math.random() * interactionsGood.length)];
-                                    logToChronicle(`【日常闲逛】${n1.name} 与 ${n2.name}${text}。`);
-                                } else {
-                                    relScore -= 10;
-                                    let text = interactionsBad[Math.floor(Math.random() * interactionsBad.length)];
-                                    logToChronicle(`【摩擦龃龉】${n1.name} 与 ${n2.name}${text}。`);
-                                }
+                                let text = interactionsGood[Math.floor(Math.random() * interactionsGood.length)];
+                                logToChronicle(`【日常闲逛】${n1.name} 与 ${n2.name}${text}。`);
                             }
                             
                             n1.relations[n2.name] = relScore;
                             n2.relations[n1.name] = relScore;
-                        } 
-                    }
-                    }
-                }
-            }
+                        }
+                        
             gameState.harem.sort((a,b)=>b.favor-a.favor);
 
             // ✨ 确保所有被暗害/折磨/下药的妃嫔属性严格锁在0~10之间并实时固化
@@ -1511,7 +1518,9 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                 if(relBad.length > 0) relInfo += `, 交恶:[${relBad.join(",")}]`;
 
                 let tStr = h.title ? h.title : "";
-                haremText += `- ${tStr}${h.rank} ${h.name} (家世:${h.bg}, ${h.age}岁, 性格:${h.personality}, 心机:${h.stats.cunning}, 宠:${h.favor}${pregInfo}${childInfo}${relInfo})\n`; 
+                let tVal = h.tendency !== undefined ? h.tendency : ({ "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[h.personality] || 25);
+            if (h.rank === "皇后") tVal = 0;
+            haremText += `- ${tStr}${h.rank} ${h.name} (家世:${h.bg}, ${h.age}岁, 性格:${h.personality}, 心机:${h.stats.cunning}, 倾向:${tVal}, 宠:${h.favor}${pregInfo}${childInfo}${relInfo})\n`; 
             });
             
             let loversText = "【红尘暗缘(秘密情郎)】\n";
@@ -1573,6 +1582,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 6. 怀孕与流产：太医诊出有喜，必须加 [怀孕: 姓名]；遇害流产，必须加 [流产: 姓名]。【特殊情况】若玩家主动在剧情中声称自己提前生下孩子（如神仙点化、仙丹催生等）或已经小产，请立刻顺从玩家的设定，无视实际怀孕月份，直接在结尾输出对应的 [诞下: 性别·名字|玩家] 或 [流产: 玩家]，孕期自会清零！
 7. 玩家属性变动：若玩家在剧情中调养容颜、练习才艺、刺绣制衣或身患恶疾，必须输出对应标签，例如：[容貌+1]、[体质-1]、[心机+1]、[女红+1]（仅限八维：容貌/才智/心机/歌舞/女红/体质/福源/魅力，单次变动+/-1至2）。
 8. 银两增减：若剧情发生金钱交易（打赏、购买、获赏等），请在结尾输出具体的【单次收支数额】标签，如：[银两-50] 或 [银两+100]（日常花销通常在10~100之间）。【红牌警告】X只能是这一次花费的差值！严禁由你来计算总账！绝对不允许输出扣光玩家钱财的离谱大数！
+9. 倾向变动：若某个妃嫔在剧情中受了刺激黑化，或被感化向善，导致其害人倾向发生变化，请输出 [倾向变动: 姓名|+10] 或 [倾向变动: 姓名|-10]。
 
 【完美输出示例 1：发生重大惩罚（位分填入）】
 [发言] 旁白：夜幕降临，殿内的烛火摇曳不定，气氛显得格外压抑。
@@ -1803,6 +1813,20 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                     showToast(`✨ 洗髓伐骨：${attrName} ${val > 0 ? '+' : ''}${val}`);
                 }
             }
+
+            // ✨ 解析倾向变动
+            const tendRegex = /\[倾向变动\s*[：:]\s*(.*?)\Vert{}\s*([+-]\d+)\]/g;
+            let tendMatch;
+            while ((tendMatch = tendRegex.exec(cleanText)) !== null) {
+                let tName = tendMatch[1].trim();
+                let tVal = parseInt(tendMatch[2]);
+                let target = gameState.harem.find(h => h.name.includes(tName));
+                if (target) {
+                    if (target.tendency === undefined) target.tendency = { "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[target.personality] || 25;
+                    target.tendency = Math.max(0, Math.min(100, target.tendency + tVal));
+                    showToast(`🖤 异变：${target.name} 的害人倾向 ${tVal > 0 ? '+' : ''}${tVal} (当前: ${target.tendency})`);
+                }
+            }
  
             // ✨ 解析银两变动
             const moneyRegex = /\[银两\s*([+-]\s*\d+)\]/g;
@@ -1977,7 +2001,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             if (gameState.lovers) { gameState.lovers.forEach(l => { if(text.includes(l.name) || text.includes(l.title)) l.isKnown = true; }); }
 
             gameState.harem.sort((a,b)=>b.favor-a.favor);
-            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').replace(/\[(容貌|才智|心机|歌舞|女红|体质|福源|魅力)\s*[+-]\d+\]/g, '').trim().replace(/\[银两\s*[+-]\d+\]/g, '');
+            cleanText = cleanText.replace(/\[天宠[+-]\d+\]/g, '').replace(/\[位份[：:].*?\]/g, '').replace(/\[背景[：:].*?\]/g, '').replace(/\[更新.*?\]/g, '').replace(/\[怀孕.*?\]/g, '').replace(/\[流产.*?\]/g, '').replace(/\[疑心.*?\]/g, '').replace(/\[(容貌|才智|心机|歌舞|女红|体质|福源|魅力)\s*[+-]\d+\]/g, '').trim().replace(/\[银两\s*[+-]\d+\]/g, '').replace(/\[倾向变动.*?\]/g, '');
             
             // 🌟 这是你原本没有任何问题的完美正则，绝对不会切乱！
             const chunkRegex = /(?:\[|【)发言(?:\]|】)\s*([^：:]+)[：:]([\s\S]*?)(?=(?:(?:\[|【)发言(?:\]|】))|$)/g;
@@ -2110,7 +2134,16 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
         function showHaremList() {
             const container = document.getElementById('harem-list-container'); container.innerHTML = '';
             gameState.harem.forEach((h, idx) => {
-                let fn = (h.title ? h.title : "") + h.rank + " " + h.name; // 🌟 核心修复1：封号显示归位
+                // 动态初始化倾向值
+            if(h.tendency === undefined) h.tendency = { "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[h.personality] || 25;
+            if(h.rank === "皇后") h.tendency = 0; // 皇后与世无争
+
+            let fn = (h.title ? h.title : "") + h.rank + " " + h.name; 
+            container.innerHTML += `
+                <div class="harem-card" style="${h.isDead ? 'filter: grayscale(100%); opacity: 0.7; background: #f0f0f0;' : ''}" onclick="showConcubineDetail(${idx})">
+                    <div class="harem-title">${fn} <span style="font-size:12px; color:#666; font-weight:normal;">(${h.age}岁)</span></div>
+                    <div class="harem-info"><span>性格：${h.personality}</span><span>倾向：<strong style="color:#dc143c;">${h.tendency}</strong></span><span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span></div>
+                </div>`;
                 container.innerHTML += `
                     <div class="harem-card" style="${h.isDead ? 'filter: grayscale(100%); opacity: 0.7; background: #f0f0f0;' : ''}" onclick="showConcubineDetail(${idx})">
                         <div class="harem-title">${fn}</div>
@@ -2127,7 +2160,9 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             document.getElementById('cd-title-name').innerText = `🌸 ${h.title ? h.title : ""}${h.rank}${h.name} 🌸`;
             document.getElementById('cd-bg').innerText = h.bg || '未知';
             document.getElementById('cd-favor').innerText = h.favor;
-            document.getElementById('cd-personality').innerText = h.personality;
+            if(h.tendency === undefined) h.tendency = { "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[h.personality] || 25;
+            if(h.rank === "皇后") h.tendency = 0;
+            document.getElementById('cd-personality').innerHTML = `${h.personality} <span style="margin-left:10px; color:#dc143c; font-size:12px;">(害人倾向: ${h.tendency})</span>`;
             document.getElementById('cd-preg').innerText = h.pregnancy > 0 ? `怀孕${h.pregnancy}月` : "无";
             document.getElementById('cd-child').innerText = h.children.length > 0 ? h.children.join("、") : "无";
             document.getElementById('cd-affection').innerText = `${h.affection>0?'+':''}${h.affection}`;
@@ -2237,6 +2272,10 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 
             let preg = prompt(`【当前孕期】：${target.pregnancy} 个月\n输入 0 打胎/卸货，或修改月份：`, target.pregnancy);
             if (preg !== null && !isNaN(parseInt(preg))) { target.pregnancy = parseInt(preg); }
+
+            let currT = target.tendency !== undefined ? target.tendency : ({ "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[target.personality] || 25);
+            let tend = prompt(`【当前倾向】：${currT} (满100必害人)\n修改其害人倾向数值：`, currT);
+            if (tend !== null && !isNaN(parseInt(tend))) { target.tendency = Math.max(0, Math.min(100, parseInt(tend))); }
 
             showToast(`✨ 神仙造化成功！${target.name} 的命运已被改写！`);
             autoSave(); showConcubineDetail(currentEditNpcIndex); showHaremList();
