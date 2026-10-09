@@ -1518,8 +1518,8 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                 if(relBad.length > 0) relInfo += `, 交恶:[${relBad.join(",")}]`;
 
                 let tStr = h.title ? h.title : "";
-                let tVal = h.tendency !== undefined ? h.tendency : ({ "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[h.personality] || 25);
-            if (h.rank === "皇后") tVal = 0;
+                let tVal = (typeof h.tendency === 'number' && !isNaN(h.tendency)) ? h.tendency : ({ "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[h.personality] || 25);
+                if (h.rank === "皇后") tVal = 0;
             haremText += `- ${tStr}${h.rank} ${h.name} (家世:${h.bg}, ${h.age}岁, 性格:${h.personality}, 心机:${h.stats.cunning}, 倾向:${tVal}, 宠:${h.favor}${pregInfo}${childInfo}${relInfo})\n`; 
             });
             
@@ -1582,7 +1582,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 6. 怀孕与流产：太医诊出有喜，必须加 [怀孕: 姓名]；遇害流产，必须加 [流产: 姓名]。【特殊情况】若玩家主动在剧情中声称自己提前生下孩子（如神仙点化、仙丹催生等）或已经小产，请立刻顺从玩家的设定，无视实际怀孕月份，直接在结尾输出对应的 [诞下: 性别·名字|玩家] 或 [流产: 玩家]，孕期自会清零！
 7. 玩家属性变动：若玩家在剧情中调养容颜、练习才艺、刺绣制衣或身患恶疾，必须输出对应标签，例如：[容貌+1]、[体质-1]、[心机+1]、[女红+1]（仅限八维：容貌/才智/心机/歌舞/女红/体质/福源/魅力，单次变动+/-1至2）。
 8. 银两增减：若剧情发生金钱交易（打赏、购买、获赏等），请在结尾输出具体的【单次收支数额】标签，如：[银两-50] 或 [银两+100]（日常花销通常在10~100之间）。【红牌警告】X只能是这一次花费的差值！严禁由你来计算总账！绝对不允许输出扣光玩家钱财的离谱大数！
-9. 倾向变动：若某个妃嫔在剧情中受了刺激黑化，或被感化向善，导致其害人倾向发生变化，请输出 [倾向变动: 姓名|+10] 或 [倾向变动: 姓名|-10]。
+9. 倾向变动：若某个妃嫔在剧情中受了刺激黑化，或被感化向善，请输出 [倾向变动: 姓名|+X] 或 [倾向变动: 姓名|-X]（X 必须介于 1 到 5 之间，日常微小改变为1~2，重大变故顶多5，严禁过大变动！）。
 
 【完美输出示例 1：发生重大惩罚（位分填入）】
 [发言] 旁白：夜幕降临，殿内的烛火摇曳不定，气氛显得格外压抑。
@@ -1814,17 +1814,23 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 }
             }
 
-            // ✨ 解析倾向变动
-            const tendRegex = /\[倾向变动\s*[：:]\s*(.*?)\Vert{}\s*([+-]\d+)\]/g;
+            // ✨ 解析倾向变动 (带有坏档抢救与极限值卡死保护)
+            const tendRegex = /\[倾向变动\s*[：:]\s*(.*?)|\s*([+-]\s*\d+)\]/g;
             let tendMatch;
             while ((tendMatch = tendRegex.exec(cleanText)) !== null) {
                 let tName = tendMatch[1].trim();
-                let tVal = parseInt(tendMatch[2]);
+                let tVal = parseInt(tendMatch[2].replace(/\s+/g, ''));
                 let target = gameState.harem.find(h => h.name.includes(tName));
                 if (target) {
-                    if (target.tendency === undefined) target.tendency = { "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[target.personality] || 25;
+                    // 坏档抢救：如果是 NaN 或者 null，自动恢复出厂设置
+                    if (typeof target.tendency !== 'number' || isNaN(target.tendency)) target.tendency = { "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[target.personality] || 25;
+                    
+                    // 强行锁死：不管 AI 发什么疯，单次最大变动绝对不能超过 ±5！
+                    if (tVal > 5) tVal = 5;
+                    if (tVal < -5) tVal = -5;
+                    
                     target.tendency = Math.max(0, Math.min(100, target.tendency + tVal));
-                    showToast(`🖤 异变：${target.name} 的害人倾向 ${tVal > 0 ? '+' : ''}${tVal} (当前: ${target.tendency})`);
+                    showToast(`🖤 异变：${target.name} 倾向 ${tVal > 0 ? '+' : ''}${tVal} (当前: ${target.tendency})`);
                 }
             }
  
@@ -2134,20 +2140,15 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
         function showHaremList() {
             const container = document.getElementById('harem-list-container'); container.innerHTML = '';
             gameState.harem.forEach((h, idx) => {
-                // 动态初始化倾向值
-            if(h.tendency === undefined) h.tendency = { "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[h.personality] || 25;
-            if(h.rank === "皇后") h.tendency = 0; // 皇后与世无争
+                // 自动修复旧坏档中的 NaN 问题
+                if(typeof h.tendency !== 'number' || isNaN(h.tendency)) h.tendency = { "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[h.personality] || 25;
+                if(h.rank === "皇后") h.tendency = 0;
 
-            let fn = (h.title ? h.title : "") + h.rank + " " + h.name; 
-            container.innerHTML += `
-                <div class="harem-card" style="${h.isDead ? 'filter: grayscale(100%); opacity: 0.7; background: #f0f0f0;' : ''}" onclick="showConcubineDetail(${idx})">
-                    <div class="harem-title">${fn} <span style="font-size:12px; color:#666; font-weight:normal;">(${h.age}岁)</span></div>
-                    <div class="harem-info"><span>性格：${h.personality}</span><span>倾向：<strong style="color:#dc143c;">${h.tendency}</strong></span><span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span></div>
-                </div>`;
+                let fn = (h.title ? h.title : "") + h.rank + " " + h.name; 
                 container.innerHTML += `
                     <div class="harem-card" style="${h.isDead ? 'filter: grayscale(100%); opacity: 0.7; background: #f0f0f0;' : ''}" onclick="showConcubineDetail(${idx})">
-                        <div class="harem-title">${fn}</div>
-                        <div class="harem-info"><span>性格：${h.personality}</span><span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span></div>
+                        <div class="harem-title">${fn} <span style="font-size:12px; color:#666; font-weight:normal;">(${h.age}岁)</span></div>
+                        <div class="harem-info"><span>性格：${h.personality}</span><span>倾向：<strong style="color:#dc143c;">${h.tendency}</strong></span><span>圣宠：<strong style="color:#b8860b;">${h.favor}</strong></span></div>
                     </div>`;
             });
             showModal('harem-modal');
