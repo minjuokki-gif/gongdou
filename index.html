@@ -1149,7 +1149,7 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
             }
 
             if (gameState.harem && gameState.harem.length > 0) {
-                let livingHarem = gameState.harem.filter(h => !h.isDead && h.rank !== "冷宫" && h.rank !== "皇后");
+                let livingHarem = gameState.harem.filter(h => !h.isDead && !["冷宫", "庶人", "废妃"].includes(h.rank) && !h.rank.includes("冷宫") && h.rank !== "皇后");
                 
                 livingHarem.forEach(h => {
                     // ✨ 核心修复：0 是病危预告，负数才是真死，1和2绝对不报！
@@ -1164,7 +1164,7 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                     }
                 });
 
-                livingHarem = gameState.harem.filter(h => !h.isDead && h.rank !== "冷宫" && h.rank !== "皇后");
+                livingHarem = gameState.harem.filter(h => !h.isDead && !["冷宫", "庶人", "废妃"].includes(h.rank) && !h.rank.includes("冷宫") && h.rank !== "皇后");
 
                 if (livingHarem.length > 0) {
                     let activeNpc = livingHarem[Math.floor(Math.random() * livingHarem.length)];
@@ -1424,7 +1424,7 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
                     document.getElementById('gameplay-screen').style.backgroundImage = `url('${bgMap["女主卧室"]}')`; document.getElementById('loc-display').innerText = "当前位置：寝宫";
                     
                     // 过滤掉死人和冷宫，找一个活人侍寝
-                    let livingHarem = gameState.harem.filter(h => !h.isDead && h.rank !== "冷宫" && h.rank !== "皇后");
+                    let livingHarem = gameState.harem.filter(h => !h.isDead && !["冷宫", "庶人", "废妃"].includes(h.rank) && !h.rank.includes("冷宫") && h.rank !== "皇后");
                     let luckyNpc = livingHarem.length > 0 ? livingHarem[Math.floor(Math.random() * livingHarem.length)] : gameState.harem[0];
                     
                     // ✨ 核心修复2：不仅要告诉AI她侍寝了，还要在底层数据里真金白银地给她加恩宠！
@@ -1559,7 +1559,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
 5. 情郎私会雷达：只要玩家与情郎互动，必须输出 [更新: 情郎姓名|好感变动|疑心变动|]。皇上不在场或无证据时疑心不变或微增。
 6. 怀孕与流产：太医诊出有喜，必须加 [怀孕: 姓名]；遇害流产，必须加 [流产: 姓名]。【特殊情况】若玩家主动在剧情中声称自己提前生下孩子（如神仙点化、仙丹催生等）或已经小产，请立刻顺从玩家的设定，无视实际怀孕月份，直接在结尾输出对应的 [诞下: 性别·名字|玩家] 或 [流产: 玩家]，孕期自会清零！
 7. 玩家属性变动：若玩家在剧情中调养容颜、练习才艺、刺绣制衣或身患恶疾，必须输出对应标签，例如：[容貌+1]、[体质-1]、[心机+1]、[女红+1]（仅限八维：容貌/才智/心机/歌舞/女红/体质/福源/魅力，单次变动+/-1至2）。
-8. 金钱变动：若玩家在剧情中买卖物品、打赏宫人、贿赂太监、或受皇上赏银等，必须在结尾输出 [银两+X] 或 [银两-X] 标签。当前银两：${gameState.money} 两。绝不能把银两扣成负数！
+8. 银两增减：若剧情发生金钱交易（打赏、购买、获赏等），请在结尾输出具体的【单次收支数额】标签，如：[银两-50] 或 [银两+100]（日常花销通常在10~100之间）。【红牌警告】X只能是这一次花费的差值！严禁由你来计算总账！绝对不允许输出扣光玩家钱财的离谱大数！
 
 【完美输出示例 1：发生重大惩罚（位分填入）】
 [发言] 旁白：夜幕降临，殿内的烛火摇曳不定，气氛显得格外压抑。
@@ -1781,10 +1781,10 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             }
  
             // ✨ 解析银两变动
-            const moneyRegex = /\[银两\s*([+-]\d+)\]/g;
+            const moneyRegex = /\[银两\s*([+-]\s*\d+)\]/g;
             let moneyMatch;
             while ((moneyMatch = moneyRegex.exec(cleanText)) !== null) {
-                let val = parseInt(moneyMatch[1]);
+                let val = parseInt(moneyMatch[1].replace(/\s+/g, ''));
                 if(gameState.money === undefined) gameState.money = 0;
                 gameState.money = Math.max(0, gameState.money + val);
                 showToast(`💰 钱财变动：银两 ${val > 0 ? '+' : ''}${val} (当前剩余：${gameState.money}两)`);
