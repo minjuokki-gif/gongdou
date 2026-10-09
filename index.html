@@ -1837,9 +1837,10 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             }
 
             // ✨ 解析倾向变动 (带有坏档抢救与极限值卡死保护)
-            const tendRegex = /\[倾向变动\s*[：:]\s*(.*?)|\s*([+-]\s*\d+)\]/g;
+            const tendRegex = /\[倾向变动\s*[：:]\s*(.*?)\|\s*([+-]\s*\d+)\]/g;
             let tendMatch;
             while ((tendMatch = tendRegex.exec(cleanText)) !== null) {
+                if (!tendMatch[1] || !tendMatch[2]) continue;
                 let tName = tendMatch[1].trim();
                 let tVal = parseInt(tendMatch[2].replace(/\s+/g, ''));
                 let target = gameState.harem.find(h => h.name.includes(tName));
