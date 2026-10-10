@@ -154,6 +154,7 @@
         <div class="menu-item" onclick="forceRestoreSave()" style="color: #00bcd4; font-weight:bold;">🚑 修复/回到上次进度</div>
         <div class="menu-item" id="menu-stats-btn" style="display:none;" onclick="showPlayerStats()">查看我的档案</div>
         <div class="menu-item" id="menu-harem-btn" style="display:none; color: #d02090;" onclick="showHaremList()">后宫花名册</div>
+        <div class="menu-item" id="menu-children-btn" style="display:none; color: #1e90ff; font-weight:bold;" onclick="showChildrenList()">👶 皇嗣玉牒 (子嗣名册)</div>
         <div class="menu-item" id="menu-wb-btn" style="display:none; color: #4682b4;" onclick="openWorldbook()">世界书设定</div>
         <div class="menu-item" id="menu-lovers-btn" style="display:none; color: #c71585; font-weight:bold;" onclick="showLoversList()">💌 浮生孽缘 (私密)</div>
         <div class="menu-item" id="menu-history-btn" style="display:none; color: #8b4513; font-weight:bold;" onclick="showHistory()">📜 剧情回放 (编辑)</div>
@@ -338,6 +339,19 @@
         </div>
     </div>
 
+    <!-- 👶 皇嗣玉牒专属弹窗 👶 -->
+    <div class="modal-overlay" id="children-modal" onclick="if(event.target==this) this.classList.remove('active')">
+        <div class="modal-content" style="border-color: #1e90ff; background: #f0f8ff;">
+            <h3 style="text-align:center; color: #1e90ff; margin-top:0;">👶 皇室玉牒 · 子嗣名册 👶</h3>
+            <p style="font-size:12px; color:#555; text-align:center;">记录宫中阿哥与公主，每年自动长一岁，支持自由修改</p>
+            <div id="children-list-container" style="max-height: 55vh; overflow-y: auto;"></div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="close-btn" style="background: #20b2aa; flex: 1;" onclick="addCustomChild()">➕ 添入皇嗣</button>
+                <button class="close-btn" style="background: #1e90ff; flex: 1;" onclick="document.getElementById('children-modal').classList.remove('active')">合上玉牒</button>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="concubine-detail-modal" style="z-index: 6100;" onclick="if(event.target==this) this.classList.remove('active')">
         <div class="modal-content" style="background: #e0f7fa; border-color: #87cefa;">
             <h3 style="text-align:center; color:#d02090; margin-top:0;" id="cd-title-name">妃嫔档案</h3>
@@ -492,9 +506,9 @@
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             if(screenId === 'gameplay-screen') {
-                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn','menu-chronicle-btn'].forEach(id=>document.getElementById(id).style.display='block');
+                ['menu-stats-btn','menu-children-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn','menu-chronicle-btn'].forEach(id=>document.getElementById(id).style.display='block');
             } else {
-                ['menu-stats-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn','menu-chronicle-btn'].forEach(id=>document.getElementById(id).style.display='none');
+                ['menu-stats-btn','menu-children-btn','menu-regen-btn','menu-wb-btn','menu-harem-btn','menu-lovers-btn', 'menu-history-btn','menu-chronicle-btn'].forEach(id=>document.getElementById(id).style.display='none');
             }
         }
         function backFromApi() { switchScreen(prevScreen); }
@@ -1260,7 +1274,13 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
             gameState.period++; 
             if(gameState.period > 2) { 
                 gameState.period = 0; gameState.month++; 
-                if(gameState.month > 12) { gameState.year++; gameState.month = 1; }
+                if(gameState.month > 12) { 
+                    gameState.year++; gameState.month = 1; 
+                    // 🎂 新的一年：所有皇嗣年龄自动长一岁！
+                    if(gameState.royalChildren) {
+                        gameState.royalChildren.forEach(ch => { ch.age = (ch.age || 0) + 1; });
+                    }
+                }
                 if(gameState.pregnancy > 0) { gameState.pregnancy++; if(gameState.pregnancy >= 10) gameState.pregnancy = 10; }
                 gameState.harem.forEach(h => { if(h.pregnancy > 0) { h.pregnancy++; if(h.pregnancy >= 10) h.pregnancy = 10; } });
                 
@@ -2056,15 +2076,37 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 let childName = parts[0].trim(); 
                 let motherName = parts.length > 1 ? parts[1].trim() : "玩家";
                 
+                // 🎲 随机赋予天资(60-100)与初始性格
+                const personalities = ["聪颖敏捷", "温润内敛", "桀骜不驯", "敦厚仁善", "娇憨可爱", "灵动活泼", "深沉内秀", "勤奋好学"];
+                let randTalent = Math.floor(Math.random() * 41) + 60;
+                let randPersonality = personalities[Math.floor(Math.random() * personalities.length)];
+                let childGender = (childName.includes("女") || childName.includes("公主")) ? "皇女" : "皇子";
+
+                if (!gameState.royalChildren) gameState.royalChildren = [];
+
+                let newChildObj = {
+                    name: childName,
+                    gender: childGender,
+                    mother: motherName.includes('玩家') ? gameState.playerName : motherName,
+                    age: 0,
+                    talent: randTalent,
+                    personality: randPersonality,
+                    image: 'https://i.postimg.cc/zBybjBPX/ying-er.png'
+                };
+                gameState.royalChildren.push(newChildObj);
+
                 if(motherName.includes('玩家') || motherName.includes(gameState.playerName)) { 
                     gameState.pregnancy = 0; 
+                    if(!gameState.children) gameState.children = [];
                     gameState.children.push(childName); 
-                    showToast(`🌸 喜报：顺利诞下【${childName}】！已载入玉牒！`); 
-                    if (typeof logToChronicle === 'function') logToChronicle(`【皇家喜报】玩家顺利诞下${childName}！`);
+                    showToast(`🌸 喜报：诞下【${childName}】！天资:${randTalent}，已入玉牒！`); 
+                    if (typeof logToChronicle === 'function') logToChronicle(`【皇家喜报】玩家顺利诞下${childName} (天资:${randTalent}, 性格:${randPersonality})！`);
                 } else { 
                     let t = gameState.harem.find(h=>motherName.includes(h.name)); 
                     if(t){ 
-                        t.pregnancy = 0; t.children.push(childName); 
+                        t.pregnancy = 0; 
+                        if(!t.children) t.children = [];
+                        t.children.push(childName); 
                         showToast(`🌸 喜报：${t.name} 诞下【${childName}】！`); 
                         if (typeof logToChronicle === 'function') logToChronicle(`【瓜熟蒂落】${t.title||""}${t.rank} ${t.name} 顺利诞下${childName}。`);
                     } 
@@ -2560,6 +2602,173 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 renderHistoryList(); 
                 showToast("🗑️ 痕迹已抹除干净！");
             }
+        }
+
+/* ================= 👶 皇嗣玉牒系统 (兼容旧档与自由增删改) ================= */
+        const defaultBabyAvatar = "https://i.postimg.cc/zBybjBPX/ying-er.png";
+
+        // 旧档兼容转换：把以前纯名字的子嗣无缝升级为拥有年龄、天资和小像的对象
+        function syncRoyalChildren() {
+            if (!gameState.royalChildren) gameState.royalChildren = [];
+            
+            // 扫描玩家旧子嗣
+            if (gameState.children && gameState.children.length > 0) {
+                gameState.children.forEach(cName => {
+                    let existing = gameState.royalChildren.find(rc => rc.name === cName);
+                    if (!existing) {
+                        gameState.royalChildren.push({
+                            name: cName,
+                            gender: (cName.includes("女") || cName.includes("公主")) ? "皇女" : "皇子",
+                            mother: gameState.playerName || "玩家",
+                            age: 1,
+                            talent: 85,
+                            personality: "聪颖内敛",
+                            image: defaultBabyAvatar
+                        });
+                    } else if (!existing.image) {
+                        existing.image = defaultBabyAvatar;
+                    }
+                });
+            }
+            // 扫描妃嫔旧子嗣
+            if (gameState.harem && gameState.harem.length > 0) {
+                gameState.harem.forEach(h => {
+                    if (h.children && h.children.length > 0) {
+                        h.children.forEach(cName => {
+                            let existing = gameState.royalChildren.find(rc => rc.name === cName);
+                            if (!existing) {
+                                gameState.royalChildren.push({
+                                    name: cName,
+                                    gender: (cName.includes("女") || cName.includes("公主")) ? "皇女" : "皇子",
+                                    mother: h.name,
+                                    age: 1,
+                                    talent: 75,
+                                    personality: "性情温顺",
+                                    image: defaultBabyAvatar
+                                });
+                            } else if (!existing.image) {
+                                existing.image = defaultBabyAvatar;
+                            }
+                        });
+                    }
+                });
+            }
+        }
+
+        // 打开子嗣名册（图文并茂展示）
+        function showChildrenList() {
+            syncRoyalChildren();
+            const container = document.getElementById('children-list-container');
+            container.innerHTML = '';
+
+            if (gameState.royalChildren.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#999; margin:30px 0;">膝下尚无皇嗣，深宫岁月悠长。</div>';
+            } else {
+                gameState.royalChildren.forEach((ch, idx) => {
+                    let isPlayerChild = (ch.mother === gameState.playerName || ch.mother === "玩家");
+                    let tagColor = isPlayerChild ? "#ff1493" : "#4682b4";
+                    let talentColor = ch.talent >= 90 ? "#e91e63" : (ch.talent >= 75 ? "#ff8c00" : "#2e8b57");
+                    let avatarUrl = ch.image || defaultBabyAvatar;
+
+                    container.innerHTML += `
+                        <div class="harem-card" style="border-left: 5px solid ${tagColor}; background:#fff; padding:12px; margin-bottom:12px; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+                            <div style="display:flex; gap:12px; align-items:center;">
+                                <!-- 👶 婴儿小像框 -->
+                                <div style="width:75px; height:85px; border-radius:8px; overflow:hidden; border:2px solid ${tagColor}; flex-shrink:0; background:#fff8dc; display:flex; align-items:center; justify-content:center;">
+                                    <img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='${defaultBabyAvatar}'">
+                                </div>
+
+                                <!-- 📜 皇嗣详情信息 -->
+                                <div style="flex-grow:1;">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <strong style="font-size:16px; color:#333;">${ch.gender === '皇女' ? '🎀' : '👑'} ${escapeHTML(ch.name)}</strong>
+                                        <span style="font-size:11px; background:${tagColor}; color:white; padding:2px 8px; border-radius:10px;">生母：${escapeHTML(ch.mother)}</span>
+                                    </div>
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:4px; margin-top:6px; font-size:12px; color:#555;">
+                                        <span><b>年龄：</b>${ch.age} 岁</span>
+                                        <span><b>天资：</b><strong style="color:${talentColor}; font-size:13px;">${ch.talent}</strong>/100</span>
+                                        <span><b>身份：</b>${ch.gender}</span>
+                                        <span><b>性格：</b><span style="color:#d2691e; font-weight:bold;">${escapeHTML(ch.personality)}</span></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px; padding-top:6px; border-top:1px dashed #eee;">
+                                <button class="btn-sm" style="background:#1e90ff; padding:3px 10px; font-size:12px;" onclick="editChild(${idx})">✏️ 修改档案/立绘</button>
+                                <button class="btn-sm" style="background:#e91e63; padding:3px 10px; font-size:12px;" onclick="deleteChild(${idx})">🗑️ 移出玉牒</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            showModal('children-modal');
+        }
+
+        // 修改单个皇嗣的所有数据（包含小像链接）
+        function editChild(idx) {
+            let ch = gameState.royalChildren[idx];
+            let newName = prompt(`【皇嗣姓名】：${ch.name}\n请输入新姓名：`, ch.name);
+            if (newName !== null && newName.trim()) ch.name = newName.trim();
+
+            let newAge = prompt(`【当前年龄】：${ch.age} 岁\n请输入新年龄：`, ch.age);
+            if (newAge !== null && !isNaN(parseInt(newAge))) ch.age = Math.max(0, parseInt(newAge));
+
+            let newTalent = prompt(`【当前天资】：${ch.talent} (0-100)\n请输入新天资：`, ch.talent);
+            if (newTalent !== null && !isNaN(parseInt(newTalent))) ch.talent = Math.max(0, Math.min(100, parseInt(newTalent)));
+
+            let newPersonality = prompt(`【当前性格】：${ch.personality}\n请输入新性格：`, ch.personality);
+            if (newPersonality !== null && newPersonality.trim()) ch.personality = newPersonality.trim();
+
+            let newMother = prompt(`【当前生母】：${ch.mother}\n请输入生母姓名：`, ch.mother);
+            if (newMother !== null && newMother.trim()) ch.mother = newMother.trim();
+
+            let newGender = prompt(`【皇嗣身份】：${ch.gender} (皇子 / 皇女)\n请输入身份：`, ch.gender);
+            if (newGender !== null && newGender.trim()) ch.gender = newGender.trim();
+
+            let newImg = prompt(`【立绘图片链接】：\n若后续找到长大的立绘可直接粘贴新链接：`, ch.image || defaultBabyAvatar);
+            if (newImg !== null && newImg.trim()) ch.image = newImg.trim();
+
+            autoSave();
+            showChildrenList();
+            showToast(`✨ ${ch.name} 的玉牒档案已修改！`);
+        }
+
+        // 移出玉牒
+        function deleteChild(idx) {
+            let ch = gameState.royalChildren[idx];
+            if (confirm(`确定要将【${ch.name}】移出皇家玉牒吗？`)) {
+                gameState.royalChildren.splice(idx, 1);
+                autoSave();
+                showChildrenList();
+                showToast("已成功移出玉牒！");
+            }
+        }
+
+        // 上帝模式：手动添入新皇嗣
+        function addCustomChild() {
+            let name = prompt("【添入皇嗣】\n请输入皇嗣姓名（如：大阿哥·永璜）：");
+            if (!name || !name.trim()) return;
+
+            let gender = prompt(`请输入【${name}】的身份（皇子 / 皇女）：`, name.includes("女") ? "皇女" : "皇子") || "皇子";
+            let mother = prompt(`请输入【${name}】的生母：`, gameState.playerName) || gameState.playerName;
+            let age = parseInt(prompt(`请输入【${name}】的年龄：`, "0")) || 0;
+            let talent = parseInt(prompt(`请输入【${name}】的天资 (0-100)：`, "85")) || 85;
+            let personality = prompt(`请输入【${name}】的性格：`, "聪颖敏捷") || "聪颖敏捷";
+
+            if (!gameState.royalChildren) gameState.royalChildren = [];
+            gameState.royalChildren.push({
+                name: name.trim(),
+                gender: gender.trim(),
+                mother: mother.trim(),
+                age: Math.max(0, age),
+                talent: Math.max(0, Math.min(100, talent)),
+                personality: personality.trim(),
+                image: defaultBabyAvatar
+            });
+
+            autoSave();
+            showChildrenList();
+            showToast(`✨ 【${name}】已正式载入皇家玉牒！`);
         }
 
 /* ================= 🌸 浮生孽缘系统逻辑 ================= */
