@@ -304,9 +304,10 @@
         <div class="modal-content" style="background: #fff0f5; border-color: #ff69b4;">
             <h3 style="text-align:center; color: var(--dark-color); margin-top:0;">🌸 我的档案 🌸</h3>
             <div class="favor-box">👑 当前天宠：<span id="favor-val">0</span> 👑</div>
-            <div style="display:flex; gap:10px; margin-bottom:15px; padding: 0 10px;">
-                <button onclick="cheatStats()" style="flex:1; background:#ffd700; color:#d2691e; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2);">💊 服下十全大补丸</button>
-                <button onclick="openPresetModal()" style="flex:1; background:#e91e63; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,0.2);">👗 一键更换立绘</button>
+            <div style="display:flex; gap:8px; margin-bottom:15px; padding: 0 5px;">
+                <button onclick="cheatStats()" style="flex:1; background:#ffd700; color:#d2691e; border:none; padding:8px 4px; border-radius:8px; font-weight:bold; font-size:13px; cursor:pointer;">💊 十全大补丸</button>
+                <button onclick="editPlayerStats()" style="flex:1.2; background:#9c27b0; color:white; border:none; padding:8px 4px; border-radius:8px; font-weight:bold; font-size:13px; cursor:pointer;">✏️ 修改档案/属性/子嗣</button>
+                <button onclick="openPresetModal()" style="flex:1; background:#e91e63; color:white; border:none; padding:8px 4px; border-radius:8px; font-weight:bold; font-size:13px; cursor:pointer;">👗 一键换装</button>
             </div>
             <div class="archive-layout">
                 <div class="al-left">
@@ -778,6 +779,62 @@
             autoSave(); showPlayerStats(); showToast("💊 满血复活！属性全满，晋升太傅嫡女！");
         }
 
+        // 🌸 上帝之手：修改玩家全属性、子嗣、年龄、位份、银两
+        function editPlayerStats() {
+            let newName = prompt(`【我的姓名】：${gameState.playerName}\n请输入新姓名：`, gameState.playerName);
+            if (newName !== null && newName.trim() !== "") gameState.playerName = newName.trim();
+
+            let newRank = prompt(`【当前位份】：${gameState.rank}\n请输入新位份（如：贵妃、嫔、答应）：`, gameState.rank);
+            if (newRank !== null && newRank.trim() !== "") gameState.rank = newRank.trim();
+
+            let curAge = document.getElementById('age-val') ? document.getElementById('age-val').innerText : "16";
+            let newAge = prompt(`【当前年龄】：${curAge} 岁\n请输入新年龄：`, curAge);
+            if (newAge !== null && !isNaN(parseInt(newAge))) {
+                if(document.getElementById('age-val')) document.getElementById('age-val').innerText = parseInt(newAge);
+            }
+
+            let newBg = prompt(`【当前家世】：${gameState.playerBg || document.getElementById('bg-val').innerText}\n请输入新家世：`, gameState.playerBg || document.getElementById('bg-val').innerText);
+            if (newBg !== null && newBg.trim() !== "") {
+                gameState.playerBg = newBg.trim();
+                if(document.getElementById('bg-val')) document.getElementById('bg-val').innerText = newBg.trim();
+            }
+
+            let currChildren = (gameState.children && gameState.children.length > 0) ? gameState.children.join(",") : "";
+            let newChildren = prompt(`【当前子嗣】：${currChildren || "无"}\n请输入子嗣列表（多个子嗣用逗号隔开，留空则清空）：`, currChildren);
+            if (newChildren !== null) {
+                gameState.children = newChildren.trim() ? newChildren.split(/[,，]/).map(s => s.trim()).filter(Boolean) : [];
+            }
+
+            let preg = prompt(`【当前孕期】：${gameState.pregnancy || 0} 个月\n输入 0 为未孕，或填入怀孕月份(1-10)：`, gameState.pregnancy || 0);
+            if (preg !== null && !isNaN(parseInt(preg))) gameState.pregnancy = parseInt(preg);
+
+            let currMoney = gameState.money !== undefined ? gameState.money : 0;
+            let newMoney = prompt(`【当前银两】：${currMoney} 两\n请输入新银两数：`, currMoney);
+            if (newMoney !== null && !isNaN(parseInt(newMoney))) {
+                gameState.money = Math.max(0, parseInt(newMoney));
+                if (document.getElementById('game-money')) document.getElementById('game-money').innerText = `银两：${gameState.money}`;
+            }
+
+            let pStatsStr = `${statsConfig.charm.v},${statsConfig.intel.v},${statsConfig.cunning.v},${statsConfig.dance.v},${statsConfig.needle.v},${statsConfig.health.v},${statsConfig.luck.v},${statsConfig.charisma.v}`;
+            let newPStats = prompt(`【修改我的八维属性】(0-10)\n顺序：容貌,才智,心机,歌舞,女红,体质,福源,魅力\n用逗号隔开：`, pStatsStr);
+            if (newPStats !== null) {
+                let arr = newPStats.split(/[,，]/);
+                if (arr.length === 8) {
+                    const keys = ['charm','intel','cunning','dance','needle','health','luck','charisma'];
+                    if (!gameState.playerStats) gameState.playerStats = {};
+                    keys.forEach((k, idx) => {
+                        let val = Math.max(0, Math.min(10, parseInt(arr[idx]) || 0));
+                        statsConfig[k].v = val;
+                        gameState.playerStats[k] = { v: val };
+                    });
+                }
+            }
+
+            autoSave();
+            showPlayerStats();
+            showToast("🌸 您的档案、属性与子嗣已成功更新！");
+        }
+
         function openEmpPresetModal() {
             const list = document.getElementById('preset-avatar-list'); list.innerHTML = '';
             empPresets.forEach(p => {
@@ -1122,17 +1179,80 @@ function rollEmpPersonality() { document.getElementById('emp-personality-val').i
             if (gameState.chronicles.length === 0) {
                 container.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">后宫风平浪静，暂无大事发生。</div>';
             } else {
-                gameState.chronicles.forEach(c => {
-                    let evs = c.events.length > 0 ? c.events.map(e => `<li style="margin-bottom:6px;">${e}</li>`).join('') : '<li style="color:#999; list-style:none;">本旬宫中岁月静好。</li>';
+                gameState.chronicles.forEach((c, cIdx) => {
+                    let evsHtml = "";
+                    if (c.events.length === 0) {
+                        evsHtml = '<li style="color:#999; list-style:none; padding:4px 0;">本旬宫中岁月静好。</li>';
+                    } else {
+                        evsHtml = c.events.map((e, eIdx) => `
+                            <li style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                                <span style="flex-grow:1; line-height:1.5;">${escapeHTML(e)}</span>
+                                <div style="flex-shrink:0; display:flex; gap:4px;">
+                                    <button class="btn-sm" style="background:#2e8b57; font-size:11px; padding:2px 6px;" onclick="editChronicleEvent(${cIdx}, ${eIdx})">✏️ 改</button>
+                                    <button class="btn-sm" style="background:#e91e63; font-size:11px; padding:2px 6px;" onclick="deleteChronicleEvent(${cIdx}, ${eIdx})">🗑️ 删</button>
+                                </div>
+                            </li>
+                        `).join('');
+                    }
+
                     container.innerHTML += `
                         <div style="margin-bottom:15px; border-bottom:1px dashed #2e8b57; padding-bottom:10px;">
-                            <strong style="color:#d2691e; font-size:15px;">【${c.time}】</strong>
-                            <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 14px; color: #333;">${evs}</ul>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <strong style="color:#d2691e; font-size:15px;">【${c.time}】</strong>
+                                <div style="display:flex; gap:5px;">
+                                    <button class="btn-sm" style="background:#ff8c00; font-size:11px; padding:2px 8px;" onclick="addChronicleEvent(${cIdx})">➕ 补记</button>
+                                    <button class="btn-sm" style="background:#555; font-size:11px; padding:2px 8px;" onclick="deleteChroniclePeriod(${cIdx})">抹除此旬</button>
+                                </div>
+                            </div>
+                            <ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 14px; color: #333;">${evsHtml}</ul>
                         </div>
                     `;
                 });
             }
             showModal('chronicle-modal');
+        }
+
+        function editChronicleEvent(cIdx, eIdx) {
+            let current = gameState.chronicles[cIdx].events[eIdx];
+            let updated = prompt("【修改记事】\n请编辑此条事件记录：", current);
+            if (updated !== null) {
+                if (updated.trim() === "") {
+                    deleteChronicleEvent(cIdx, eIdx);
+                } else {
+                    gameState.chronicles[cIdx].events[eIdx] = updated.trim();
+                    autoSave();
+                    showChronicle();
+                    showToast("记事已更新！");
+                }
+            }
+        }
+
+        function deleteChronicleEvent(cIdx, eIdx) {
+            if (confirm("确定要抹除此条记事吗？")) {
+                gameState.chronicles[cIdx].events.splice(eIdx, 1);
+                autoSave();
+                showChronicle();
+                showToast("已删除该条记事！");
+            }
+        }
+
+        function addChronicleEvent(cIdx) {
+            let newEv = prompt("【增补记事】\n请输入想要记录的事件：");
+            if (newEv && newEv.trim()) {
+                gameState.chronicles[cIdx].events.push(newEv.trim());
+                autoSave();
+                showChronicle();
+                showToast("已增补记事！");
+            }
+        }
+
+        function deleteChroniclePeriod(cIdx) {
+            if (confirm("确定要删除这整旬的所有记事吗？")) {
+                gameState.chronicles.splice(cIdx, 1);
+                autoSave();
+                showChronicle();
+                showToast("已抹除整旬记事！");
+            }
         }
 
         // 👑 核心：时间流转与沙盒引擎 (完美同步修复版) 👑
@@ -2051,8 +2171,10 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             let msg = dialogueQueue.shift();
             
             clearNpcAvatar();
+            let currentSpeaker = msg.speaker;
             
             if(msg.speaker.includes(gameState.empName) || msg.speaker.includes("皇帝") || msg.speaker.includes("皇上")) { 
+                currentSpeaker = `【皇上】${gameState.empName}`;
                 if(gameState.empAvatar) {
                     const elId = gameState.isEmpTransparent ? 'npc-trans-ingame' : 'npc-framed-ingame';
                     const p = document.getElementById(elId); 
@@ -2060,56 +2182,48 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                     p.style.display = 'block';
                 }
             } else if(msg.speaker.includes("太后")) {
-                // ✨ 新英雄太后专属登场判定：只要说话人带“太后”二字，直接上特有立绘！
+                currentSpeaker = "【太后】";
                 const p = document.getElementById('npc-trans-ingame');
                 p.src = "https://i.postimg.cc/G2FYHQkT/tai-hou.png"; 
                 p.style.display = 'block';
                 document.getElementById('npc-framed-ingame').style.display = 'none';
             } else if(msg.speaker === gameState.playerName || msg.speaker === "我" || msg.speaker.includes(gameState.playerName)) {
-                msg.speaker = `【${gameState.rank}】${gameState.playerName}`;
-    
+                currentSpeaker = `【${gameState.rank}】${gameState.playerName}`;
             } else if(msg.speaker !== "系统") {
                 let isMaid = false;
                 let maidImg = "";
                 
-                // 1. 判定是不是玩家的两个贴身宫女
                 if (gameState.playerMaids && (msg.speaker.includes(gameState.playerMaids[0].name) || msg.speaker.includes(gameState.playerMaids[1].name))) {
                     isMaid = true;
                     let pm = msg.speaker.includes(gameState.playerMaids[0].name) ? gameState.playerMaids[0] : gameState.playerMaids[1];
                     maidImg = pm.image;
-                    finalSpeakerName = `【贴身宫女】${pm.name}`;
-                } 
-                // 2. 判定是不是别的杂役、宫女或嬷嬷
-                else if (msg.speaker.includes("宫女") || msg.speaker.includes("侍女") || msg.speaker.includes("丫鬟") || msg.speaker.includes("嬷嬷") || msg.speaker.includes("姑姑")) {
+                    currentSpeaker = `【贴身宫女】${pm.name}`;
+                } else if (msg.speaker.includes("宫女") || msg.speaker.includes("侍女") || msg.speaker.includes("丫鬟") || msg.speaker.includes("嬷嬷") || msg.speaker.includes("姑姑")) {
                     isMaid = true;
-                    finalSpeakerName = msg.speaker.includes("【") ? msg.speaker : `【宫女】${msg.speaker.replace(/宫女|侍女|丫鬟|嬷嬷|姑姑/, '').trim()}`;
-                    
-                    // ✨ 核心避让逻辑：从池子里滤掉玩家的两个宫女，剩下的随机抽
+                    currentSpeaker = msg.speaker.includes("【") ? msg.speaker : `【宫女】${msg.speaker.replace(/宫女|侍女|丫鬟|嬷嬷|姑姑/, '').trim()}`;
                     let otherMaids = allMaidPortraits.filter(img => !gameState.playerMaids.some(pm => pm.image === img));
                     maidImg = otherMaids[Math.floor(Math.random() * otherMaids.length)];
                 }
 
-                // 如果是宫女，直接弹图
                 if (isMaid) {
                     const p = document.getElementById('npc-trans-ingame');
                     p.src = maidImg; 
                     p.style.display = 'block';
                     document.getElementById('npc-framed-ingame').style.display = 'none';
                 } else {
-                    // 如果不是宫女，走原本的找妃子/情郎逻辑
-                    let targetNpc = gameState.harem.find(h => msg.speaker.includes(h.name) || (h.title !== "" && msg.speaker.includes(h.title)) || (h.rank === "皇后" && msg.speaker.includes("皇后")));
+                    let targetNpc = gameState.harem.find(h => msg.speaker.includes(h.name) || (h.title && msg.speaker.includes(h.title)) || (h.rank === "皇后" && msg.speaker.includes("皇后")));
                     let isTrans = targetNpc ? targetNpc.isTransparent : false;
                     
                     if(!targetNpc && gameState.lovers) {
-                        targetNpc = gameState.lovers.find(l => msg.speaker.includes(l.name) || (l.title !== "" && msg.speaker.includes(l.title)));
+                        targetNpc = gameState.lovers.find(l => msg.speaker.includes(l.name) || (l.title && msg.speaker.includes(l.title)));
                         if(targetNpc) isTrans = true; 
                     }
 
                     if(targetNpc) {
                         if (targetNpc.rank) {
-                            finalSpeakerName = `【${targetNpc.title || ""}${targetNpc.rank}】${targetNpc.name}`;
+                            currentSpeaker = `【${targetNpc.title || ""}${targetNpc.rank}】${targetNpc.name}`;
                         } else if (targetNpc.type) { 
-                            finalSpeakerName = `【${targetNpc.title || ""}】${targetNpc.name}`;
+                            currentSpeaker = `【${targetNpc.title || ""}】${targetNpc.name}`;
                         }
                         
                         if(targetNpc.image) {
@@ -2121,7 +2235,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             }
 
             if(dialogueQueue.length > 0) document.getElementById('click-hint').style.display='block'; else document.getElementById('click-hint').style.display='none';
-            displayDialogue(msg.speaker, msg.text, true);
+            displayDialogue(currentSpeaker, msg.text, true);
         }
 
         function displayDialogue(s,t,tw=false) {
@@ -2247,26 +2361,33 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             autoSave(); // 自动保存
         }
 
-        // 神仙造化：强行修改妃子数据（一键换脸 + 全属性 + 名字性格 + 强制改位份/生死）
         function editCurrentConcubine() {
             if (currentEditNpcIndex === -1) return;
             let target = gameState.harem[currentEditNpcIndex];
 
-            // 0. 判生死（防AI剧情杀代码没识别）
             if (!target.isDead) {
-                if (confirm(`【生死大权】${target.name} 目前还活着。如果她在剧情里上吊或被赐死了，是否要强制将其标记为死亡？\n(点击"确定"直接死亡，点击"取消"跳过)`)) {
+                if (confirm(`【生死大权】${target.name} 目前还活着。是否强制标记为死亡？\n(点击“确定”死亡，点击“取消”跳过)`)) {
                     target.isDead = true; target.rank = "👻已故"; target.title = ""; target.favor = 0;
-                    showToast(`💀 ${target.name} 已被系统强行抹杀。`);
+                    showToast(`💀 ${target.name} 已被标记为死亡。`);
                     autoSave(); showConcubineDetail(currentEditNpcIndex); showHaremList(); return;
                 }
             } else {
-                if (confirm(`【起死回生】${target.name} 已死亡。是否要将其复活？\n(点击"确定"复活，点击"取消"跳过)`)) {
+                if (confirm(`【起死回生】${target.name} 已死亡。是否复活？\n(点击“确定”复活，点击“取消”跳过)`)) {
                     target.isDead = false; target.rank = "答应";
                 } else return;
             }
 
-            let newName = prompt(`【当前名字】：${target.name}\n请输入新名字：`, target.name);
+            let newName = prompt(`【当前姓名】：${target.name}\n请输入新姓名：`, target.name);
             if (newName !== null && newName.trim() !== "") target.name = newName.trim();
+
+            let newTitle = prompt(`【当前封号】：${target.title || "无"}\n请输入新封号（如：端、华、纯，无封号留空）：`, target.title || "");
+            if (newTitle !== null) target.title = newTitle.trim();
+
+            let newRank = prompt(`【当前位份】：${target.rank}\n请输入位份（如：贵妃、嫔、常在、冷宫）：`, target.rank);
+            if (newRank !== null && newRank.trim() !== "") target.rank = newRank.trim();
+
+            let newAge = prompt(`【当前年龄】：${target.age || 18} 岁\n请输入新年龄：`, target.age || 18);
+            if (newAge !== null && !isNaN(parseInt(newAge))) target.age = parseInt(newAge);
 
             let newBg = prompt(`【当前家世】：${target.bg}\n请输入新家世：`, target.bg);
             if (newBg !== null && newBg.trim() !== "") target.bg = newBg.trim();
@@ -2274,14 +2395,23 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
             let newPersonality = prompt(`【当前性格】：${target.personality}\n请输入新性格：`, target.personality);
             if (newPersonality !== null && newPersonality.trim() !== "") target.personality = newPersonality.trim();
 
-            // ✨ 防冷宫诈尸专属：手动改位份
-            let newRank = prompt(`【当前位份】：${target.rank}\n强制修改位份（打入冷宫请直接填“冷宫”或“庶人”）：`, target.rank);
-            if (newRank !== null && newRank.trim() !== "") target.rank = newRank.trim();
+            let currChildren = (target.children && target.children.length > 0) ? target.children.join(",") : "";
+            let newChildren = prompt(`【当前子嗣】：${currChildren || "无"}\n请输入子嗣列表（多个子嗣用逗号隔开，留空则清空）：`, currChildren);
+            if (newChildren !== null) {
+                target.children = newChildren.trim() ? newChildren.split(/[,，]/).map(s => s.trim()).filter(Boolean) : [];
+            }
+
+            let preg = prompt(`【当前孕期】：${target.pregnancy || 0} 个月\n输入 0 为未孕，或填入月份(1-10)：`, target.pregnancy || 0);
+            if (preg !== null && !isNaN(parseInt(preg))) target.pregnancy = parseInt(preg);
+
+            let currT = target.tendency !== undefined ? target.tendency : ({ "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[target.personality] || 25);
+            let tend = prompt(`【害人倾向】：${currT} (0-100)\n修改数值：`, currT);
+            if (tend !== null && !isNaN(parseInt(tend))) target.tendency = Math.max(0, Math.min(100, parseInt(tend)));
 
             let statsStr = `${target.stats.charm},${target.stats.intel},${target.stats.cunning},${target.stats.dance},${target.stats.needle},${target.stats.health},${target.stats.luck},${target.stats.charisma}`;
-            let newStatsStr = prompt(`【修改属性】(0-10)\n顺序：容貌,才智,心机,歌舞,女红,体质,福源,魅力\n请用逗号隔开：`, statsStr);
+            let newStatsStr = prompt(`【修改八维属性】(0-10)\n顺序：容貌,才智,心机,歌舞,女红,体质,福源,魅力\n用逗号隔开：`, statsStr);
             if (newStatsStr !== null) {
-                let arr = newStatsStr.split(',');
+                let arr = newStatsStr.split(/[,，]/);
                 if(arr.length === 8) {
                     target.stats.charm = Math.max(0, Math.min(10, parseInt(arr[0])||0));
                     target.stats.intel = Math.max(0, Math.min(10, parseInt(arr[1])||0));
@@ -2294,14 +2424,7 @@ ${haremText}${loversText}${chronicleText}${encounterHints}${wbText}${extraRules}
                 }
             }
 
-            let preg = prompt(`【当前孕期】：${target.pregnancy} 个月\n输入 0 打胎/卸货，或修改月份：`, target.pregnancy);
-            if (preg !== null && !isNaN(parseInt(preg))) { target.pregnancy = parseInt(preg); }
-
-            let currT = target.tendency !== undefined ? target.tendency : ({ "嚣张跋扈":50, "心思深沉":45, "笑面虎":45, "娇纵做作":35, "清高孤傲":20, "天真烂漫":20, "温婉可人":15, "胆小懦弱":10 }[target.personality] || 25);
-            let tend = prompt(`【当前倾向】：${currT} (满100必害人)\n修改其害人倾向数值：`, currT);
-            if (tend !== null && !isNaN(parseInt(tend))) { target.tendency = Math.max(0, Math.min(100, parseInt(tend))); }
-
-            showToast(`✨ 神仙造化成功！${target.name} 的命运已被改写！`);
+            showToast(`✨ 神仙造化成功！${target.name} 档案已更新！`);
             autoSave(); showConcubineDetail(currentEditNpcIndex); showHaremList();
         }
 
